@@ -35,7 +35,6 @@ export interface Event {
   author: string;
   image: string;
   location: string;
-  mapUrl: string;
 }
 
 export interface GalleryItem {

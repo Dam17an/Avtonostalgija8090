@@ -392,7 +392,7 @@ const YoungtimerSection = () => {
                     <li>klima.</li>
                   </ul>
                   <p className="mb-4">
-                    To je bil tudi čas, ko razen katalizatorja še nič ni bilo podrejeno ekologiji. Takrat besede mobilnost še nismo uporabljali, poudarek je bil predvsem na uživanju v vožnji in vizualnem občudovanju avtomobila.
+                    To je bil tudi čas, ko razen katalizatorja še nič ni bilo podrejeno ekologiji. Takrat besede mobilnost še nismo uporabljali, poudarek je bil predvsem na uživanju v vožnji in vizualnem občudovanju avtomobilila.
                   </p>
                   <p className="mb-4">
                     Z vsesplošnim razmahom interneta po letu 2000, se je tempo življenja zelo spremenil, poleg tega pa so si ljudje v življenju začeli postavljati nove prioritete. Tako pri nas, kot v svetu, je tudi avtomobil, kot predmet poželenja začel izgubljati na svoji veljavi.
@@ -619,8 +619,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
       const evData: Event = {
         id, slug, title: { si: formData.titleSi, en: formData.titleEn },
         description: { si: formData.excerptSi, en: formData.excerptEn },
-        date: formData.date, author: formData.author, image: formData.image, location: formData.location,
-        mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2768.456!2d14.505!'
+        date: formData.date, author: formData.author, image: formData.image, location: formData.location
       };
       setEvents(prev => editingId ? prev.map(e => e.id === id ? evData : e) : [evData, ...prev]);
       addLog(editingId ? 'update' : 'create', 'event', id);
@@ -943,9 +942,6 @@ const MainContent = () => {
                   <div className="flex items-center gap-4 sm:gap-6"><MapPin className="text-pink-500 shrink-0" size={24} /><div className="text-sm sm:text-xl font-bold tracking-widest uppercase break-words">{activeEvent.location}</div></div>
                 </div>
                 <p className="text-slate-300 leading-relaxed font-light text-sm sm:text-xl italic border-l-4 border-teal-400 pl-4 sm:pl-6">{activeEvent.description[lang]}</p>
-                <div className="bg-slate-950 p-1.5 rounded-2xl border border-slate-800 h-48 sm:h-64 overflow-hidden mt-auto shadow-inner">
-                   <iframe src={activeEvent.mapUrl} title="Map" width="100%" height="100%" style={{ border: 0 }} allowFullScreen loading="lazy" className="grayscale invert opacity-50 hover:opacity-100 transition-opacity" />
-                </div>
               </div>
             </div>
           </div>
