@@ -105,57 +105,14 @@ const useApp = () => {
   return context;
 };
 
-// --- INITIAL DATA ---
-const INITIAL_ARTICLES: Article[] = [
-  {
-    id: '1',
-    slug: 'vstop-v-svet-youngtimerjev',
-    title: { si: 'Vstop v svet Youngtimerjev', en: 'Entering the World of Youngtimers' },
-    excerpt: { si: 'Kaj definira avtomobil iz 80-ih in 90-ih kot klasiko?', en: 'What defines an 80s or 90s car as a classic?' },
-    content: { 
-      si: 'V Sloveniji se meja za Youngtimerje vztrajno pomika v devetdeseta leta. Modeli kot so BMW E30, VW Golf II in Mazda MX-5 so postali ikone.\n\nYoungtimerji nam ponujajo analogni občutek vožnje, ki ga v modernih digitaliziranih vozilih ne najdemo več.', 
-      en: 'In Slovenia, the threshold for Youngtimers is steadily moving into the nineties. Models like the BMW E30, VW Golf II, and Mazda MX-5 have become icons.' 
-    },
-    image: 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1200',
-    author: 'Admin',
-    date: '2024-03-20',
-    category: 'Vodnik',
-    tags: ['E30', '90s']
-  }
-];
-
-const INITIAL_EVENTS: Event[] = [
-  {
-    id: '1',
-    slug: 'retro-srecanje-ljubljana',
-    title: { si: 'Retro Srečanje Ljubljana 2024', en: 'Retro Meet Ljubljana 2024' },
-    description: { 
-      si: 'Največje srečanje ljubiteljev 80ih in 90ih v osrednji Sloveniji. Pričakujemo več kot 200 vozil iz celotne regije.', 
-      en: 'The biggest meeting of 80s and 90s fans in central Slovenia.' 
-    },
-    date: '2024-05-15',
-    author: 'Admin',
-    image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=1200',
-    location: 'Ljubljana, Kongresni trg',
-    mapUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2768.456!2d14.505!'
-  }
-];
-
-const INITIAL_GALLERY: GalleryItem[] = [
-  {
-    id: '1',
-    eventId: '1',
-    title: { si: 'Zbor Ljubljana', en: 'Ljubljana Meet' },
-    images: [
-      'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1200',
-      'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=1200'
-    ]
-  }
-];
+// --- INITIAL DATA (Empty for user customization) ---
+const INITIAL_ARTICLES: Article[] = [];
+const INITIAL_EVENTS: Event[] = [];
+const INITIAL_GALLERY: GalleryItem[] = [];
 
 const INITIAL_SETTINGS: SiteSettings = {
   heroImage: 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1920',
-  aboutImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1200', // enthusiasts around engine
+  aboutImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1200',
   memberCount: '300+',
   eventCount: '30+'
 };
@@ -309,14 +266,150 @@ const YoungtimerSection = () => {
           <h3 className="retro-font text-xl sm:text-2xl text-pink-500 uppercase tracking-widest text-center">{t.faq.manifestoTitle}</h3>
           <div className="glass p-6 sm:p-12 rounded-3xl sm:rounded-[2rem] border border-white/10 shadow-2xl relative group overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-teal-400/5 blur-[60px] group-hover:bg-pink-500/10 transition-colors duration-1000" />
-            <div className="relative z-10 space-y-6 sm:space-y-8">
-              <div className="prose prose-invert max-w-none text-slate-300 text-base sm:text-lg md:text-xl leading-relaxed sm:leading-[2] font-light italic opacity-90 text-left sm:text-justify break-words px-2 sm:px-0">
-                <p>
-                  Youngtimerji so več kot le prevozna sredstva; so časovne kapsule, ki nas popeljejo nazaj v dobo, ko je bila vožnja analogna, mehanska in polna karakterja. V svetu, kjer prevladujejo zasloni na dotik in avtonomni sistemi, Youngtimer ponuja surovo povratno informacijo, vonj po bencinu in nezmotljiv zvok motorja, ki še ni bil udušen s sodobnimi regulacijami.
-                </p>
-                <p>
-                  Tukaj bomo dodali vašo vsebino. Ta prostor je namenjen poglobljenemu razmišljanju o tem, zakaj nas ti stroji iz 80-ih in 90-ih let prejšnjega stoletja še vedno fascinirajo in zakaj je njihovo ohranjanje ključno za avtomobilsko kulturo v Sloveniji.
-                </p>
+            <div className="relative z-10 space-y-8 sm:space-y-12">
+              <div className="prose prose-invert max-w-none text-slate-300 text-sm sm:text-base md:text-lg leading-relaxed text-left sm:text-justify break-words px-2 sm:px-0 space-y-8">
+                
+                {/* Section 1 */}
+                <div>
+                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Kaj je youngtimer?</h4>
+                  <p className="mb-4">
+                    To je vozilo, ki se je praviloma izdelovalo v obdobju 80-ih in 90-ih let, je ohranjeno, originalno, tehnično zanimivo in, kot radi rečemo, ima dušo. Z youngtimerjem ima lastnik neko dolgoročno vizijo – ohranjati ga za prihodnje rodove.
+                  </p>
+                  <p className="mb-4">
+                    Tako npr. youngtimer nikakor ne more biti starejši avtomobil z vgrajeno plinsko inštalacijo, ki je namenjen vsakodnevnemu nabijanju kilometrov. Ker se youngtimer vozi samo občasno tu poraba ne sme predstavljat problema, četudi znaša 20 litrov/100 km.
+                  </p>
+                  <p>
+                    Iz istega razloga se moramo npr. sprijazniti z dejstvom, da nam pač glasbe ni potrebno poslušati iz USB ključka v tistih redkih dveh urah ljubiteljske vožnje z avtomobilom, katerega duh časa narekuje uporabo kasetofona oz. kasneje tudi običajnega CD-ja.
+                  </p>
+                </div>
+
+                {/* Section 2 */}
+                <div>
+                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Nekateri se sprašujejo ali je avto, ki je ravnokar dopolnil 30 let oldtimer ali youngtimer?</h4>
+                  <p className="mb-4">
+                    Če je pridobil certifikat in homologacijo starodobnika, je sicer lahko oldtimer administrativno, nikakor pa ne ljubiteljsko gledano.
+                  </p>
+                  <p>
+                    Lep primer je honda NSX, ki je že praznovala 30. obletnico predstavitve in ima lahko vse pogoje za pridobitev uradnega starodobniškega statusa. Ampak tak avto bo na srečanjih starodobnikov večno nezaželen, saj resnici na ljubo res ne spada v družbo avtomobilov s kromiranimi rozetami luči in kromiranimi kolesnimi pokrovi. Torej, primeren izraz za hondo NSX je youngtimer in bo tudi večno youngtimer. Tako, kot je npr. Ivan Cankar večni modernist, pa je umrl že davnega leta 1918. Ali pa, kot so milenijci predstavniki generacije, rojene v letih 1981 -1996.
+                  </p>
+                </div>
+
+                {/* Highlight Quote */}
+                <div className="border-l-4 border-pink-500 pl-6 py-4 bg-pink-500/5 italic text-slate-200 text-lg sm:text-xl font-medium">
+                  Ljubitelji youngtimerjev gojimo tehnično kulturo določenega obdobja.
+                </div>
+
+                {/* Section 3 */}
+                <div>
+                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Kaj ne spada k nam?</h4>
+                  <p>
+                    Razne “čunga-lunga” predelave so najhujši sovražnik avtomobilske tehnične kulture. Če je avto star, je pač star. Na novo vgrajene novotarije so dostikrat tako neokusne, kot tangice na 90-letni starki.
+                  </p>
+                </div>
+
+                {/* Section 4 */}
+                <div>
+                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Dobre prakse iz tujine.</h4>
+                  <p className="mb-4">
+                    V tujini je youngtimer že dolgo uveljavljen avtomobilski pojem, imajo pa tudi veliko srečanj in klubov za posamezne znamke.
+                  </p>
+                  <p className="mb-4">
+                    V Nemčiji npr. se stanje oldtimerjev in tudi youngtimerjev ocenjuje z ocenami od 1 do 5 (1-kot nov, 5-grozen), na podlagi ocene pa je za lepše primerke (stanje 1 ali 2) brez težav možno skleniti kasko zavarovanje na dogovorjeno realno vrednost.
+                  </p>
+                  <p>
+                    Zaradi velike konkurence in omejenih letnih kilometrov (tudi garaža je pogoj), so cene kaska zelo zmerne. Večina nemških zavarovalnic ponuja tak kasko za ljubiteljska vozila starosti od 20 let navzgor. Pri nas v Sloveniji takšnega kaska načeloma nikjer ni možno skleniti, razen če si zelo vztrajen in pod posebnimi pogoji.
+                  </p>
+                </div>
+
+                {/* Section 5 */}
+                <div>
+                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Slovenija je svetovna specifika glede avtomobilskega dogajanja v 80-ih in 90-ih letih.</h4>
+                  <p>
+                    Da res je. V tem dvajsetletnem obdobju verjetno nikjer na svetu niso doživeli toliko zanimivih avtomobilskih zgodb, tako pozitivnih, kot negativnih. Temu je verjetno botrovalo dejstvo, da smo imeli v SFRJ poseben model socializma, kakršnega niso imeli prav nikjer na svetu – ne v Sovjetski zvezi, ne v državah Vzhodnega bloka, ne na Kubi, ne na Kitajskem in ne v Venezueli. Slovenija je imela znotraj SFRJ še poseben status, saj smo edini mejili na dve razviti kapitalistični državi – Avstrijo in Italijo.
+                  </p>
+                </div>
+
+                {/* Highlight Quote 2 */}
+                <div className="border-l-4 border-teal-400 pl-6 py-4 bg-teal-400/5 italic text-slate-200 text-lg sm:text-xl font-medium">
+                  V prehodu iz 80-ih v 90-ta so se tako v Sloveniji, kot v svetu zgodile velike družbene spremembe. Teh dogodkov enostavno ne moreš pozabiti.
+                </div>
+
+                {/* Section 6 - List */}
+                <div>
+                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Kaj vse smo Slovenci, glede avtomobilizma doživeli v 80ih in 90ih?</h4>
+                  <p className="mb-4">Kronološko urejeno:</p>
+                  <ul className="list-disc list-inside space-y-2 ml-4 mb-6 text-slate-300">
+                    <li>sistem par-nepar,</li>
+                    <li>bencinski boni,</li>
+                    <li>“modre kuverte” za nakup avtomobila oz. 2-letno čakanje nanj,</li>
+                    <li>vožnja na kurilno olje,</li>
+                    <li>konsignacijske prodaje avtomobilov,</li>
+                    <li>hiperinflacija – posledično prerivanje v vrstah za poceni nakup “dinarskih” avtomobilov,</li>
+                    <li>Markovičev dinar – posledično nore cene v markah,</li>
+                    <li>prvi privat uvozi novih avtov iz tujine,</li>
+                    <li>afera Grubelič (Trend Grosuplje),</li>
+                    <li>“hrvaška varianta” nakupa brez carine v osamosvojitvenem letu,</li>
+                    <li>prvi lizingi (sistem “trije ta močni” ob neplačevanju),</li>
+                    <li>vzporedni trg uradnih in sivih prodajalcev novih vozil,</li>
+                    <li>množičen uvoz tujih leasing vozil v Slovenijo,</li>
+                    <li>uvedba DDV – posledično umetno ustvarjena panika na trgu in s tem rekordna prodaja novih avtomobilov.</li>
+                  </ul>
+                  <p className="mb-4">
+                    Prehod iz 80-ih v 90-ta je bil tudi čas, ko je večina Slovencev menjala fičke, katrce, jugote, stoenke in lade za “kapitalistične” avtomobile. Avto je bil takrat res statusni simbol v pravem pomenu besede.
+                  </p>
+                  <p className="mb-4">
+                    Tudi mladina se je takrat mnogo bolj zanimala za avte, kot danes. Že 12 letniki so kupovali revije Avto magazin, Auto motor und sport, Gente motori in Quattroruote…
+                  </p>
+                  <p>
+                    Ideal vsakega takega mulca je bil na hitro obogateti pri dvajsetih in se potem voziti čez Portorož v slogu; metalik črn BMW 525i s črnim usnjem, priprt šibedah, odprto okno, komolec ven, glasba na glas, sončna očala RayBan Aviator obvezna…
+                  </p>
+                </div>
+
+                {/* Section 7 - List */}
+                <div>
+                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Zakaj so 80-ta in 90-ta najboljša leta avtomobilizma?</h4>
+                  <p className="mb-4">
+                    Evolucija avtomobila v 80-ih in 90-ih letih je bila res fascinantna, saj so najpomembnejše pridobitve postale avtomobilski standard ravno v tem obdobju;
+                  </p>
+                  <p className="mb-4">Kronološko urejeno:</p>
+                  <ul className="list-disc list-inside grid grid-cols-1 sm:grid-cols-2 gap-2 ml-4 mb-6 text-slate-300">
+                    <li>ura,</li>
+                    <li>desno ogledalo,</li>
+                    <li>peta prestava,</li>
+                    <li>katalizator,</li>
+                    <li>digitalni avtoradio,</li>
+                    <li>avtoreverse kasetar,</li>
+                    <li>sistem RDS,</li>
+                    <li>električne šipe,</li>
+                    <li>centralno zaklepanje,</li>
+                    <li>servo volan,</li>
+                    <li>ABS,</li>
+                    <li>zadnji vzglavniki,</li>
+                    <li>voznikov airbag,</li>
+                    <li>sovoznikov airbag,</li>
+                    <li>3. zavorna luč,</li>
+                    <li>CD predvajalnik,</li>
+                    <li>klima.</li>
+                  </ul>
+                  <p className="mb-4">
+                    To je bil tudi čas, ko razen katalizatorja še nič ni bilo podrejeno ekologiji. Takrat besede mobilnost še nismo uporabljali, poudarek je bil predvsem na uživanju v vožnji in vizualnem občudovanju avtomobila.
+                  </p>
+                  <p className="mb-4">
+                    Z vsesplošnim razmahom interneta po letu 2000, se je tempo življenja zelo spremenil, poleg tega pa so si ljudje v življenju začeli postavljati nove prioritete. Tako pri nas, kot v svetu, je tudi avtomobil, kot predmet poželenja začel izgubljati na svoji veljavi.
+                  </p>
+                  <p>
+                    Povpraševanje po avtomobilih je dandanes sicer ogromno, pa tudi vsi izdelki resnici na ljubo sploh niso slabi. Vendar pa splošnega odnosa do današnjih avtomobilov, nikakor ne moremo primerjati s tistim, ki smo ga poznali v 80-ih in 90-ih letih.
+                  </p>
+                </div>
+
+                {/* Signature */}
+                <div className="flex justify-end pt-12">
+                  <div className="text-right">
+                    <p className="text-pink-500 font-black uppercase tracking-widest text-lg sm:text-xl">Ekipa Avtonostalgije 80&90</p>
+                    <div className="w-16 h-1 bg-gradient-to-r from-teal-400 to-pink-500 ml-auto mt-2 rounded-full" />
+                  </div>
+                </div>
+
               </div>
               <div className="flex justify-center border-t border-white/5 pt-6 sm:pt-8">
                 <div className="w-12 h-1 bg-gradient-to-r from-pink-500 to-teal-400 rounded-full" />
@@ -390,7 +483,7 @@ const LoginPageOverlay = ({ onClose }: { onClose: () => void }) => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'ADMIN8090' && password === 't2Qy!BD$Q$ (eFV8R') { 
+    if (username === 'ADMIN8090' && password === 't2Qy!BD$Q$(eFV8R') { 
       setIsAdmin(true); 
       localStorage.setItem('an_admin', 'true');
       onClose();
@@ -603,7 +696,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                           </div>
                        </label>
                        <input placeholder="Ali vnesi URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={settingsData.aboutImage} onChange={e => setSettingsData({...settingsData, aboutImage: e.target.value})} />
-                       {settingsData.aboutImage && <img src={settingsData.aboutImage} className="h-32 w-full object-cover rounded-xl border border-slate-800" />}
+                       {settingsData.aboutImage && <img src={settingsData.aboutImage} className="h-32 w-full object-cover rounded-xl border border-slate-800" alt="Preview" />}
                     </div>
                  </div>
 
@@ -981,9 +1074,9 @@ const MainContent = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {[
-                { roleKey: 'president', name: '[Ime Priimek]', tel: '+386 41 000 001' },
-                { roleKey: 'vicePresident', name: '[Ime Priimek]', tel: '+386 41 000 002' },
-                { roleKey: 'secretary', name: '[Ime Priimek]', tel: '+386 41 000 003' },
+                { roleKey: 'president', name: 'Janez Tomc', tel: '+386 51 319 618' },
+                { roleKey: 'vicePresident', name: 'Tomaž Beguš', tel: '+386 41 512 723' },
+                { roleKey: 'secretary', name: 'Damir Sterle', tel: '+386 31 759 331' },
               ].map((contact, idx) => (
                 <a 
                   key={idx} 

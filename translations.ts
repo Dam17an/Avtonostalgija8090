@@ -1,4 +1,3 @@
-
 export const translations = {
   si: {
     nav: {
@@ -39,8 +38,8 @@ export const translations = {
       a3: 'Tehnično gledano so avtomobili iz 80-ih že prešli v kategorijo Oldtimerjev, vendar jih v širšem pomenu nostalgije še vedno uvrščamo v našo skupnost.',
       q4: 'Kako vzdrževati takšno vozilo?',
       a4: 'Ključno je redno servisiranje z originalnimi deli in zaščita pred korozijo, saj so ti avtomobili nagnjeni k rji v slovenskih zimah.',
-      q5: 'Kje najdem rezervne dele?',
-      a5: 'Rezervne dele iščemo preko specializiranih trgovin, forumov in sejmov rabljenih delov po celotni Evropi.',
+      q5: 'Kaj ne spada k nam?',
+      a5: 'Razne “čunga-lunga” predelave so najhujši sovražnik avtomobilske tehnične kulture.',
       manifestoTitle: 'Manifest Analognega Časa'
     },
     contactRoles: {
@@ -113,8 +112,8 @@ export const translations = {
       a3: 'Technically, 80s cars have already entered the Oldtimer category, but in a broader nostalgic sense, they are still part of our community.',
       q4: 'How to maintain such a vehicle?',
       a4: 'Regular servicing with original parts and protection against corrosion are key, as these cars are prone to rust in Slovenian winters.',
-      q5: 'Where can I find spare parts?',
-      a5: 'Spare parts are sourced through specialized shops, forums, and used parts fairs throughout Europe.',
+      q5: 'What doesn\'t belong here?',
+      a5: 'Various "cheap and tacky" modifications are the worst enemy of automotive technical culture.',
       manifestoTitle: 'The Analog Era Manifesto'
     },
     contactRoles: {
