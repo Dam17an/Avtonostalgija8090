@@ -134,7 +134,7 @@ export const translations = {
       edit: 'Edit',
       delete: 'Delete',
       create: 'Create New',
-      cancel: 'Create New'
+      cancel: 'Cancel'
     },
     admin: {
       dashboard: 'Admin Dashboard',
