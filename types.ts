@@ -6,6 +6,13 @@ export interface NavLink {
   path: string;
 }
 
+export interface SiteSettings {
+  heroImage: string;
+  aboutImage: string;
+  memberCount: string;
+  eventCount: string;
+}
+
 export interface Article {
   id: string;
   title: Record<Language, string>;
@@ -41,7 +48,7 @@ export interface GalleryItem {
 export interface ActivityLog {
   id: string;
   action: 'create' | 'update' | 'delete';
-  type: 'article' | 'event' | 'gallery';
+  type: 'article' | 'event' | 'gallery' | 'settings';
   targetId: string;
   timestamp: string;
 }

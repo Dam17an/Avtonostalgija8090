@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings } from 'lucide-react';
 import { translations } from './translations';
-import { Language, Article, Event, GalleryItem, ActivityLog } from './types';
+import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
 
 // --- INDEXEDDB STORAGE UTILITIES ---
 const DB_NAME = 'AvtoNostalgijaDB';
@@ -95,6 +95,8 @@ const AppContext = createContext<{
   addLog: (action: 'create' | 'update' | 'delete', type: ActivityLog['type'], targetId: string) => void;
   isSaving: boolean;
   setIsSaving: (b: boolean) => void;
+  settings: SiteSettings;
+  setSettings: React.Dispatch<React.SetStateAction<SiteSettings>>;
 } | null>(null);
 
 const useApp = () => {
@@ -150,6 +152,13 @@ const INITIAL_GALLERY: GalleryItem[] = [
     ]
   }
 ];
+
+const INITIAL_SETTINGS: SiteSettings = {
+  heroImage: 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1920',
+  aboutImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1200', // enthusiasts around engine
+  memberCount: '300+',
+  eventCount: '30+'
+};
 
 // --- COMPONENTS ---
 
@@ -321,13 +330,13 @@ const YoungtimerSection = () => {
 };
 
 const Hero = () => {
-  const { lang } = useApp();
+  const { lang, settings } = useApp();
   const t = translations[lang];
 
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img src="https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1920" className="w-full h-full object-cover brightness-[0.3]" alt="Hero Background" />
+        <img src={settings.heroImage} className="w-full h-full object-cover brightness-[0.3]" alt="Hero Background" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/40 to-slate-950"></div>
       </div>
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto w-full flex flex-col items-center justify-center h-full">
@@ -428,8 +437,8 @@ const LoginPageOverlay = ({ onClose }: { onClose: () => void }) => {
 };
 
 const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
-  const { lang, setIsAdmin, articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog } = useApp();
-  const [showForm, setShowForm] = useState<'article' | 'event' | 'gallery' | null>(null);
+  const { lang, setIsAdmin, articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog, settings, setSettings } = useApp();
+  const [showForm, setShowForm] = useState<'article' | 'event' | 'gallery' | 'settings' | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   
@@ -438,6 +447,8 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     image: '', 
     location: '', date: new Date().toISOString().split('T')[0], galleryImages: [] as string[], author: 'Admin', category: 'Blog'
   });
+
+  const [settingsData, setSettingsData] = useState<SiteSettings>(settings);
 
   const handleEdit = (type: 'article' | 'event' | 'gallery', item: any) => {
     setEditingId(item.id);
@@ -465,19 +476,18 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target?: 'settings' | 'article') => {
     if (e.target.files && e.target.files.length > 0) {
       setUploading(true);
       try {
         if (showForm === 'gallery') {
           const files = Array.from(e.target.files) as File[];
-          if (formData.galleryImages.length + files.length > 25) {
-            alert("Največje število slik v galeriji je 25!");
-            setUploading(false);
-            return;
-          }
           const newImages = await Promise.all(files.map(file => compressImage(file)));
           setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...newImages] }));
+        } else if (showForm === 'settings') {
+           const compressed = await compressImage(e.target.files[0] as File);
+           const field = (e.target.name as keyof SiteSettings);
+           setSettingsData(prev => ({ ...prev, [field]: compressed }));
         } else {
           const compressed = await compressImage(e.target.files[0] as File);
           setFormData(prev => ({ ...prev, image: compressed }));
@@ -493,6 +503,13 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (showForm === 'settings') {
+      setSettings(settingsData);
+      addLog('update', 'gallery', 'site-settings'); // using gallery type as proxy or updating type in types.ts
+      setShowForm(null);
+      return;
+    }
+
     const id = editingId || Date.now().toString();
     const slug = (formData.titleEn || formData.titleSi).toLowerCase().replace(/[^a-z0-9]/g, '-');
 
@@ -544,15 +561,75 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
             <h1 className="retro-font text-2xl sm:text-3xl text-teal-400 tracking-tighter uppercase font-black">Nadzorna Plošča</h1>
             <p className="text-slate-500 text-[10px] uppercase tracking-widest mt-1">CMS Upravljanje Vsebin</p>
           </div>
-          <button 
-            onClick={() => { setIsAdmin(false); localStorage.removeItem('an_admin'); onClose(); }} 
-            className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-xl hover:bg-pink-500 transition-all font-bold uppercase tracking-widest shadow-lg cursor-pointer text-xs"
-          >
-            <LogOut size={16} /> Odjava
-          </button>
+          <div className="flex items-center gap-4">
+             <button onClick={() => setShowForm('settings')} className="flex items-center gap-2 bg-indigo-950/50 border border-indigo-500/30 px-6 py-3 rounded-xl hover:bg-indigo-500 transition-all font-bold uppercase tracking-widest shadow-lg cursor-pointer text-xs text-indigo-400">
+               <Settings size={16} /> Nastavitve
+             </button>
+             <button 
+               onClick={() => { setIsAdmin(false); localStorage.removeItem('an_admin'); onClose(); }} 
+               className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-xl hover:bg-pink-500 transition-all font-bold uppercase tracking-widest shadow-lg cursor-pointer text-xs"
+             >
+               <LogOut size={16} /> Odjava
+             </button>
+          </div>
         </div>
 
-        {showForm && (
+        {showForm === 'settings' && (
+           <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
+            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-2xl border border-indigo-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
+              <h2 className="retro-font text-xl sm:text-2xl text-indigo-400 mb-6 sm:mb-8 uppercase text-center tracking-tighter font-black">
+                Splošne Nastavitve Strani
+              </h2>
+              <div className="space-y-6 mb-8">
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Število članov</label>
+                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.memberCount} onChange={e => setSettingsData({...settingsData, memberCount: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Število dogodkov</label>
+                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.eventCount} onChange={e => setSettingsData({...settingsData, eventCount: e.target.value})} />
+                    </div>
+                 </div>
+                 
+                 <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Slika v "Zgodba o strasti" (Upload/Link)</label>
+                    <div className="flex flex-col gap-3">
+                       <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 transition-colors text-center cursor-pointer group">
+                          <input type="file" name="aboutImage" className="hidden" onChange={handleFileUpload} />
+                          <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400">
+                             {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                             <span className="text-[10px] uppercase tracking-widest font-bold">Naloži novo fotografijo</span>
+                          </div>
+                       </label>
+                       <input placeholder="Ali vnesi URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={settingsData.aboutImage} onChange={e => setSettingsData({...settingsData, aboutImage: e.target.value})} />
+                       {settingsData.aboutImage && <img src={settingsData.aboutImage} className="h-32 w-full object-cover rounded-xl border border-slate-800" />}
+                    </div>
+                 </div>
+
+                 <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Hero ozadje (Upload/Link)</label>
+                    <div className="flex flex-col gap-3">
+                       <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 transition-colors text-center cursor-pointer group">
+                          <input type="file" name="heroImage" className="hidden" onChange={handleFileUpload} />
+                          <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400">
+                             {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+                             <span className="text-[10px] uppercase tracking-widest font-bold">Naloži novo ozadje</span>
+                          </div>
+                       </label>
+                       <input placeholder="Ali vnesi URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={settingsData.heroImage} onChange={e => setSettingsData({...settingsData, heroImage: e.target.value})} />
+                    </div>
+                 </div>
+              </div>
+              <div className="flex gap-4">
+                <button type="submit" className="flex-1 py-4 bg-indigo-500 rounded-xl font-black uppercase tracking-widest text-sm cursor-pointer hover:bg-indigo-600 shadow-xl">Shrani Spremembe</button>
+                <button type="button" onClick={() => setShowForm(null)} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm cursor-pointer">Prekliči</button>
+              </div>
+            </form>
+           </div>
+        )}
+
+        {showForm && showForm !== 'settings' && (
           <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
             <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-4xl border border-pink-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
               <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-6 sm:mb-8 uppercase text-center tracking-tighter font-black">
@@ -727,7 +804,7 @@ const AdminList = ({ title, icon, items, onAdd, onEdit, onDelete, lang }: any) =
 );
 
 const MainContent = () => {
-  const { lang, events, articles, gallery } = useApp();
+  const { lang, events, articles, gallery, settings } = useApp();
   const [activeGallery, setActiveGallery] = useState<GalleryItem | null>(null);
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
@@ -819,18 +896,18 @@ const MainContent = () => {
             <p className="text-lg sm:text-2xl text-slate-300 leading-relaxed font-light">Avtonostalgija 80&90 ni zgolj klub, je skupnost ljubiteljev analogne dobe.</p>
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div className="p-4 sm:p-8 glass rounded-2xl border border-pink-500/20 text-center">
-                <div className="text-3xl sm:text-5xl font-black text-pink-500 mb-1 sm:mb-2">500+</div>
+                <div className="text-3xl sm:text-5xl font-black text-pink-500 mb-1 sm:mb-2">{settings.memberCount}</div>
                 <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Članov</div>
               </div>
               <div className="p-4 sm:p-8 glass rounded-2xl border border-teal-500/20 text-center">
-                <div className="text-3xl sm:text-5xl font-black text-teal-400 mb-1 sm:mb-2">20+</div>
+                <div className="text-3xl sm:text-5xl font-black text-teal-400 mb-1 sm:mb-2">{settings.eventCount}</div>
                 <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Dogodkov</div>
               </div>
             </div>
           </div>
           <div className="relative group px-4 sm:px-0">
             <div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-pink-500 to-teal-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-            <img src="https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800" className="relative z-10 rounded-2xl border border-white/10 shadow-2xl w-full" alt="Passion Story" />
+            <img src={settings.aboutImage} className="relative z-10 rounded-2xl border border-white/10 shadow-2xl w-full" alt="Passion Story" />
           </div>
         </div>
       </Section>
@@ -941,6 +1018,7 @@ const App = () => {
   const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
   const [gallery, setGallery] = useState<GalleryItem[]>(INITIAL_GALLERY);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
 
   useEffect(() => {
     const loadContent = async () => {
@@ -955,6 +1033,9 @@ const App = () => {
 
       const savedLogs = await fetchPersistedData('an_logs');
       if (savedLogs) setLogs(savedLogs as ActivityLog[]);
+
+      const savedSettings = await fetchPersistedData('an_settings');
+      if (savedSettings) setSettings(savedSettings as SiteSettings);
       
       const authed = localStorage.getItem('an_admin');
       if (authed === 'true') setIsAdmin(true);
@@ -973,10 +1054,11 @@ const App = () => {
       await persistData('an_events', events);
       await persistData('an_gallery', gallery);
       await persistData('an_logs', logs);
+      await persistData('an_settings', settings);
       setIsSaving(false);
     };
     saveToStorage();
-  }, [articles, events, gallery, logs, hasLoaded]);
+  }, [articles, events, gallery, logs, settings, hasLoaded]);
 
   const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => {
     const newLog: ActivityLog = { id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() };
@@ -987,7 +1069,7 @@ const App = () => {
     <AppContext.Provider value={{ 
       lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin,
       articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog,
-      isSaving, setIsSaving
+      isSaving, setIsSaving, settings, setSettings
     }}>
       <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-pink-500 font-sans tracking-tight overflow-x-hidden">
         <Navbar />
