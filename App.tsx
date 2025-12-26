@@ -1,8 +1,79 @@
 
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2 } from 'lucide-react';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog } from './types';
+
+// --- INDEXEDDB STORAGE UTILITIES ---
+const DB_NAME = 'AvtoNostalgijaDB';
+const STORE_NAME = 'content';
+
+const getDB = (): Promise<IDBDatabase> => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME);
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+};
+
+const persistData = async (key: string, data: any) => {
+  try {
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(data, key);
+    return new Promise((resolve) => (tx.oncomplete = () => resolve(true)));
+  } catch (e) {
+    console.error("Failed to save to IDB", e);
+  }
+};
+
+const fetchPersistedData = async (key: string) => {
+  try {
+    const db = await getDB();
+    const tx = db.transaction(STORE_NAME, 'readonly');
+    const request = tx.objectStore(STORE_NAME).get(key);
+    return new Promise((resolve) => (request.onsuccess = () => resolve(request.result)));
+  } catch (e) {
+    console.error("Failed to load from IDB", e);
+    return null;
+  }
+};
+
+// --- IMAGE COMPRESSION HELPER ---
+const compressImage = (file: File, maxWidth = 1600): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = (maxWidth / width) * height;
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+};
 
 // Context for global state management
 const AppContext = createContext<{
@@ -22,6 +93,8 @@ const AppContext = createContext<{
   setGallery: React.Dispatch<React.SetStateAction<GalleryItem[]>>;
   logs: ActivityLog[];
   addLog: (action: 'create' | 'update' | 'delete', type: ActivityLog['type'], targetId: string) => void;
+  isSaving: boolean;
+  setIsSaving: (b: boolean) => void;
 } | null>(null);
 
 const useApp = () => {
@@ -38,8 +111,8 @@ const INITIAL_ARTICLES: Article[] = [
     title: { si: 'Vstop v svet Youngtimerjev', en: 'Entering the World of Youngtimers' },
     excerpt: { si: 'Kaj definira avtomobil iz 80-ih in 90-ih kot klasiko?', en: 'What defines an 80s or 90s car as a classic?' },
     content: { 
-      si: 'V Sloveniji se meja za Youngtimerje vztrajno pomika v devetdeseta leta. Modeli kot so BMW E30, VW Golf II in Mazda MX-5 so postali ikone.\n\nKljuč do uspeha je originalnost. Mnogi zbiratelji danes iščejo vozila, ki niso bila predelana in imajo znano zgodovino. Youngtimerji nam ponujajo analogni občutek vožnje, ki ga v modernih digitaliziranih vozilih ne najdemo več.', 
-      en: 'In Slovenia, the threshold for Youngtimers is steadily moving into the nineties. Models like the BMW E30, VW Golf II, and Mazda MX-5 have become icons.\n\nThe key to success is originality. Many collectors today are looking for vehicles that haven\'t been modified and have a known history. Youngtimers offer us an analog driving experience that can no longer be found in modern digitized vehicles.' 
+      si: 'V Sloveniji se meja za Youngtimerje vztrajno pomika v devetdeseta leta. Modeli kot so BMW E30, VW Golf II in Mazda MX-5 so postali ikone.\n\nYoungtimerji nam ponujajo analogni občutek vožnje, ki ga v modernih digitaliziranih vozilih ne najdemo več.', 
+      en: 'In Slovenia, the threshold for Youngtimers is steadily moving into the nineties. Models like the BMW E30, VW Golf II, and Mazda MX-5 have become icons.' 
     },
     image: 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1200',
     author: 'Admin',
@@ -56,7 +129,7 @@ const INITIAL_EVENTS: Event[] = [
     title: { si: 'Retro Srečanje Ljubljana 2024', en: 'Retro Meet Ljubljana 2024' },
     description: { 
       si: 'Največje srečanje ljubiteljev 80ih in 90ih v osrednji Sloveniji. Pričakujemo več kot 200 vozil iz celotne regije.', 
-      en: 'The biggest meeting of 80s and 90s fans in central Slovenia. We expect more than 200 vehicles from the entire region.' 
+      en: 'The biggest meeting of 80s and 90s fans in central Slovenia.' 
     },
     date: '2024-05-15',
     author: 'Admin',
@@ -77,16 +150,6 @@ const INITIAL_GALLERY: GalleryItem[] = [
     ]
   }
 ];
-
-// --- HELPER FOR IMAGE UPLOAD ---
-const readFileAsBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-};
 
 // --- COMPONENTS ---
 
@@ -292,7 +355,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
   const { lang, setIsAdmin, articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog } = useApp();
   const [showForm, setShowForm] = useState<'article' | 'event' | 'gallery' | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
   
   const [formData, setFormData] = useState({
     titleSi: '', titleEn: '', excerptSi: '', excerptEn: '', contentSi: '', contentEn: '',
@@ -307,7 +370,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
       setFormData({
         ...formData,
         titleSi: item.title.si, titleEn: item.title.en,
-        galleryImages: item.images
+        galleryImages: item.images || []
       });
     } else {
       setFormData({
@@ -328,12 +391,26 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      if (showForm === 'gallery') {
-        const newImages = await Promise.all(Array.from(e.target.files).map(file => readFileAsBase64(file)));
-        setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...newImages] }));
-      } else {
-        const base64 = await readFileAsBase64(e.target.files[0]);
-        setFormData(prev => ({ ...prev, image: base64 }));
+      setUploading(true);
+      try {
+        if (showForm === 'gallery') {
+          const files = Array.from(e.target.files);
+          if (formData.galleryImages.length + files.length > 25) {
+            alert("Največje število slik v galeriji je 25!");
+            setUploading(false);
+            return;
+          }
+          const newImages = await Promise.all(files.map(file => compressImage(file)));
+          setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...newImages] }));
+        } else {
+          const compressed = await compressImage(e.target.files[0]);
+          setFormData(prev => ({ ...prev, image: compressed }));
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Napaka pri nalaganju slike.");
+      } finally {
+        setUploading(false);
       }
     }
   };
@@ -419,12 +496,12 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                 <div className="space-y-4">
                   {showForm === 'gallery' ? (
                     <div className="space-y-4">
-                       <label className="block p-8 border-2 border-dashed border-slate-700 rounded-xl hover:border-teal-400 transition-colors text-center cursor-pointer group">
-                          <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileUpload} />
-                          <Upload className="mx-auto mb-4 text-slate-500 group-hover:text-teal-400" size={32} />
-                          <p className="text-xs uppercase tracking-widest text-slate-400">Izberi slike z računalnika</p>
+                       <label className={`block p-8 border-2 border-dashed rounded-xl transition-colors text-center cursor-pointer group ${uploading ? 'border-pink-500' : 'border-slate-700 hover:border-teal-400'}`}>
+                          <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
+                          {uploading ? <Loader2 className="mx-auto mb-4 text-pink-500 animate-spin" size={32} /> : <Upload className="mx-auto mb-4 text-slate-500 group-hover:text-teal-400" size={32} />}
+                          <p className="text-xs uppercase tracking-widest text-slate-400">{uploading ? "Obdelujem slike..." : `Dodaj slike z računalnika (${formData.galleryImages.length}/25)`}</p>
                        </label>
-                       <div className="grid grid-cols-4 gap-2">
+                       <div className="grid grid-cols-5 gap-2 max-h-60 overflow-y-auto p-2 bg-slate-950/50 rounded-xl scrollbar-thin scrollbar-thumb-slate-800">
                           {formData.galleryImages.map((img, idx) => (
                             <div key={idx} className="aspect-square rounded overflow-hidden relative group border border-slate-800">
                                <img src={img} className="w-full h-full object-cover" alt="Preview" />
@@ -441,18 +518,16 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                   )}
                   {showForm !== 'gallery' && (
                     <div className="space-y-2">
-                       <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-teal-400 transition-colors text-center cursor-pointer group">
-                          <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                       <label className={`block p-4 border-2 border-dashed rounded-xl transition-colors text-center cursor-pointer group ${uploading ? 'border-pink-500' : 'border-slate-700 hover:border-teal-400'}`}>
+                          <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} disabled={uploading} />
                           <div className="flex items-center justify-center gap-3">
-                            <Upload className="text-slate-500 group-hover:text-teal-400" size={20} />
-                            <p className="text-xs uppercase tracking-widest text-slate-400">Naloži naslovno sliko</p>
+                            {uploading ? <Loader2 size={20} className="text-pink-500 animate-spin" /> : <Upload className="text-slate-500 group-hover:text-teal-400" size={20} />}
+                            <p className="text-xs uppercase tracking-widest text-slate-400">{uploading ? "Obdelujem..." : "Naloži naslovno sliko"}</p>
                           </div>
                        </label>
-                       <div className="flex gap-2">
-                          <input placeholder="Ali vnesi URL slike" className="flex-1 bg-slate-950 p-3 rounded-lg border border-slate-700 focus:border-teal-400 outline-none text-sm" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
-                       </div>
+                       <input placeholder="Ali vnesi URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 focus:border-teal-400 outline-none text-sm" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
                        {formData.image && (
-                         <div className="h-32 w-full rounded-xl border border-slate-800 overflow-hidden bg-black flex items-center justify-center relative">
+                         <div className="h-24 w-full rounded-xl border border-slate-800 overflow-hidden bg-black flex items-center justify-center relative">
                             <img src={formData.image} alt="Preview" className="h-full object-contain" />
                             <button type="button" onClick={() => setFormData({...formData, image: ''})} className="absolute top-2 right-2 bg-red-500/80 p-1 rounded-full"><X size={14} /></button>
                          </div>
@@ -466,7 +541,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-6">
-                <button type="submit" className="flex-1 py-4 bg-pink-500 rounded-xl font-black retro-font hover:bg-pink-600 flex items-center justify-center gap-4 text-lg shadow-xl uppercase tracking-widest cursor-pointer">
+                <button type="submit" disabled={uploading} className="flex-1 py-4 bg-pink-500 rounded-xl font-black retro-font hover:bg-pink-600 flex items-center justify-center gap-4 text-lg shadow-xl uppercase tracking-widest cursor-pointer disabled:opacity-50">
                   <Save size={20} /> Shrani
                 </button>
                 <button type="button" onClick={() => { setShowForm(null); setEditingId(null); }} className="flex-1 py-4 bg-slate-800 rounded-xl font-black retro-font hover:bg-slate-700 text-lg uppercase tracking-widest cursor-pointer">
@@ -479,9 +554,42 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-12">
           <div className="lg:col-span-3 space-y-16">
-            <AdminList title="Članki" icon={<ImageIcon className="text-pink-500" />} items={articles} onAdd={() => setShowForm('article')} onEdit={(item: any) => handleEdit('article', item)} onDelete={(id: string) => { setArticles(a => a.filter(x => x.id !== id)); addLog('delete', 'article', id); }} lang={lang} />
-            <AdminList title="Dogodki" icon={<Calendar className="text-teal-400" />} items={events} onAdd={() => setShowForm('event')} onEdit={(item: any) => handleEdit('event', item)} onDelete={(id: string) => { setEvents(e => e.filter(x => x.id !== id)); addLog('delete', 'event', id); }} lang={lang} />
-            <AdminList title="Galerije" icon={<ExternalLink className="text-purple-400" />} items={gallery} onAdd={() => setShowForm('gallery')} onEdit={(item: any) => handleEdit('gallery', item)} onDelete={(id: string) => { setGallery(g => g.filter(x => x.id !== id)); addLog('delete', 'gallery', id); }} lang={lang} />
+            <AdminList 
+              title="Članki" 
+              icon={<ImageIcon className="text-pink-500" />} 
+              items={articles} 
+              onAdd={() => setShowForm('article')} 
+              onEdit={(item: any) => handleEdit('article', item)} 
+              onDelete={(id: string) => { 
+                setArticles(prev => prev.filter(x => x.id !== id)); 
+                addLog('delete', 'article', id); 
+              }} 
+              lang={lang} 
+            />
+            <AdminList 
+              title="Dogodki" 
+              icon={<Calendar className="text-teal-400" />} 
+              items={events} 
+              onAdd={() => setShowForm('event')} 
+              onEdit={(item: any) => handleEdit('event', item)} 
+              onDelete={(id: string) => { 
+                setEvents(prev => prev.filter(x => x.id !== id)); 
+                addLog('delete', 'event', id); 
+              }} 
+              lang={lang} 
+            />
+            <AdminList 
+              title="Galerije" 
+              icon={<ExternalLink className="text-purple-400" />} 
+              items={gallery} 
+              onAdd={() => setShowForm('gallery')} 
+              onEdit={(item: any) => handleEdit('gallery', item)} 
+              onDelete={(id: string) => { 
+                setGallery(prev => prev.filter(x => x.id !== id)); 
+                addLog('delete', 'gallery', id); 
+              }} 
+              lang={lang} 
+            />
           </div>
           <div className="lg:col-span-1">
             <div className="bg-slate-950 p-6 rounded-2xl border border-slate-800 shadow-xl h-fit">
@@ -518,8 +626,26 @@ const AdminList = ({ title, icon, items, onAdd, onEdit, onDelete, lang }: any) =
             <span className="font-bold text-xs truncate tracking-tighter uppercase">{item.title[lang]}</span>
           </div>
           <div className="flex gap-1 shrink-0">
-            <button onClick={() => onEdit(item)} className="p-2 text-teal-400 hover:bg-teal-400/10 rounded-full cursor-pointer"><Edit3 size={16} /></button>
-            <button onClick={() => { if(confirm('Izbrišem vsebino?')){ onDelete(item.id); } }} className="p-2 text-pink-500 hover:bg-pink-500/10 rounded-full cursor-pointer"><Trash2 size={16} /></button>
+            <button 
+              type="button" 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onEdit(item); }} 
+              className="p-2 text-teal-400 hover:bg-teal-400/10 rounded-full cursor-pointer relative z-10"
+            >
+              <Edit3 size={16} />
+            </button>
+            <button 
+              type="button" 
+              onClick={(e) => { 
+                e.preventDefault();
+                e.stopPropagation();
+                if (window.confirm('Ali ste prepričani, da želite izbrisati to vsebino?')) { 
+                  onDelete(item.id); 
+                } 
+              }} 
+              className="p-2 text-pink-500 hover:bg-pink-500/10 rounded-full cursor-pointer relative z-10"
+            >
+              <Trash2 size={16} />
+            </button>
           </div>
         </div>
       ))}
@@ -697,34 +823,52 @@ const App = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [articles, setArticles] = useState<Article[]>(() => {
-    const saved = localStorage.getItem('an_articles');
-    return saved ? JSON.parse(saved) : INITIAL_ARTICLES;
-  });
-  const [events, setEvents] = useState<Event[]>(() => {
-    const saved = localStorage.getItem('an_events');
-    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
-  });
-  const [gallery, setGallery] = useState<GalleryItem[]>(() => {
-    const saved = localStorage.getItem('an_gallery');
-    return saved ? JSON.parse(saved) : INITIAL_GALLERY;
-  });
-  const [logs, setLogs] = useState<ActivityLog[]>(() => {
-    const saved = localStorage.getItem('an_logs');
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  
+  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
+  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
+  const [gallery, setGallery] = useState<GalleryItem[]>(INITIAL_GALLERY);
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
 
+  // Load data from IndexedDB on mount
   useEffect(() => {
-    localStorage.setItem('an_articles', JSON.stringify(articles));
-    localStorage.setItem('an_events', JSON.stringify(events));
-    localStorage.setItem('an_gallery', JSON.stringify(gallery));
-    localStorage.setItem('an_logs', JSON.stringify(logs));
-  }, [articles, events, gallery, logs]);
+    const loadContent = async () => {
+      const savedArticles = await fetchPersistedData('an_articles');
+      if (savedArticles) setArticles(savedArticles as Article[]);
 
-  useEffect(() => {
-    const authed = localStorage.getItem('an_admin');
-    if (authed === 'true') setIsAdmin(true);
+      const savedEvents = await fetchPersistedData('an_events');
+      if (savedEvents) setEvents(savedEvents as Event[]);
+
+      const savedGallery = await fetchPersistedData('an_gallery');
+      if (savedGallery) setGallery(savedGallery as GalleryItem[]);
+
+      const savedLogs = await fetchPersistedData('an_logs');
+      if (savedLogs) setLogs(savedLogs as ActivityLog[]);
+      
+      const authed = localStorage.getItem('an_admin');
+      if (authed === 'true') setIsAdmin(true);
+
+      // SIGNAL: Signal that the load is finished so the auto-save doesn't overwrite deletions on startup
+      setHasLoaded(true);
+    };
+    loadContent();
   }, []);
+
+  // Persist to IndexedDB whenever state changes, but ONLY after initial load
+  useEffect(() => {
+    if (!hasLoaded) return;
+
+    const saveToStorage = async () => {
+      setIsSaving(true);
+      await persistData('an_articles', articles);
+      await persistData('an_events', events);
+      await persistData('an_gallery', gallery);
+      await persistData('an_logs', logs);
+      setIsSaving(false);
+    };
+    saveToStorage();
+  }, [articles, events, gallery, logs, hasLoaded]);
 
   const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => {
     const newLog: ActivityLog = { id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() };
@@ -734,10 +878,14 @@ const App = () => {
   return (
     <AppContext.Provider value={{ 
       lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin,
-      articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog 
+      articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog,
+      isSaving, setIsSaving
     }}>
       <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-pink-500 font-sans tracking-tight">
         <Navbar />
+        {isSaving && <div className="fixed bottom-4 right-4 z-[99] glass px-4 py-2 rounded-full border border-teal-500/50 flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-teal-400">
+           <Loader2 size={12} className="animate-spin" /> Shranjujem v bazo...
+        </div>}
         <main>
           <MainContent />
           {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
