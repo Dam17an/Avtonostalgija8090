@@ -1054,7 +1054,7 @@ const MainContent = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {[
                 { roleKey: 'president', name: 'Janez Tomc', tel: '+386 51 319 618' },
-                { roleKey: 'vicePresident', name: 'Tomaž Beguš', tel: '+386 41 512 723' },
+                { roleKey: 'vicePresident', name: 'Darko Šturm', tel: '+386 31 790 605' },
                 { roleKey: 'secretary', name: 'Damir Sterle', tel: '+386 31 759 331' },
               ].map((contact, idx) => (
                 <a 
