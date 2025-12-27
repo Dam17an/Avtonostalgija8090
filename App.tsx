@@ -9,47 +9,66 @@ const SUPABASE_URL = 'https://jtkhmwwbwlvqwwxlvdoa.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a2htd3did2x2cXd3eGx2ZG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MzQyMjYsImV4cCI6MjA4MjQxMDIyNn0.MWiSmvEwjuoafmrwbjEtQFrYW1iqDbSAYmZJjNkG7zE';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- STORAGE UTILITIES ---
+// --- STORAGE UTILITIES (OPTIMIZED FOR SEGMENTED SYNC) ---
+
 const persistData = async (key: string, data: any) => {
-  // 1. Always try Supabase first (The Cloud)
   try {
-    const { error } = await supabase
-      .from('an_content')
-      .upsert({ key, data });
-    
-    if (error) {
-      console.error(`Supabase Sync Failed [${key}]:`, error.message);
-      if (error.message.includes('timeout')) {
-        console.warn(`💡 DATA TOO LARGE: The images in ${key} are causing a timeout. Try using smaller images or fewer items.`);
-      }
+    // 1. Check if we are persisting a collection to segment it
+    const isCollection = ['an_articles', 'an_events', 'an_gallery'].includes(key) && Array.isArray(data);
+
+    if (isCollection) {
+      // Save the index/list of IDs first
+      const listKey = `${key}_list`;
+      const ids = data.map((item: any) => item.id);
+      await supabase.from('an_content').upsert({ key: listKey, data: ids });
+
+      // Save individual items in parallel
+      await Promise.all(data.map(item => 
+        supabase.from('an_content').upsert({ key: `${key}_item_${item.id}`, data: item })
+      ));
+    } else {
+      // Standard single-row sync for logs, settings, etc.
+      await supabase.from('an_content').upsert({ key, data });
     }
   } catch (e: any) {
-    console.error(`Network error during cloud sync [${key}]:`, e.message);
+    console.error(`Supabase Sync Error [${key}]:`, e.message);
   }
 
-  // 2. Try LocalStorage (The Browser Cache)
+  // 2. Try LocalStorage fallback (ignoring quota errors)
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e: any) {
     if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
       console.warn(`Browser cache is full. Content saved to cloud but local backup skipped for [${key}].`);
-    } else {
-      console.error(`LocalStorage Error [${key}]:`, e.message);
     }
   }
 };
 
 const fetchPersistedData = async (key: string) => {
   try {
-    const { data, error } = await supabase
-      .from('an_content')
-      .select('data')
-      .eq('key', key)
-      .maybeSingle();
-    
+    // 1. Try to fetch segmented collection first if applicable
+    const isCollection = ['an_articles', 'an_events', 'an_gallery'].includes(key);
+    if (isCollection) {
+      const { data: listResult } = await supabase.from('an_content').select('data').eq('key', `${key}_list`).maybeSingle();
+      const ids = listResult?.data;
+
+      if (ids && Array.isArray(ids)) {
+        // Fetch individual items in parallel for speed
+        const itemPromises = ids.map(async (id) => {
+          const { data: itemResult } = await supabase.from('an_content').select('data').eq('key', `${key}_item_${id}`).maybeSingle();
+          return itemResult?.data;
+        });
+        const items = await Promise.all(itemPromises);
+        return items.filter(Boolean);
+      }
+    }
+
+    // 2. Fallback: try standard single-key fetch (for logs/settings or legacy collections)
+    const { data, error } = await supabase.from('an_content').select('data').eq('key', key).maybeSingle();
     if (data) return data.data;
     if (error) throw error;
     
+    // 3. Last fallback: local storage
     const local = localStorage.getItem(key);
     return local ? JSON.parse(local) : null;
   } catch (e: any) {
@@ -59,8 +78,7 @@ const fetchPersistedData = async (key: string) => {
 };
 
 // --- IMAGE COMPRESSION HELPER ---
-// Reduced default max width and quality to keep payload sizes manageable for Supabase JSONB columns
-const compressImage = (file: File, maxWidth = 1200, quality = 0.5): Promise<string> => {
+const compressImage = (file: File, maxWidth = 1000, quality = 0.45): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -81,7 +99,6 @@ const compressImage = (file: File, maxWidth = 1200, quality = 0.5): Promise<stri
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Use JPEG for better compression of photos
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = reject;
@@ -455,29 +472,43 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
     const fieldName = e.target.name;
 
-    if (file) {
-      setUploading(true);
-      try {
-        // More aggressive compression for gallery to avoid timeouts
-        const maxWidth = showForm === 'gallery' ? 800 : 1200;
-        const quality = showForm === 'gallery' ? 0.4 : 0.5;
+    setUploading(true);
+    try {
+      if (showForm === 'gallery') {
+        const maxWidth = 800;
+        const quality = 0.4;
+        const currentCount = formData.galleryImages.length;
+        const allowedCount = 25 - currentCount;
         
+        const fileArray = Array.from(files).slice(0, allowedCount);
+        const compressedResults = await Promise.all(
+          fileArray.map(file => compressImage(file, maxWidth, quality))
+        );
+        
+        setFormData(prev => ({ 
+          ...prev, 
+          galleryImages: [...prev.galleryImages, ...compressedResults] 
+        }));
+      } else {
+        const file = files[0];
+        const maxWidth = 1000;
+        const quality = 0.45;
         const compressed = await compressImage(file, maxWidth, quality);
-        if (showForm === 'gallery') {
-          setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, compressed] }));
-        } else if (showForm === 'settings') {
+        
+        if (showForm === 'settings') {
           setSettingsData(prev => ({ ...prev, [fieldName]: compressed }));
         } else {
           setFormData(prev => ({ ...prev, image: compressed }));
         }
-      } catch (err) { 
-        alert("Napaka pri nalaganju slike."); 
-      } finally { 
-        setUploading(false); 
       }
+    } catch (err) { 
+      alert("Napaka pri nalaganju slike."); 
+    } finally { 
+      setUploading(false); 
     }
   };
 
@@ -583,8 +614,8 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                   {showForm === 'gallery' ? (
                     <div className="space-y-4">
                       <label className="block p-6 sm:p-8 border-2 border-dashed border-slate-700 rounded-xl transition-colors text-center cursor-pointer group hover:border-teal-400">
-                        <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-                        <p className="text-[10px] uppercase tracking-widest text-slate-400">Dodaj sliko</p>
+                        <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} />
+                        <p className="text-[10px] uppercase tracking-widest text-slate-400">Dodaj slike (do 25)</p>
                       </label>
                       <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto p-2 bg-slate-950/50 rounded-xl">
                         {formData.galleryImages.map((img, idx) => (
@@ -655,6 +686,7 @@ const MainContent = () => {
         <div className="fixed inset-0 z-[60] glass flex items-center justify-center p-4 lg:p-12 overflow-y-auto">
           <div className="bg-slate-900 w-full max-w-6xl rounded-3xl overflow-hidden border border-teal-500/30 relative flex flex-col shadow-2xl max-h-[90vh]">
             <button className="absolute top-4 right-4 p-2 bg-slate-800/80 rounded-full hover:bg-teal-400 transition-colors cursor-pointer z-[70]" onClick={() => setActiveEvent(null)}><X size={20} /></button>
+            {/* Fixed: Use 'activeEvent' instead of 'event' which refers to global Event object */}
             <div className="overflow-y-auto grid grid-cols-1 lg:grid-cols-2"><div className="h-48 sm:h-72 lg:h-full"><img src={activeEvent.image} className="w-full h-full object-cover" alt={activeEvent.title[lang]} /></div><div className="p-6 sm:p-10"><div className="flex flex-wrap items-center gap-6 mb-6"><div className="flex items-center text-slate-400 text-xs font-black uppercase"><Calendar size={16} className="mr-2 text-pink-500" /> {activeEvent.date}</div><div className="flex items-center text-slate-400 text-xs font-black uppercase"><MapPin size={16} className="mr-2 text-teal-400" /> {activeEvent.location}</div></div><h2 className="retro-font text-xl sm:text-3xl text-teal-400 mb-6 uppercase">{activeEvent.title[lang]}</h2><div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap">{activeEvent.description[lang]}</div></div></div>
           </div>
         </div>
@@ -718,11 +750,12 @@ const App = () => {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
 
-  // Use refs to avoid redundant syncing if data hasn't changed
+  // Tracker for synced state to avoid redundant upserts
   const lastSyncedRef = useRef<Record<string, string>>({});
 
   useEffect(() => {
     const loadContent = async () => {
+      // Parallel loading of segmented collections and single-row items
       const [art, ev, gal, lg, sett] = await Promise.all([
         fetchPersistedData('an_articles'),
         fetchPersistedData('an_events'),
@@ -755,6 +788,7 @@ const App = () => {
         'an_settings': settings
       };
 
+      // Only sync keys that actually changed
       const keysToSync = Object.entries(dataToSync).filter(([key, value]) => {
         const stringified = JSON.stringify(value);
         if (lastSyncedRef.current[key] === stringified) return false;
@@ -766,7 +800,7 @@ const App = () => {
 
       setIsSaving(true);
       try {
-        // Sync sequentially to reduce load and prevent timeouts
+        // Sync items (segmented sync is handled inside persistData)
         for (const [key, value] of keysToSync) {
           await persistData(key, value);
         }
@@ -777,8 +811,8 @@ const App = () => {
       }
     };
 
-    // Debounce saves slightly
-    const timer = setTimeout(saveToStorage, 1000);
+    // Debounce to prevent rapid fire sync
+    const timer = setTimeout(saveToStorage, 1200);
     return () => clearTimeout(timer);
   }, [articles, events, gallery, logs, settings, hasLoaded]);
 
