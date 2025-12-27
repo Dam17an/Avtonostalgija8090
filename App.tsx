@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings } from 'lucide-react';
 import { translations } from './translations';
@@ -269,7 +268,7 @@ const YoungtimerSection = () => {
             <div className="relative z-10 space-y-8 sm:space-y-12">
               <div className="prose prose-invert max-w-none text-slate-300 text-sm sm:text-base md:text-lg leading-relaxed text-left sm:text-justify break-words px-2 sm:px-0 space-y-8">
                 
-                {/* Section 1 */}
+                {/* 1 */}
                 <div>
                   <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Kaj je youngtimer?</h4>
                   <p className="mb-4">
@@ -283,23 +282,23 @@ const YoungtimerSection = () => {
                   </p>
                 </div>
 
-                {/* Section 2 */}
+                {/* 2 */}
                 <div>
-                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Nekateri se sprašujejo ali je avto, ki je ravnokar dopolnil 30 let oldtimer ali youngtimer?</h4>
+                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Oldtimer ali Youngtimer?</h4>
                   <p className="mb-4">
-                    Če je pridobil certifikat in homologacijo starodobnika, je sicer lahko oldtimer administrativno, nikakor pa ne ljubiteljsko gledano.
+                    Nekateri se sprašujejo ali je avto, ki je ravnokar dopolnil 30 let oldtimer ali youngtimer? Če je pridobil certifikat in homologacijo starodobnika, je sicer lahko oldtimer administrativno, nikakor pa ne ljubiteljsko gledano.
                   </p>
                   <p>
                     Lep primer je honda NSX, ki je že praznovala 30. obletnico predstavitve in ima lahko vse pogoje za pridobitev uradnega starodobniškega statusa. Ampak tak avto bo na srečanjih starodobnikov večno nezaželen, saj resnici na ljubo res ne spada v družbo avtomobilov s kromiranimi rozetami luči in kromiranimi kolesnimi pokrovi. Torej, primeren izraz za hondo NSX je youngtimer in bo tudi večno youngtimer. Tako, kot je npr. Ivan Cankar večni modernist, pa je umrl že davnega leta 1918. Ali pa, kot so milenijci predstavniki generacije, rojene v letih 1981 -1996.
                   </p>
                 </div>
 
-                {/* Highlight Quote */}
+                {/* Quote */}
                 <div className="border-l-4 border-pink-500 pl-6 py-4 bg-pink-500/5 italic text-slate-200 text-lg sm:text-xl font-medium">
                   Ljubitelji youngtimerjev gojimo tehnično kulturo določenega obdobja.
                 </div>
 
-                {/* Section 3 */}
+                {/* 3 */}
                 <div>
                   <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Kaj ne spada k nam?</h4>
                   <p>
@@ -307,7 +306,7 @@ const YoungtimerSection = () => {
                   </p>
                 </div>
 
-                {/* Section 4 */}
+                {/* 4 */}
                 <div>
                   <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Dobre prakse iz tujine.</h4>
                   <p className="mb-4">
@@ -321,7 +320,7 @@ const YoungtimerSection = () => {
                   </p>
                 </div>
 
-                {/* Section 5 */}
+                {/* 5 */}
                 <div>
                   <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Slovenija je svetovna specifika glede avtomobilskega dogajanja v 80-ih in 90-ih letih.</h4>
                   <p>
@@ -329,12 +328,12 @@ const YoungtimerSection = () => {
                   </p>
                 </div>
 
-                {/* Highlight Quote 2 */}
+                {/* Quote 2 */}
                 <div className="border-l-4 border-teal-400 pl-6 py-4 bg-teal-400/5 italic text-slate-200 text-lg sm:text-xl font-medium">
                   V prehodu iz 80-ih v 90-ta so se tako v Sloveniji, kot v svetu zgodile velike družbene spremembe. Teh dogodkov enostavno ne moreš pozabiti.
                 </div>
 
-                {/* Section 6 - List */}
+                {/* 6 */}
                 <div>
                   <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Kaj vse smo Slovenci, glede avtomobilizma doživeli v 80ih in 90ih?</h4>
                   <p className="mb-4">Kronološko urejeno:</p>
@@ -365,7 +364,7 @@ const YoungtimerSection = () => {
                   </p>
                 </div>
 
-                {/* Section 7 - List */}
+                {/* 7 */}
                 <div>
                   <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Zakaj so 80-ta in 90-ta najboljša leta avtomobilizma?</h4>
                   <p className="mb-4">
@@ -373,29 +372,16 @@ const YoungtimerSection = () => {
                   </p>
                   <p className="mb-4">Kronološko urejeno:</p>
                   <ul className="list-disc list-inside grid grid-cols-1 sm:grid-cols-2 gap-2 ml-4 mb-6 text-slate-300">
-                    <li>ura,</li>
-                    <li>desno ogledalo,</li>
-                    <li>peta prestava,</li>
-                    <li>katalizator,</li>
-                    <li>digitalni avtoradio,</li>
-                    <li>avtoreverse kasetar,</li>
-                    <li>sistem RDS,</li>
-                    <li>električne šipe,</li>
-                    <li>centralno zaklepanje,</li>
-                    <li>servo volan,</li>
-                    <li>ABS,</li>
-                    <li>zadnji vzglavniki,</li>
-                    <li>voznikov airbag,</li>
-                    <li>sovoznikov airbag,</li>
-                    <li>3. zavorna luč,</li>
-                    <li>CD predvajalnik,</li>
-                    <li>klima.</li>
+                    <li>ura, desno ogledalo, peta prestava,</li>
+                    <li>katalizator, digitalni avtoradio,</li>
+                    <li>avtoreverse kasetar, sistem RDS,</li>
+                    <li>električne šipe, centralno zaklepanje,</li>
+                    <li>servo volan, ABS, zadnji vzglavniki,</li>
+                    <li>voznikov airbag, sovoznikov airbag,</li>
+                    <li>3. zavorna luč, CD predvajalnik, klima.</li>
                   </ul>
                   <p className="mb-4">
-                    To je bil tudi čas, ko razen katalizatorja še nič ni bilo podrejeno ekologiji. Takrat besede mobilnost še nismo uporabljali, poudarek je bil predvsem na uživanju v vožnji in vizualnem občudovanju avtomobilila.
-                  </p>
-                  <p className="mb-4">
-                    Z vsesplošnim razmahom interneta po letu 2000, se je tempo življenja zelo spremenil, poleg tega pa so si ljudje v življenju začeli postavljati nove prioritete. Tako pri nas, kot v svetu, je tudi avtomobil, kot predmet poželenja začel izgubljati na svoji veljavi.
+                    Takrat besede mobilnost še nismo uporabljali, poudarek je bil predvsem na uživanju v vožnji in vizualnem občudovanju avtomobilila.
                   </p>
                   <p>
                     Povpraševanje po avtomobilih je dandanes sicer ogromno, pa tudi vsi izdelki resnici na ljubo sploh niso slabi. Vendar pa splošnega odnosa do današnjih avtomobilov, nikakor ne moremo primerjati s tistim, ki smo ga poznali v 80-ih in 90-ih letih.
@@ -411,9 +397,6 @@ const YoungtimerSection = () => {
                 </div>
 
               </div>
-              <div className="flex justify-center border-t border-white/5 pt-6 sm:pt-8">
-                <div className="w-12 h-1 bg-gradient-to-r from-pink-500 to-teal-400 rounded-full" />
-              </div>
             </div>
           </div>
         </div>
@@ -425,6 +408,12 @@ const YoungtimerSection = () => {
 const Hero = () => {
   const { lang, settings } = useApp();
   const t = translations[lang];
+  
+  // Custom split for the requested layout
+  const title = t.hero.title; // "AVTONOSTALGIJA 80&90" or "CAR NOSTALGIA 80&90"
+  const parts = title.split(' ');
+  const yearPart = parts.pop(); // "80&90"
+  const namePart = parts.join(' '); // "AVTONOSTALGIJA" or "CAR NOSTALGIA"
 
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
@@ -432,9 +421,16 @@ const Hero = () => {
         <img src={settings.heroImage} className="w-full h-full object-cover brightness-[0.3]" alt="Hero Background" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/40 to-slate-950"></div>
       </div>
-      <div className="relative z-10 text-center px-6 max-w-5xl mx-auto w-full flex flex-col items-center justify-center h-full">
-        <h1 className="retro-font text-3xl sm:text-5xl md:text-8xl font-black mb-4 sm:mb-6 tracking-tighter neon-text-pink leading-tight sm:leading-none uppercase text-center w-full break-words">
-          {t.hero.title}
+      <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
+        <h1 className="retro-font font-black mb-4 sm:mb-6 tracking-tighter uppercase text-center w-full flex flex-col items-center">
+          {/* Main name part: AVTONOSTALGIJA / CAR NOSTALGIA */}
+          <span className="text-[6.2vw] xs:text-[7.5vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl whitespace-nowrap block neon-text-pink leading-none pb-2 sm:pb-4">
+            {namePart}
+          </span>
+          {/* Year part: 80&90 */}
+          <span className="text-[12vw] xs:text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl block neon-text-teal text-teal-400 leading-none">
+            {yearPart}
+          </span>
         </h1>
         <p className="text-sm sm:text-lg md:text-2xl text-teal-400 font-light mb-8 sm:mb-12 tracking-[0.2em] sm:tracking-[0.3em] uppercase italic opacity-90 text-center w-full max-w-3xl mx-auto">
           {t.hero.subtitle}
@@ -598,7 +594,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     e.preventDefault();
     if (showForm === 'settings') {
       setSettings(settingsData);
-      addLog('update', 'gallery', 'site-settings'); // using gallery type as proxy or updating type in types.ts
+      addLog('update', 'gallery', 'site-settings');
       setShowForm(null);
       return;
     }
@@ -634,11 +630,6 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     
     setShowForm(null);
     setEditingId(null);
-    setFormData({
-      titleSi: '', titleEn: '', excerptSi: '', excerptEn: '', contentSi: '', contentEn: '',
-      image: '', 
-      location: '', date: new Date().toISOString().split('T')[0], galleryImages: [], author: 'Admin', category: 'Blog'
-    });
   };
 
   return (
@@ -913,14 +904,10 @@ const MainContent = () => {
               <div className="w-full h-48 sm:h-[400px] md:h-[500px] overflow-hidden bg-slate-950 flex items-center justify-center">
                 <img src={activeArticle.image} className="w-full h-full object-cover" alt={activeArticle.title[lang]} />
               </div>
-              <div className="p-6 sm:p-10 md:p-16">
-                <span className="bg-pink-500/20 text-pink-500 px-3 py-0.5 sm:px-4 sm:py-1 rounded-full text-[10px] font-black uppercase tracking-widest mb-4 sm:mb-6 inline-block">{activeArticle.category}</span>
-                <h2 className="retro-font text-xl sm:text-3xl md:text-5xl text-teal-400 mb-6 sm:mb-8 uppercase tracking-tighter leading-tight">{activeArticle.title[lang]}</h2>
-                <div className="flex flex-wrap gap-4 sm:gap-8 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-500 mb-8 sm:mb-10 border-y border-slate-800 py-4 sm:py-6">
-                  <span>{t.common.author}: <strong className="text-slate-200">{activeArticle.author}</strong></span>
-                  <span>{t.common.date}: <strong className="text-slate-200">{activeArticle.date}</strong></span>
-                </div>
-                <div className="prose prose-invert max-w-none text-slate-300 leading-relaxed text-sm sm:text-xl whitespace-pre-wrap font-light opacity-90">{activeArticle.content[lang]}</div>
+              <div className="p-6 sm:p-10">
+                <span className="bg-pink-500/20 text-pink-500 px-3 py-1 rounded-full text-[10px] font-black uppercase mb-4 inline-block">{activeArticle.category}</span>
+                <h2 className="retro-font text-xl sm:text-3xl text-teal-400 mb-6 uppercase">{activeArticle.title[lang]}</h2>
+                <div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap">{activeArticle.content[lang]}</div>
               </div>
             </div>
           </div>
@@ -935,13 +922,13 @@ const MainContent = () => {
               <div className="h-48 sm:h-72 lg:h-full bg-slate-950 flex items-center justify-center">
                 <img src={activeEvent.image} className="w-full h-full object-cover" alt={activeEvent.title[lang]} />
               </div>
-              <div className="p-6 sm:p-10 md:p-16 space-y-6 sm:space-y-10 flex flex-col">
-                <h2 className="retro-font text-xl sm:text-3xl md:text-5xl text-pink-500 uppercase tracking-tighter leading-tight">{activeEvent.title[lang]}</h2>
-                <div className="space-y-4 sm:space-y-6">
-                  <div className="flex items-center gap-4 sm:gap-6"><Calendar className="text-teal-400 shrink-0" size={24} /><div className="text-sm sm:text-xl font-bold tracking-widest uppercase">{activeEvent.date}</div></div>
-                  <div className="flex items-center gap-4 sm:gap-6"><MapPin className="text-pink-500 shrink-0" size={24} /><div className="text-sm sm:text-xl font-bold tracking-widest uppercase break-words">{activeEvent.location}</div></div>
+              <div className="p-6 sm:p-10">
+                <div className="flex flex-wrap items-center gap-6 mb-6">
+                  <div className="flex items-center text-slate-400 text-xs font-black uppercase"><Calendar size={16} className="mr-2 text-pink-500" /> {activeEvent.date}</div>
+                  <div className="flex items-center text-slate-400 text-xs font-black uppercase"><MapPin size={16} className="mr-2 text-teal-400" /> {activeEvent.location}</div>
                 </div>
-                <p className="text-slate-300 leading-relaxed font-light text-sm sm:text-xl italic border-l-4 border-teal-400 pl-4 sm:pl-6">{activeEvent.description[lang]}</p>
+                <h2 className="retro-font text-xl sm:text-3xl text-teal-400 mb-6 uppercase">{activeEvent.title[lang]}</h2>
+                <div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap">{activeEvent.description[lang]}</div>
               </div>
             </div>
           </div>
@@ -950,17 +937,13 @@ const MainContent = () => {
 
       {activeGallery && (
         <div className="fixed inset-0 z-[60] glass flex items-center justify-center p-4 lg:p-12 overflow-y-auto">
-          <div className="bg-slate-900 w-full max-w-7xl rounded-3xl p-6 sm:p-10 lg:p-16 border border-pink-500/30 relative max-h-[90vh] overflow-y-auto">
+          <div className="bg-slate-900 w-full max-w-7xl rounded-3xl p-6 sm:p-10 border border-pink-500/30 relative max-h-[90vh] overflow-y-auto">
             <button className="absolute top-4 right-4 sm:top-8 sm:right-8 p-2 sm:p-3 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors cursor-pointer" onClick={() => setActiveGallery(null)} aria-label="Close gallery"><X size={20} /></button>
-            <div className="flex flex-col sm:flex-row items-center justify-between mb-8 sm:mb-12 border-b border-slate-800 pb-4 sm:pb-6 gap-4">
-              <h2 className="retro-font text-xl sm:text-3xl text-teal-400 uppercase tracking-tighter text-center sm:text-left">{activeGallery.title[lang]}</h2>
-              <span className="text-pink-500 font-bold tracking-[0.2em] sm:tracking-[0.3em] text-[10px] sm:text-xs uppercase">{activeGallery.images.length} Fotografij</span>
-            </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <h2 className="retro-font text-xl sm:text-3xl text-teal-400 mb-6 uppercase border-b border-slate-800 pb-4">{activeGallery.title[lang]}</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {activeGallery.images.map((img, idx) => (
-                <div key={idx} className="relative group cursor-zoom-in overflow-hidden rounded-xl sm:rounded-2xl aspect-square shadow-xl border border-white/5 bg-slate-950" onClick={() => setLightboxIndex(idx)}>
+                <div key={idx} className="relative group cursor-zoom-in overflow-hidden rounded-xl aspect-square" onClick={() => setLightboxIndex(idx)}>
                   <img src={img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" alt={`Gallery ${idx}`} />
-                  <div className="absolute inset-0 bg-gradient-to-br from-pink-500/20 to-teal-400/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               ))}
             </div>
