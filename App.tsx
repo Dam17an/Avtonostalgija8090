@@ -5,29 +5,24 @@ import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
 
 // --- SHARED BACKEND CONFIGURATION ---
-const SUPABASE_URL = 'https://ilatpfgfihqugvxjkfot.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsYXRwZmdmaWhxdWd2eGprZm90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MTkyNzcsImV4cCI6MjA4MjM5NTI3N30.iaQuPce2CUaGFh1jzg7_HbQhtgo4-MNs4_fpdpJnuTQ';
+const SUPABASE_URL = 'https://jtkhmwwbwlvqwwxlvdoa.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a2htd3did2x2cXd3eGx2ZG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MzQyMjYsImV4cCI6MjA4MjQxMDIyNn0.MWiSmvEwjuoafmrwbjEtQFrYW1iqDbSAYmZJjNkG7zE';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- STORAGE UTILITIES ---
 const persistData = async (key: string, data: any) => {
   try {
     // Attempt to save to shared backend
-    // NOTE: Removed explicit onConflict specification to rely on the Primary Key.
-    // IMPORTANT: Ensure you have run 'ALTER TABLE an_content ADD PRIMARY KEY (key);' in Supabase SQL Editor.
     const { error } = await supabase
       .from('an_content')
       .upsert({ key, data });
     
     if (error) {
       console.error(`Supabase Error [${key}]:`, error.message);
-      if (error.message.includes('on conflict')) {
-        console.warn("💡 TIP: The table 'an_content' might be missing a Primary Key. Run this in Supabase SQL Editor: ALTER TABLE an_content ADD PRIMARY KEY (key);");
-      }
       throw error;
     }
     
-    // Also save locally as a backup/cache
+    // Backup to local storage
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e: any) {
     console.warn(`Fallback to local storage for ${key}: ${e.message}`);
@@ -286,17 +281,11 @@ const YoungtimerSection = () => {
                 <div>
                   <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Oldtimer ali Youngtimer?</h4>
                   <p>
-                    Lep primer je honda NSX, ki je že praznovala 30. obletnico predstavitve in ima lahko vse pogoje za pridobitev uradnega starodobniškega statusa. Ampak tak avto bo na srečanjih starodobnikov večno nezaželen. Youngtimer je primeren izraz.
+                    Lep primer je honda NSX, ki je že praznovala 30. obletnico predstavitve in ima lahko vse pogoje za pridobitev uradnega starodobniškega statusa. Youngtimer je primeren izraz.
                   </p>
                 </div>
                 <div className="border-l-4 border-pink-500 pl-6 py-4 bg-pink-500/5 italic text-slate-200 text-lg sm:text-xl font-medium">
                   Ljubitelji youngtimerjev gojimo tehnično kulturo določenega obdobja.
-                </div>
-                <div>
-                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Zakaj so 80-ta in 90-ta najboljša leta avtomobilizma?</h4>
-                  <p>
-                    Evolucija avtomobila v 80-ih in 90-ih letih je bila res fascinantna, saj so najpomembnejše pridobitve postale avtomobilski standard ravno v tem obdobju.
-                  </p>
                 </div>
                 <div className="flex justify-end pt-12">
                   <div className="text-right">
@@ -467,18 +456,29 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         } else if (showForm === 'settings') {
            const compressed = await compressImage(e.target.files[0] as File);
            const field = (e.target.name as keyof SiteSettings);
-           setSettingsData(prev => ({ ...prev, [field]: compressed }));
+           if (field) {
+             setSettingsData(prev => ({ ...prev, [field]: compressed }));
+           }
         } else {
           const compressed = await compressImage(e.target.files[0] as File);
           setFormData(prev => ({ ...prev, image: compressed }));
         }
-      } catch (err) { alert("Napaka pri nalaganju slike."); } finally { setUploading(false); }
+      } catch (err) { 
+        alert("Napaka pri nalaganju slike."); 
+      } finally { 
+        setUploading(false); 
+      }
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (showForm === 'settings') { setSettings(settingsData); addLog('update', 'settings', 'site-settings'); setShowForm(null); return; }
+    if (showForm === 'settings') { 
+      setSettings(settingsData); 
+      addLog('update', 'settings', 'site-settings'); 
+      setShowForm(null); 
+      return; 
+    }
 
     const id = editingId || Date.now().toString();
     const slug = (formData.titleEn || formData.titleSi).toLowerCase().replace(/[^a-z0-9]/g, '-');
@@ -506,12 +506,58 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         <div className="flex flex-col sm:flex-row justify-between items-center mb-10 sm:mb-16 gap-6">
           <div className="text-center sm:text-left"><h1 className="retro-font text-2xl sm:text-3xl text-teal-400 tracking-tighter uppercase font-black">Nadzorna Plošča</h1></div>
           <div className="flex items-center gap-4">
-             <button onClick={() => setShowForm('settings')} className="flex items-center gap-2 bg-indigo-950/50 border border-indigo-500/30 px-6 py-3 rounded-xl hover:bg-indigo-500 transition-all font-bold uppercase tracking-widest text-xs text-indigo-400"><Settings size={16} /> Nastavitve</button>
+             <button onClick={() => { setSettingsData(settings); setShowForm('settings'); }} className="flex items-center gap-2 bg-indigo-950/50 border border-indigo-500/30 px-6 py-3 rounded-xl hover:bg-indigo-500 transition-all font-bold uppercase tracking-widest text-xs text-indigo-400"><Settings size={16} /> Nastavitve</button>
              <button onClick={() => { setIsAdmin(false); localStorage.removeItem('an_admin'); onClose(); }} className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-xl hover:bg-pink-500 transition-all font-bold uppercase tracking-widest text-xs"><LogOut size={16} /> Odjava</button>
           </div>
         </div>
 
-        {showForm && (
+        {showForm === 'settings' && (
+          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
+            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-2xl border border-indigo-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
+              <h2 className="retro-font text-xl sm:text-2xl text-indigo-400 mb-6 sm:mb-8 uppercase text-center font-black">Nastavitve Strani</h2>
+              <div className="space-y-6 mb-8">
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Člani</label>
+                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.memberCount} onChange={e => setSettingsData({...settingsData, memberCount: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Dogodki</label>
+                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.eventCount} onChange={e => setSettingsData({...settingsData, eventCount: e.target.value})} />
+                    </div>
+                 </div>
+                 
+                 <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Slika "Zgodba o strasti"</label>
+                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3">
+                       <input type="file" name="aboutImage" className="hidden" onChange={handleFileUpload} />
+                       <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400 font-bold uppercase tracking-widest text-[10px]">
+                          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži sliko
+                       </div>
+                    </label>
+                    <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs mb-2" value={settingsData.aboutImage} onChange={e => setSettingsData({...settingsData, aboutImage: e.target.value})} />
+                 </div>
+
+                 <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Hero ozadje</label>
+                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3">
+                       <input type="file" name="heroImage" className="hidden" onChange={handleFileUpload} />
+                       <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400 font-bold uppercase tracking-widest text-[10px]">
+                          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži ozadje
+                       </div>
+                    </label>
+                    <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={settingsData.heroImage} onChange={e => setSettingsData({...settingsData, heroImage: e.target.value})} />
+                 </div>
+              </div>
+              <div className="flex gap-4">
+                <button type="submit" className="flex-1 py-4 bg-indigo-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl">Shrani</button>
+                <button type="button" onClick={() => setShowForm(null)} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm">Prekliči</button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {showForm && showForm !== 'settings' && (
           <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
             <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-4xl border border-pink-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
               <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-6 sm:mb-8 uppercase text-center font-black">{editingId ? 'Uredi' : 'Ustvari'}</h2>
@@ -655,13 +701,26 @@ const App = () => {
     if (!hasLoaded) return;
     const saveToStorage = async () => {
       setIsSaving(true);
-      await Promise.all([persistData('an_articles', articles), persistData('an_events', events), persistData('an_gallery', gallery), persistData('an_logs', logs), persistData('an_settings', settings)]);
-      setIsSaving(false);
+      try {
+        await Promise.all([
+          persistData('an_articles', articles), 
+          persistData('an_events', events), 
+          persistData('an_gallery', gallery), 
+          persistData('an_logs', logs), 
+          persistData('an_settings', settings)
+        ]);
+      } catch (e) {
+        console.error("Critical save error", e);
+      } finally {
+        setIsSaving(false);
+      }
     };
     saveToStorage();
   }, [articles, events, gallery, logs, settings, hasLoaded]);
 
-  const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => { setLogs(prev => [{ id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() }, ...prev]); };
+  const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => { 
+    setLogs(prev => [{ id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() }, ...prev]); 
+  };
 
   return (
     <AppContext.Provider value={{ lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin, articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog, isSaving, setIsSaving, settings, setSettings }}>
