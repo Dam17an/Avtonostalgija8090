@@ -1,46 +1,50 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings } from 'lucide-react';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
 
-// --- INDEXEDDB STORAGE UTILITIES ---
-const DB_NAME = 'AvtoNostalgijaDB';
-const STORE_NAME = 'content';
+// --- SHARED BACKEND CONFIGURATION ---
+const SUPABASE_URL = 'https://ilatpfgfihqugvxjkfot.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlsYXRwZmdmaWhxdWd2eGprZm90Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MTkyNzcsImV4cCI6MjA4MjM5NTI3N30.iaQuPce2CUaGFh1jzg7_HbQhtgo4-MNs4_fpdpJnuTQ';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const getDB = (): Promise<IDBDatabase> => {
-  return new Promise((resolve, reject) => {
-    const request = indexedDB.open(DB_NAME, 1);
-    request.onupgradeneeded = () => {
-      const db = request.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME);
-      }
-    };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-};
-
+// --- STORAGE UTILITIES ---
 const persistData = async (key: string, data: any) => {
   try {
-    const db = await getDB();
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).put(data, key);
-    return new Promise((resolve) => (tx.oncomplete = () => resolve(true)));
+    // Attempt to save to shared backend
+    const { error } = await supabase
+      .from('an_content')
+      .upsert({ key, data }, { onConflict: 'key' });
+    if (error) throw error;
+    
+    // Also save locally as a backup/cache
+    localStorage.setItem(key, JSON.stringify(data));
   } catch (e) {
-    console.error("Failed to save to IDB", e);
+    console.error("Failed to save to shared backend, falling back to local storage", e);
+    localStorage.setItem(key, JSON.stringify(data));
   }
 };
 
 const fetchPersistedData = async (key: string) => {
   try {
-    const db = await getDB();
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const request = tx.objectStore(STORE_NAME).get(key);
-    return new Promise((resolve) => (request.onsuccess = () => resolve(request.result)));
+    // Attempt to fetch from shared backend
+    const { data, error } = await supabase
+      .from('an_content')
+      .select('data')
+      .eq('key', key)
+      .single();
+    
+    if (data) return data.data;
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is 'not found'
+    
+    // Fallback to local storage if shared fetch fails or is missing
+    const local = localStorage.getItem(key);
+    return local ? JSON.parse(local) : null;
   } catch (e) {
-    console.error("Failed to load from IDB", e);
-    return null;
+    console.error("Failed to load from shared backend, falling back to local storage", e);
+    const local = localStorage.getItem(key);
+    return local ? JSON.parse(local) : null;
   }
 };
 
@@ -112,7 +116,7 @@ const INITIAL_GALLERY: GalleryItem[] = [];
 const INITIAL_SETTINGS: SiteSettings = {
   heroImage: 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1920',
   aboutImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1200',
-  memberCount: '300+',
+  memberCount: '35.000+',
   eventCount: '30+'
 };
 
@@ -313,7 +317,7 @@ const YoungtimerSection = () => {
                     V tujini je youngtimer že dolgo uveljavljen avtomobilski pojem, imajo pa tudi veliko srečanj in klubov za posamezne znamke.
                   </p>
                   <p className="mb-4">
-                    V Nemčiji npr. se stanje oldtimerjev in tudi youngtimerjev ocenjuje z ocenami od 1 do 5 (1-kot nov, 5-grozen), na podlagi ocene pa je za lepše primerke (stanje 1 ali 2) brez težav možno skleniti kasko zavarovanje na dogovorjeno realno vrednost.
+                    V Nemčiji npr. se stanje oldtimerjev in tudi youngtimerjev ocenjuje z ocenami od 1 do 5 (1-kot nov, 5-grozen), na podlagi ocene pa je za lepšie primerke (stanje 1 ali 2) brez težav možno skleniti kasko zavarovanje na dogovorjeno realno vrednost.
                   </p>
                   <p>
                     Zaradi velike konkurence in omejenih letnih kilometrov (tudi garaža je pogoj), so cene kaska zelo zmerne. Večina nemških zavarovalnic ponuja tak kasko za ljubiteljska vozila starosti od 20 let navzgor. Pri nas v Sloveniji takšnega kaska načeloma nikjer ni možno skleniti, razen če si zelo vztrajen in pod posebnimi pogoji.
@@ -970,6 +974,9 @@ const MainContent = () => {
               <div className="p-4 sm:p-8 glass rounded-2xl border border-pink-500/20 text-center">
                 <div className="text-3xl sm:text-5xl font-black text-pink-500 mb-1 sm:mb-2">{settings.memberCount}</div>
                 <div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Članov</div>
+                <a href="https://www.facebook.com/share/g/19R6ZkvvVd/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="block mt-2 text-[10px] text-pink-500 hover:text-white font-black uppercase tracking-widest transition-colors">
+                  Obišči Facebook skupino
+                </a>
               </div>
               <div className="p-4 sm:p-8 glass rounded-2xl border border-teal-500/20 text-center">
                 <div className="text-3xl sm:text-5xl font-black text-teal-400 mb-1 sm:mb-2">{settings.eventCount}</div>
