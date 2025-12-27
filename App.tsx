@@ -11,28 +11,36 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- STORAGE UTILITIES ---
 const persistData = async (key: string, data: any) => {
+  // 1. Always try Supabase first (The Cloud)
   try {
-    // Attempt to save to shared backend
     const { error } = await supabase
       .from('an_content')
       .upsert({ key, data });
     
     if (error) {
-      console.error(`Supabase Error [${key}]:`, error.message);
-      throw error;
+      console.error(`Supabase Sync Failed [${key}]:`, error.message);
+      if (error.message.includes('timeout')) {
+        console.warn(`💡 DATA TOO LARGE: The images in ${key} are causing a timeout. Try using smaller images or fewer items.`);
+      }
     }
-    
-    // Backup to local storage
+  } catch (e: any) {
+    console.error(`Network error during cloud sync [${key}]:`, e.message);
+  }
+
+  // 2. Try LocalStorage (The Browser Cache)
+  try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (e: any) {
-    console.warn(`Fallback to local storage for ${key}: ${e.message}`);
-    localStorage.setItem(key, JSON.stringify(data));
+    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+      console.warn(`Browser cache is full. Content saved to cloud but local backup skipped for [${key}].`);
+    } else {
+      console.error(`LocalStorage Error [${key}]:`, e.message);
+    }
   }
 };
 
 const fetchPersistedData = async (key: string) => {
   try {
-    // Try shared backend first
     const { data, error } = await supabase
       .from('an_content')
       .select('data')
@@ -42,7 +50,6 @@ const fetchPersistedData = async (key: string) => {
     if (data) return data.data;
     if (error) throw error;
     
-    // Fallback to local
     const local = localStorage.getItem(key);
     return local ? JSON.parse(local) : null;
   } catch (e: any) {
@@ -52,7 +59,8 @@ const fetchPersistedData = async (key: string) => {
 };
 
 // --- IMAGE COMPRESSION HELPER ---
-const compressImage = (file: File, maxWidth = 1600): Promise<string> => {
+// Reduced default max width and quality to keep payload sizes manageable for Supabase JSONB columns
+const compressImage = (file: File, maxWidth = 1200, quality = 0.5): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -73,7 +81,8 @@ const compressImage = (file: File, maxWidth = 1600): Promise<string> => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.8));
+        // Use JPEG for better compression of photos
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = reject;
     };
@@ -446,21 +455,22 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
+    const file = e.target.files?.[0];
+    const fieldName = e.target.name;
+
+    if (file) {
       setUploading(true);
       try {
+        // More aggressive compression for gallery to avoid timeouts
+        const maxWidth = showForm === 'gallery' ? 800 : 1200;
+        const quality = showForm === 'gallery' ? 0.4 : 0.5;
+        
+        const compressed = await compressImage(file, maxWidth, quality);
         if (showForm === 'gallery') {
-          const files = Array.from(e.target.files) as File[];
-          const newImages = await Promise.all(files.map(file => compressImage(file)));
-          setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...newImages] }));
+          setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, compressed] }));
         } else if (showForm === 'settings') {
-           const compressed = await compressImage(e.target.files[0] as File);
-           const field = (e.target.name as keyof SiteSettings);
-           if (field) {
-             setSettingsData(prev => ({ ...prev, [field]: compressed }));
-           }
+          setSettingsData(prev => ({ ...prev, [fieldName]: compressed }));
         } else {
-          const compressed = await compressImage(e.target.files[0] as File);
           setFormData(prev => ({ ...prev, image: compressed }));
         }
       } catch (err) { 
@@ -529,7 +539,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                  
                  <div>
                     <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Slika "Zgodba o strasti"</label>
-                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3">
+                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3 transition-colors">
                        <input type="file" name="aboutImage" className="hidden" onChange={handleFileUpload} />
                        <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400 font-bold uppercase tracking-widest text-[10px]">
                           {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži sliko
@@ -540,7 +550,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
 
                  <div>
                     <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Hero ozadje</label>
-                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3">
+                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3 transition-colors">
                        <input type="file" name="heroImage" className="hidden" onChange={handleFileUpload} />
                        <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400 font-bold uppercase tracking-widest text-[10px]">
                           {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži ozadje
@@ -550,8 +560,8 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                  </div>
               </div>
               <div className="flex gap-4">
-                <button type="submit" className="flex-1 py-4 bg-indigo-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl">Shrani</button>
-                <button type="button" onClick={() => setShowForm(null)} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm">Prekliči</button>
+                <button type="submit" className="flex-1 py-4 bg-indigo-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-indigo-600 transition-colors">Shrani</button>
+                <button type="button" onClick={() => setShowForm(null)} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-slate-700 transition-colors">Prekliči</button>
               </div>
             </form>
           </div>
@@ -571,14 +581,38 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                 </div>
                 <div className="space-y-4">
                   {showForm === 'gallery' ? (
-                    <div className="space-y-4"><label className="block p-6 sm:p-8 border-2 border-dashed border-slate-700 rounded-xl transition-colors text-center cursor-pointer group hover:border-teal-400"><input type="file" multiple accept="image/*" className="hidden" onChange={handleFileUpload} /><p className="text-[10px] uppercase tracking-widest text-slate-400">Dodaj slike</p></label><div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto p-2 bg-slate-950/50 rounded-xl">{formData.galleryImages.map((img, idx) => (<div key={idx} className="aspect-square rounded overflow-hidden relative group border border-slate-800"><img src={img} className="w-full h-full object-cover" alt="Preview" /><button type="button" onClick={() => setFormData(prev => ({...prev, galleryImages: prev.galleryImages.filter((_, i) => i !== idx)}))} className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-bl"><Trash2 size={10} /></button></div>))}</div></div>
+                    <div className="space-y-4">
+                      <label className="block p-6 sm:p-8 border-2 border-dashed border-slate-700 rounded-xl transition-colors text-center cursor-pointer group hover:border-teal-400">
+                        <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                        <p className="text-[10px] uppercase tracking-widest text-slate-400">Dodaj sliko</p>
+                      </label>
+                      <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto p-2 bg-slate-950/50 rounded-xl">
+                        {formData.galleryImages.map((img, idx) => (
+                          <div key={idx} className="aspect-square rounded overflow-hidden relative group border border-slate-800">
+                            <img src={img} className="w-full h-full object-cover" alt="Preview" />
+                            <button type="button" onClick={() => setFormData(prev => ({...prev, galleryImages: prev.galleryImages.filter((_, i) => i !== idx)}))} className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-bl">
+                              <Trash2 size={10} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   ) : (
                     <><textarea required placeholder="Vsebina (SI)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-24 sm:h-32 outline-none text-sm" value={formData.contentSi} onChange={e => setFormData({...formData, contentSi: e.target.value})} /><textarea required placeholder="Content (EN)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-24 sm:h-32 outline-none text-sm" value={formData.contentEn} onChange={e => setFormData({...formData, contentEn: e.target.value})} /></>
                   )}
                   {showForm !== 'gallery' && (
-                    <div className="space-y-2"><label className="block p-3 border-2 border-dashed border-slate-700 rounded-xl text-center cursor-pointer hover:border-teal-400 transition-colors"><input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} /><p className="text-[10px] uppercase tracking-widest text-slate-400">Naloži naslovno sliko</p></label><input placeholder="Ali URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} /></div>
+                    <div className="space-y-2">
+                      <label className="block p-3 border-2 border-dashed border-slate-700 rounded-xl text-center cursor-pointer hover:border-teal-400 transition-colors">
+                        <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
+                        <p className="text-[10px] uppercase tracking-widest text-slate-400">Naloži naslovno sliko</p>
+                      </label>
+                      <input placeholder="Ali URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+                    </div>
                   )}
-                  <div className="grid grid-cols-2 gap-4"><input type="date" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />{showForm === 'event' && <input placeholder="Lokacija" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />}</div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <input type="date" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                    {showForm === 'event' && <input placeholder="Lokacija" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />}
+                  </div>
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 sm:gap-6"><button type="submit" disabled={uploading} className="flex-1 py-4 bg-pink-500 rounded-xl font-black shadow-xl uppercase tracking-widest text-sm cursor-pointer disabled:opacity-50 hover:bg-pink-600 transition-colors">Shrani</button><button type="button" onClick={() => { setShowForm(null); setEditingId(null); }} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm cursor-pointer hover:bg-slate-700">Prekliči</button></div>
@@ -684,13 +718,25 @@ const App = () => {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
 
+  // Use refs to avoid redundant syncing if data hasn't changed
+  const lastSyncedRef = useRef<Record<string, string>>({});
+
   useEffect(() => {
     const loadContent = async () => {
-      const savedArticles = await fetchPersistedData('an_articles'); if (savedArticles) setArticles(savedArticles);
-      const savedEvents = await fetchPersistedData('an_events'); if (savedEvents) setEvents(savedEvents);
-      const savedGallery = await fetchPersistedData('an_gallery'); if (savedGallery) setGallery(savedGallery);
-      const savedLogs = await fetchPersistedData('an_logs'); if (savedLogs) setLogs(savedLogs);
-      const savedSettings = await fetchPersistedData('an_settings'); if (savedSettings) setSettings(savedSettings);
+      const [art, ev, gal, lg, sett] = await Promise.all([
+        fetchPersistedData('an_articles'),
+        fetchPersistedData('an_events'),
+        fetchPersistedData('an_gallery'),
+        fetchPersistedData('an_logs'),
+        fetchPersistedData('an_settings')
+      ]);
+      
+      if (art) setArticles(art);
+      if (ev) setEvents(ev);
+      if (gal) setGallery(gal);
+      if (lg) setLogs(lg);
+      if (sett) setSettings(sett);
+      
       if (localStorage.getItem('an_admin') === 'true') setIsAdmin(true);
       setHasLoaded(true);
     };
@@ -699,23 +745,41 @@ const App = () => {
 
   useEffect(() => {
     if (!hasLoaded) return;
+    
     const saveToStorage = async () => {
+      const dataToSync = {
+        'an_articles': articles,
+        'an_events': events,
+        'an_gallery': gallery,
+        'an_logs': logs,
+        'an_settings': settings
+      };
+
+      const keysToSync = Object.entries(dataToSync).filter(([key, value]) => {
+        const stringified = JSON.stringify(value);
+        if (lastSyncedRef.current[key] === stringified) return false;
+        lastSyncedRef.current[key] = stringified;
+        return true;
+      });
+
+      if (keysToSync.length === 0) return;
+
       setIsSaving(true);
       try {
-        await Promise.all([
-          persistData('an_articles', articles), 
-          persistData('an_events', events), 
-          persistData('an_gallery', gallery), 
-          persistData('an_logs', logs), 
-          persistData('an_settings', settings)
-        ]);
+        // Sync sequentially to reduce load and prevent timeouts
+        for (const [key, value] of keysToSync) {
+          await persistData(key, value);
+        }
       } catch (e) {
-        console.error("Critical save error", e);
+        console.error("Critical app-level save error", e);
       } finally {
         setIsSaving(false);
       }
     };
-    saveToStorage();
+
+    // Debounce saves slightly
+    const timer = setTimeout(saveToStorage, 1000);
+    return () => clearTimeout(timer);
   }, [articles, events, gallery, logs, settings, hasLoaded]);
 
   const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => { 
