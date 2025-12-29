@@ -149,6 +149,11 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
+    
+    // Fill background with solid black for better contrast in light mode
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
@@ -203,19 +208,25 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
   const clear = () => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Fill background with black when clearing
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Restore signature stroke settings
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
     onSave('');
   };
 
   return (
     <div className="space-y-2">
       <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Podpis</label>
-      <div className="border border-slate-700 bg-slate-950 rounded-xl overflow-hidden touch-none relative">
+      <div className="border border-slate-700 bg-black rounded-xl overflow-hidden touch-none relative">
         <canvas
           ref={canvasRef}
           width={600}
           height={200}
-          className="w-full h-[150px] cursor-crosshair"
+          className="w-full h-[150px] cursor-crosshair bg-black"
           onMouseDown={startDrawing}
           onMouseMove={draw}
           onMouseUp={endDrawing}
@@ -732,7 +743,6 @@ const LoginPageOverlay = ({ onClose }: { onClose: () => void }) => {
     e.preventDefault();
     if (username === 'ADMIN8090' && password === 't2Qy!BD$Q$(eFV8R') { 
       setIsAdmin(true); 
-      localStorage.setItem('an_admin', 'true');
       onClose();
       setShowAdmin(true);
     } 
@@ -890,7 +900,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
           <div className="text-center sm:text-left"><h1 className="retro-font text-2xl sm:text-3xl text-teal-400 tracking-tighter uppercase font-black">Nadzorna Plošča</h1></div>
           <div className="flex items-center gap-4">
              <button onClick={() => { setSettingsData(settings); setShowForm('settings'); }} className="flex items-center gap-2 bg-indigo-950/50 border border-indigo-500/30 px-6 py-3 rounded-xl hover:bg-indigo-500 transition-all font-bold uppercase tracking-widest text-xs text-indigo-400"><Settings size={16} /> Nastavitve</button>
-             <button onClick={() => { setIsAdmin(false); localStorage.removeItem('an_admin'); onClose(); }} className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-xl hover:bg-pink-500 transition-all font-bold uppercase tracking-widest text-xs"><LogOut size={16} /> Odjava</button>
+             <button onClick={() => { setIsAdmin(false); onClose(); }} className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-xl hover:bg-pink-500 transition-all font-bold uppercase tracking-widest text-xs"><LogOut size={16} /> Odjava</button>
           </div>
         </div>
 
@@ -1112,7 +1122,6 @@ const App = () => {
       if (lg) setLogs(lg);
       if (sett) setSettings(sett);
       
-      if (localStorage.getItem('an_admin') === 'true') setIsAdmin(true);
       setHasLoaded(true);
     };
     loadContent();
