@@ -129,12 +129,233 @@ const AppContext = createContext<{
   setIsSaving: (b: boolean) => void;
   settings: SiteSettings;
   setSettings: React.Dispatch<React.SetStateAction<SiteSettings>>;
+  showMembershipModal: boolean;
+  setShowMembershipModal: (b: boolean) => void;
 } | null>(null);
 
 const useApp = () => {
   const context = useContext(AppContext);
   if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
+};
+
+// --- SIGNATURE PAD COMPONENT ---
+const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+  }, []);
+
+  const getPos = (e: any) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    
+    // Accurate tracking for both mouse and touch events
+    let clientX, clientY;
+    if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Fix: Account for responsive scaling between CSS dimensions and canvas buffer dimensions
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
+    };
+  };
+
+  const startDrawing = (e: any) => {
+    setIsDrawing(true);
+    const { x, y } = getPos(e);
+    const ctx = canvasRef.current!.getContext('2d')!;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+  };
+
+  const draw = (e: any) => {
+    if (!isDrawing) return;
+    e.preventDefault();
+    const { x, y } = getPos(e);
+    const ctx = canvasRef.current!.getContext('2d')!;
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const endDrawing = () => {
+    setIsDrawing(false);
+    onSave(canvasRef.current!.toDataURL());
+  };
+
+  const clear = () => {
+    const canvas = canvasRef.current!;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    onSave('');
+  };
+
+  return (
+    <div className="space-y-2">
+      <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Podpis</label>
+      <div className="border border-slate-700 bg-slate-950 rounded-xl overflow-hidden touch-none relative">
+        <canvas
+          ref={canvasRef}
+          width={600}
+          height={200}
+          className="w-full h-[150px] cursor-crosshair"
+          onMouseDown={startDrawing}
+          onMouseMove={draw}
+          onMouseUp={endDrawing}
+          onMouseLeave={endDrawing}
+          onTouchStart={startDrawing}
+          onTouchMove={draw}
+          onTouchEnd={endDrawing}
+        />
+        <button type="button" onClick={clear} className="absolute bottom-2 right-2 p-1 bg-slate-800/80 rounded text-[8px] uppercase font-bold text-slate-400 hover:text-white transition-colors">Počisti</button>
+      </div>
+    </div>
+  );
+};
+
+// --- MEMBERSHIP MODAL ---
+const MembershipModal = ({ onClose }: { onClose: () => void }) => {
+  const [submitting, setSubmitting] = useState(false);
+  const [signature, setSignature] = useState('');
+  
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!signature) {
+      alert("Prosimo, dodajte svoj podpis.");
+      return;
+    }
+
+    setSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name'),
+      address: formData.get('address'),
+      phone: formData.get('phone'),
+      email: formData.get('email'),
+      emso: formData.get('emso'),
+      birth_place: formData.get('birth_place'),
+      vehicle_type: formData.get('vehicle_type'),
+      shirt_size: formData.get('shirt_size'),
+      date: formData.get('date'),
+      signature: signature
+    };
+
+    try {
+      // Configuration for EmailJS
+      (window as any).emailjs.init("0XBKLVyfoTbX1tjxl");
+      await (window as any).emailjs.send("service_0ag32va", "template_vpe5zil", data);
+      
+      console.log("Submitting Membership Form:", data);
+      alert("Obrazec je bil uspešno poslan! Prejeli boste potrditveno e-pošto.");
+      onClose();
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert("Prišlo je do napake pri pošiljanju. Prosimo, poskusite znova.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] glass flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-slate-900 w-full max-w-2xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 p-6 sm:p-10">
+        <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors" onClick={onClose}><X size={20} /></button>
+        <h2 className="retro-font text-xl sm:text-2xl text-teal-400 mb-8 uppercase text-center font-black tracking-tighter">Vloga za včlanitev</h2>
+        
+        <form onSubmit={handleFormSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Ime in priimek</label>
+              <input required name="name" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Janez Novak" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Naslov</label>
+              <input required name="address" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Ulica 1, 1000 Ljubljana" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Telefon</label>
+              <input required name="phone" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="041 123 456" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">E-pošta</label>
+              <input required type="email" name="email" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="janez@novak.si" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">EMŠO</label>
+              <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="0101980500123" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Kraj rojstva</label>
+              <input required name="birth_place" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Ljubljana" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Tip vozila</label>
+              <input required name="vehicle_type" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Golf MK2" />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Velikost majice</label>
+              <select required name="shirt_size" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm">
+                <option value="S">S</option>
+                <option value="M">M</option>
+                <option value="L">L</option>
+                <option value="XL">XL</option>
+                <option value="XXL">XXL</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 text-[11px] leading-relaxed text-slate-400 text-justify">
+            S podpisom izjavljam, da želim postati član-ica kluba AVTONOSTALGIJA 80&90, klub ljubiteljev mladodobnikov in, da sprejemam statut kluba ter sem se pripravljen-a ravnati po njem.
+            Klubu dovoljujem zbiranje, obdelavo in uporabo mojih osebnih podatkov za potrebe delovanja kluba, pri čemer je dolžno ravnati v skladu z določili Zakona o varstvu osebnih podatkov. Dovoljujem tudi javno objavljanje slikovnega, video in zvočnega materiala, ki prikazuje dejavnost društva in vsebuje moje posnetke.
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
+            <SignaturePad onSave={setSignature} />
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Datum</label>
+              <input required type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" />
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3 px-1">
+            <input required type="checkbox" id="agreement" className="mt-1 accent-teal-400" />
+            <label htmlFor="agreement" className="text-[10px] text-slate-500 leading-snug">
+              Z uporabo tega obrazca se strinjate s shranjevanjem in obdelavo vaših podatkov na tej spletni strani.*
+            </label>
+          </div>
+
+          <div className="text-[10px] text-slate-400 italic px-1 pt-2">
+            Članarina bo plačana ob prevzemu certifikata, ki jo boste prejeli po pošti od SVAMZ. Tale email je zgolj potrdilo o včlanitvi v Avtonostalgija 80&90.
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={submitting}
+            className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50"
+          >
+            {submitting ? <Loader2 className="animate-spin mx-auto" /> : "Pošlji vlogo za včlanitev"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
 };
 
 // --- INITIAL DATA ---
@@ -271,7 +492,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
 };
 
 const YoungtimerSection = () => {
-  const { lang } = useApp();
+  const { lang, setShowMembershipModal } = useApp();
   const t = translations[lang];
 
   return (
@@ -321,6 +542,20 @@ const YoungtimerSection = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Včlani se Section */}
+        <div className="space-y-6 sm:space-y-8 pt-6 sm:pt-10 border-t border-white/5">
+          <h3 className="retro-font text-xl sm:text-2xl text-teal-400 uppercase tracking-widest text-center">Včlani se</h3>
+          <div className="p-6 border border-dashed border-slate-700 rounded-2xl min-h-[50px]"></div>
+          <div className="flex justify-center">
+            <button 
+              onClick={() => setShowMembershipModal(true)}
+              className="px-12 py-5 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-2xl font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_20px_rgba(20,184,166,0.3)] text-lg cursor-pointer"
+            >
+              Postani član
+            </button>
           </div>
         </div>
       </div>
@@ -486,7 +721,8 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         
         const fileArray = Array.from(files).slice(0, allowedCount);
         const compressedResults = await Promise.all(
-          fileArray.map(file => compressImage(file, maxWidth, quality))
+          // Adding explicit type casting to File to resolve TypeScript inference issues
+          fileArray.map(file => compressImage(file as File, maxWidth, quality))
         );
         
         setFormData(prev => ({ 
@@ -494,10 +730,11 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
           galleryImages: [...prev.galleryImages, ...compressedResults] 
         }));
       } else {
-        const file = files[0];
+        // Adding explicit type casting to File to resolve TypeScript inference issues
+        const file = files[0] as File;
         const maxWidth = 1000;
         const quality = 0.45;
-        const compressed = await compressImage(file, maxWidth, quality);
+        const compressed = await compressImage(file as File, maxWidth, quality);
         
         if (showForm === 'settings') {
           setSettingsData(prev => ({ ...prev, [fieldName]: compressed }));
@@ -665,7 +902,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
 };
 
 const MainContent = () => {
-  const { lang, events, articles, gallery, settings } = useApp();
+  const { lang, events, articles, gallery, settings, setShowMembershipModal } = useApp();
   const [activeGallery, setActiveGallery] = useState<GalleryItem | null>(null);
   const [activeArticle, setActiveArticle] = useState<Article | null>(null);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
@@ -686,7 +923,6 @@ const MainContent = () => {
         <div className="fixed inset-0 z-[60] glass flex items-center justify-center p-4 lg:p-12 overflow-y-auto">
           <div className="bg-slate-900 w-full max-w-6xl rounded-3xl overflow-hidden border border-teal-500/30 relative flex flex-col shadow-2xl max-h-[90vh]">
             <button className="absolute top-4 right-4 p-2 bg-slate-800/80 rounded-full hover:bg-teal-400 transition-colors cursor-pointer z-[70]" onClick={() => setActiveEvent(null)}><X size={20} /></button>
-            {/* Fixed: Use 'activeEvent' instead of 'event' which refers to global Event object */}
             <div className="overflow-y-auto grid grid-cols-1 lg:grid-cols-2"><div className="h-48 sm:h-72 lg:h-full"><img src={activeEvent.image} className="w-full h-full object-cover" alt={activeEvent.title[lang]} /></div><div className="p-6 sm:p-10"><div className="flex flex-wrap items-center gap-6 mb-6"><div className="flex items-center text-slate-400 text-xs font-black uppercase"><Calendar size={16} className="mr-2 text-pink-500" /> {activeEvent.date}</div><div className="flex items-center text-slate-400 text-xs font-black uppercase"><MapPin size={16} className="mr-2 text-teal-400" /> {activeEvent.location}</div></div><h2 className="retro-font text-xl sm:text-3xl text-teal-400 mb-6 uppercase">{activeEvent.title[lang]}</h2><div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap">{activeEvent.description[lang]}</div></div></div>
           </div>
         </div>
@@ -743,6 +979,7 @@ const App = () => {
   const [showAdmin, setShowAdmin] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
   
   const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
   const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
@@ -821,11 +1058,16 @@ const App = () => {
   };
 
   return (
-    <AppContext.Provider value={{ lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin, articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog, isSaving, setIsSaving, settings, setSettings }}>
+    <AppContext.Provider value={{ lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin, articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog, isSaving, setIsSaving, settings, setSettings, showMembershipModal, setShowMembershipModal }}>
       <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-pink-500 font-sans tracking-tight overflow-x-hidden">
         <Navbar />
         {isSaving && <div className="fixed bottom-4 right-4 z-[99] glass px-4 py-2 rounded-full border border-teal-500/50 flex items-center gap-2 text-[9px] font-black uppercase text-teal-400 shadow-2xl"><Loader2 size={10} className="animate-spin" /> Sinhronizacija z oblakom...</div>}
-        <main className="w-full"><MainContent />{showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}{showAdmin && isAdmin && <AdminCMSOverlay onClose={() => setShowAdmin(false)} />}</main>
+        <main className="w-full">
+          <MainContent />
+          {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
+          {showAdmin && isAdmin && <AdminCMSOverlay onClose={() => setShowAdmin(false)} />}
+          {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
+        </main>
         <footer className="bg-gradient-to-b from-slate-950 to-indigo-950 border-t border-purple-500/20 py-16 text-center"><div className="max-w-7xl mx-auto space-y-8"><h3 className="retro-font text-2xl sm:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-teal-400 uppercase">Avtonostalgija 80&90</h3><div className="text-[10px] font-black uppercase tracking-[1em] text-slate-700 opacity-50">&copy; 2024 Vse pravice pridržane.</div></div></footer>
       </div>
     </AppContext.Provider>
