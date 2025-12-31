@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings } from 'lucide-react';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -9,51 +10,32 @@ const SUPABASE_URL = 'https://jtkhmwwbwlvqwwxlvdoa.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a2htd3did2x2cXd3eGx2ZG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MzQyMjYsImV4cCI6MjA4MjQxMDIyNn0.MWiSmvEwjuoafmrwbjEtQFrYW1iqDbSAYmZJjNkG7zE';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// --- STORAGE UTILITIES (OPTIMIZED FOR SEGMENTED SYNC) ---
-
+// --- STORAGE UTILITIES ---
 const persistData = async (key: string, data: any) => {
   try {
-    // 1. Check if we are persisting a collection to segment it
     const isCollection = ['an_articles', 'an_events', 'an_gallery'].includes(key) && Array.isArray(data);
-
     if (isCollection) {
-      // Save the index/list of IDs first
       const listKey = `${key}_list`;
       const ids = data.map((item: any) => item.id);
       await supabase.from('an_content').upsert({ key: listKey, data: ids });
-
-      // Save individual items in parallel
       await Promise.all(data.map(item => 
         supabase.from('an_content').upsert({ key: `${key}_item_${item.id}`, data: item })
       ));
     } else {
-      // Standard single-row sync for logs, settings, etc.
       await supabase.from('an_content').upsert({ key, data });
     }
   } catch (e: any) {
     console.error(`Supabase Sync Error [${key}]:`, e.message);
   }
-
-  // 2. Try LocalStorage fallback (ignoring quota errors)
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-  } catch (e: any) {
-    if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-      console.warn(`Browser cache is full. Content saved to cloud but local backup skipped for [${key}].`);
-    }
-  }
 };
 
 const fetchPersistedData = async (key: string) => {
   try {
-    // 1. Try to fetch segmented collection first if applicable
     const isCollection = ['an_articles', 'an_events', 'an_gallery'].includes(key);
     if (isCollection) {
       const { data: listResult } = await supabase.from('an_content').select('data').eq('key', `${key}_list`).maybeSingle();
       const ids = listResult?.data;
-
       if (ids && Array.isArray(ids)) {
-        // Fetch individual items in parallel for speed
         const itemPromises = ids.map(async (id) => {
           const { data: itemResult } = await supabase.from('an_content').select('data').eq('key', `${key}_item_${id}`).maybeSingle();
           return itemResult?.data;
@@ -62,22 +44,16 @@ const fetchPersistedData = async (key: string) => {
         return items.filter(Boolean);
       }
     }
-
-    // 2. Fallback: try standard single-key fetch (for logs/settings or legacy collections)
     const { data, error } = await supabase.from('an_content').select('data').eq('key', key).maybeSingle();
     if (data) return data.data;
     if (error) throw error;
-    
-    // 3. Last fallback: local storage
-    const local = localStorage.getItem(key);
-    return local ? JSON.parse(local) : null;
+    return null;
   } catch (e: any) {
-    const local = localStorage.getItem(key);
-    return local ? JSON.parse(local) : null;
+    console.error(`Supabase Fetch Error [${key}]:`, e);
+    return null;
   }
 };
 
-// --- IMAGE COMPRESSION HELPER ---
 const compressImage = (file: File, maxWidth = 1000, quality = 0.45): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -89,12 +65,10 @@ const compressImage = (file: File, maxWidth = 1000, quality = 0.45): Promise<str
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
         }
-
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
@@ -107,7 +81,6 @@ const compressImage = (file: File, maxWidth = 1000, quality = 0.45): Promise<str
   });
 };
 
-// Context for global state management
 const AppContext = createContext<{
   lang: Language;
   setLang: (l: Language) => void;
@@ -139,7 +112,6 @@ const useApp = () => {
   return context;
 };
 
-// --- SIGNATURE PAD COMPONENT ---
 const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
@@ -149,11 +121,8 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    
-    // Fill background with solid black for better contrast in light mode
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
@@ -162,8 +131,6 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
   const getPos = (e: any) => {
     const canvas = canvasRef.current!;
     const rect = canvas.getBoundingClientRect();
-    
-    // Accurate tracking for both mouse and touch events
     let clientX, clientY;
     if (e.touches && e.touches.length > 0) {
       clientX = e.touches[0].clientX;
@@ -172,15 +139,9 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
       clientX = e.clientX;
       clientY = e.clientY;
     }
-    
-    // Fix: Account for responsive scaling between CSS dimensions and canvas buffer dimensions
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
-    
-    return {
-      x: (clientX - rect.left) * scaleX,
-      y: (clientY - rect.top) * scaleY
-    };
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
   };
 
   const startDrawing = (e: any) => {
@@ -208,10 +169,8 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
   const clear = () => {
     const canvas = canvasRef.current!;
     const ctx = canvas.getContext('2d')!;
-    // Fill background with black when clearing
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    // Restore signature stroke settings
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
@@ -241,7 +200,6 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
   );
 };
 
-// --- MEMBERSHIP MODAL ---
 const MembershipModal = ({ onClose }: { onClose: () => void }) => {
   const [submitting, setSubmitting] = useState(false);
   const [signature, setSignature] = useState('');
@@ -252,7 +210,6 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
       alert("Prosimo, dodajte svoj podpis.");
       return;
     }
-
     setSubmitting(true);
     const formData = new FormData(e.currentTarget);
     const data = {
@@ -267,13 +224,9 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
       date: formData.get('date'),
       signature: signature
     };
-
     try {
-      // Configuration for EmailJS
       (window as any).emailjs.init("0XBKLVyfoTbX1tjxl");
       await (window as any).emailjs.send("service_0ag32va", "template_vpe5zil", data);
-      
-      console.log("Submitting Membership Form:", data);
       alert("Obrazec je bil uspešno poslan! Prejeli boste potrditveno e-pošto.");
       onClose();
     } catch (error) {
@@ -289,7 +242,6 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
       <div className="bg-slate-900 w-full max-w-2xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 p-6 sm:p-10">
         <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors" onClick={onClose}><X size={20} /></button>
         <h2 className="retro-font text-xl sm:text-2xl text-teal-400 mb-8 uppercase text-center font-black tracking-tighter">Vloga za včlanitev</h2>
-        
         <form onSubmit={handleFormSubmit} className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
@@ -331,12 +283,10 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
               </select>
             </div>
           </div>
-
           <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 text-[11px] leading-relaxed text-slate-400 text-justify">
             S podpisom izjavljam, da želim postati član-ica kluba AVTONOSTALGIJA 80&90, klub ljubiteljev mladodobnikov in, da sprejemam statut kluba ter sem se pripravljen-a ravnati po njem.
             Klubu dovoljujem zbiranje, obdelavo in uporabo mojih osebnih podatkov za potrebe delovanja kluba, pri čemer je dolžno ravnati v skladu z določili Zakona o varstvu osebnih podatkov. Dovoljujem tudi javno objavljanje slikovnega, video in zvočnega materiala, ki prikazuje dejavnost društva in vsebuje moje posnetke.
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
             <SignaturePad onSave={setSignature} />
             <div className="space-y-1">
@@ -344,23 +294,16 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
               <input required type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" />
             </div>
           </div>
-
           <div className="flex items-start gap-3 px-1">
             <input required type="checkbox" id="agreement" className="mt-1 accent-teal-400" />
             <label htmlFor="agreement" className="text-[10px] text-slate-500 leading-snug">
               Z uporabo tega obrazca se strinjate s shranjevanjem in obdelavo vaših podatkov na tej spletni strani.*
             </label>
           </div>
-
           <div className="text-[10px] text-slate-400 italic px-1 pt-2">
             Članarino lahko poravnate preko povezave ali QR kode, ki jo boste prejeli po elektronski pošti po oddaji vloge.
           </div>
-
-          <button 
-            type="submit" 
-            disabled={submitting}
-            className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50"
-          >
+          <button type="submit" disabled={submitting} className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50">
             {submitting ? <Loader2 className="animate-spin mx-auto" /> : "Pošlji vlogo za včlanitev"}
           </button>
         </form>
@@ -369,39 +312,26 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
   );
 };
 
-// --- INITIAL DATA ---
-const INITIAL_ARTICLES: Article[] = [];
-const INITIAL_EVENTS: Event[] = [];
-const INITIAL_GALLERY: GalleryItem[] = [];
-
 const INITIAL_SETTINGS: SiteSettings = {
   heroImage: 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1920',
   aboutImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1200',
-  memberCount: '35.000+',
+  memberCount: '35,00',
   eventCount: '30+'
 };
-
-// --- COMPONENTS ---
 
 const Navbar = () => {
   const { lang, setLang, isAdmin, setShowLogin, setShowAdmin } = useApp();
   const [isOpen, setIsOpen] = useState(false);
   const t = translations[lang];
-
   const handleNavClick = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     setIsOpen(false);
   };
-
   const handleAdminAction = () => {
-    if (isAdmin) {
-      setShowAdmin(true);
-    } else {
-      setShowLogin(true);
-    }
+    if (isAdmin) setShowAdmin(true);
+    else setShowLogin(true);
     setIsOpen(false);
   };
-
   const menuItems = [
     { label: t.nav.home, id: 'hero' },
     { label: t.nav.intro, id: 'about' },
@@ -411,19 +341,13 @@ const Navbar = () => {
     { label: t.sections.youngtimerTitle, id: 'youngtimer' },
     { label: t.nav.contact, id: 'contact' }
   ];
-
   return (
     <nav className="fixed w-full z-50 glass border-b border-purple-500/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
           <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer relative z-50 ml-0 lg:-ml-16">
-            <img 
-              src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" 
-              alt="Avtonostalgija Logo" 
-              className="h-10 sm:h-12 w-auto object-contain"
-            />
+            <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" alt="Avtonostalgija Logo" className="h-10 sm:h-12 w-auto object-contain" />
           </div>
-
           <div className="hidden lg:flex items-center space-x-4 text-xs xl:text-sm font-medium">
             {menuItems.map(item => (
               <button key={item.id} onClick={() => handleNavClick(item.id)} className="hover:text-pink-500 transition-colors uppercase tracking-widest px-2 cursor-pointer">{item.label}</button>
@@ -437,13 +361,11 @@ const Navbar = () => {
               <span className="text-[10px] uppercase font-bold tracking-widest hidden xl:inline">{isAdmin ? "CMS" : "Admin"}</span>
             </button>
           </div>
-
           <button className="lg:hidden text-slate-100 p-2 cursor-pointer relative z-50" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle menu">
             {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
       </div>
-
       {isOpen && (
         <div className="lg:hidden glass border-t border-purple-500/20 absolute top-20 w-full h-[calc(100vh-5rem)] overflow-y-auto z-40">
           <div className="px-4 py-8 space-y-6 flex flex-col items-center text-center text-lg uppercase tracking-widest font-bold">
@@ -456,7 +378,7 @@ const Navbar = () => {
              </div>
              <button onClick={handleAdminAction} className={`w-full py-4 mt-4 border border-white/10 rounded-xl cursor-pointer ${isAdmin ? 'text-teal-400' : 'text-slate-400'} flex items-center justify-center gap-2 uppercase text-base tracking-widest`}>
               <User size={20} />
-              {isAdmin ? "Admin Panel" : t.common.login}
+              {isAdmin ? "Admin Panel" : translations[lang].common.login}
              </button>
           </div>
         </div>
@@ -482,40 +404,28 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="border border-teal-500/20 rounded-2xl overflow-hidden glass transition-all duration-300 hover:border-teal-400/50">
-      <button 
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-5 sm:p-6 text-left flex justify-between items-center group gap-4"
-      >
-        <span className="text-base sm:text-xl font-bold tracking-tight text-slate-100 group-hover:text-teal-400 transition-colors uppercase">
-          {question}
-        </span>
-        <ChevronDown 
-          className={`text-pink-500 shrink-0 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} 
-          size={24} 
-        />
+      <button onClick={() => setIsOpen(!isOpen)} className="w-full p-5 sm:p-6 text-left flex justify-between items-center group gap-4">
+        <span className="text-base sm:text-xl font-bold tracking-tight text-slate-100 group-hover:text-teal-400 transition-colors uppercase">{question}</span>
+        <ChevronDown className={`text-pink-500 shrink-0 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} size={24} />
       </button>
       <div className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-max opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-        <div className="p-5 sm:p-6 pt-0 text-slate-400 leading-relaxed font-light text-sm sm:text-base border-t border-white/5 bg-slate-950/30 whitespace-pre-wrap">
-          {answer}
-        </div>
+        <div className="p-5 sm:p-6 pt-0 text-slate-400 leading-relaxed font-light text-sm sm:text-base border-t border-white/5 bg-slate-950/30 whitespace-pre-wrap">{answer}</div>
       </div>
     </div>
   );
 };
 
-const YoungtimerSection = () => {
+const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
   const { lang, setShowMembershipModal } = useApp();
   const t = translations[lang];
-
   return (
-    <Section id="youngtimer" title={t.sections.youngtimerTitle} gradient="bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950">
+    <Section id="youngtimer" title={t.sections.youngtimerTitle} gradient={transparent ? "bg-transparent" : "bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950"}>
       <div className="max-w-4xl mx-auto space-y-12 sm:space-y-16">
         <div className="space-y-6">
           <div className="flex items-center gap-4 mb-6 sm:mb-10 justify-center sm:justify-start">
             <MessageSquare className="text-pink-500 shrink-0" size={28} />
             <h3 className="retro-font text-xl sm:text-2xl text-teal-400 uppercase tracking-widest">{t.faq.title}</h3>
           </div>
-          
           <div className="space-y-4">
             <FAQItem question={t.faq.q1} answer={t.faq.a1} />
             <FAQItem question={t.faq.q2} answer={t.faq.a2} />
@@ -527,39 +437,25 @@ const YoungtimerSection = () => {
             <FAQItem question={t.faq.q8} answer={t.faq.a8} />
           </div>
         </div>
-
-        {/* Včlani se Section */}
         <div id="vclani-se" className="space-y-10 sm:space-y-16 pt-10 sm:pt-20 border-t border-white/5">
           <div className="space-y-12">
             <h3 className="retro-font text-2xl sm:text-4xl text-teal-400 uppercase tracking-widest text-center font-black">Zakaj sem član Avtonostalgije 80&90?</h3>
-            
             <div className="grid grid-cols-1 gap-8">
               <div className="glass p-8 sm:p-12 rounded-[2.5rem] border border-white/10 relative overflow-hidden group">
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/10 blur-[80px] group-hover:bg-teal-400/10 transition-colors duration-1000" />
                 <div className="space-y-8 relative z-10">
                   <div className="space-y-4">
-                    <p className="text-lg sm:text-xl text-slate-100 font-bold leading-relaxed">
-                      Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitety, mojih spominov in tehnične kulture svojega časa.
-                    </p>
-                    <p className="text-lg sm:text-xl text-slate-100 font-bold leading-relaxed">
-                      Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.
-                    </p>
+                    <p className="text-lg sm:text-xl text-slate-100 font-bold leading-relaxed">Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitety, mojih spominov in tehnične kulture svojega časa.</p>
+                    <p className="text-lg sm:text-xl text-slate-100 font-bold leading-relaxed">Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.</p>
                   </div>
-
                   <div className="py-6 border-y border-white/5">
                     <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-4">Avtonostalgija 80&90 ni klub popustov.</p>
                     <p className="text-slate-300 leading-relaxed">Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev i oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
                   </div>
-
                   <div className="space-y-6">
                     <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Klub obstaja zato, da:</h4>
                     <ul className="space-y-4">
-                      {[
-                        "zastopa lastnike vozil v dialogu z zakonodajo v Sloveniji in Evropski uniji,",
-                        "ohranja pravico do uporabe, vožnje in dolgoročne vrednosti mladodobnih in starodobnih vozil,",
-                        "gradi okolje, v katerem so avtomobili 80. in 90. let prepoznani kot tehniška in kulturna dediščina,",
-                        "povezuje znanje, izkušnje in ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."
-                      ].map((item, i) => (
+                      {["zastopa lastnike vozil v dialogu z zakonodajo v Sloveniji in Evropski uniji,", "ohranja pravico do uporabe, vožnje in dolgoročne vrednosti mladodobnih in starodobnih vozil,", "gradi okolje, v katerem so avtomobili 80. in 90. let prepoznani kot tehniška in kulturna dediščina,", "povezuje znanje, izkušnje in ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."].map((item, i) => (
                         <li key={i} className="flex items-start gap-4 text-slate-300">
                           <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-2 shrink-0 shadow-[0_0_8px_#ec4899]" />
                           <span>{item}</span>
@@ -567,80 +463,12 @@ const YoungtimerSection = () => {
                       ))}
                     </ul>
                   </div>
-
-                  <div className="p-6 bg-slate-950/50 rounded-2xl border border-slate-800 italic text-slate-400 text-sm">
-                    Brez skupnosti zakonodaja ne deluje v našo korist. Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov i – kar je najpomembneje – ni prihodnosti za naše avtomobile.
-                  </div>
-                </div>
-              </div>
-
-              <div className="glass p-8 sm:p-12 rounded-[2.5rem] border border-white/10 relative overflow-hidden group">
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-teal-400/10 blur-[80px] group-hover:bg-pink-500/10 transition-colors duration-1000" />
-                <div className="space-y-10 relative z-10">
-                  <h4 className="retro-font text-xl sm:text-2xl text-teal-400 uppercase font-black tracking-widest text-center">Kaj pomeni članstvo v praksi?</h4>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <p className="text-slate-100 font-bold uppercase tracking-widest text-xs border-b border-white/10 pb-2">Dostop do znanja in podpore</p>
-                      <ul className="space-y-4">
-                        {[
-                          "strokovno vodenje postopkov certificiranja in tehničnih vprašanj,",
-                          "stalno spremljanje zakonodajnih sprememb in aktivnosti doma ter v tujini,",
-                          "pomoč pri homologacijah, uvozu, predelavah in vrednotenju vozil,"
-                        ].map((item, i) => (
-                          <li key={i} className="flex items-start gap-3 text-slate-400 text-sm">
-                            <ChevronRight size={14} className="text-teal-400 mt-1 shrink-0" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="space-y-4">
-                      <p className="text-slate-100 font-bold uppercase tracking-widest text-xs border-b border-white/10 pb-2">Skupnost in priložnosti</p>
-                      <ul className="space-y-4">
-                        {[
-                          "možnost aktivnega sodelovanja na klubskih dogodkih, vožnjah in tehničnih dnevih,",
-                          "večjo vidnost in priložnosti za vozila (mediji, filmi, razstave, posebni dogodki),",
-                          "povezovanje s skupnostjo, ki deli iste vrednote, razumevanje in strast."
-                        ].map((item, i) => (
-                          <li key={i} className="flex items-start gap-3 text-slate-400 text-sm">
-                            <ChevronRight size={14} className="text-teal-400 mt-1 shrink-0" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-
-                  <div className="bg-teal-400/5 p-8 rounded-3xl border border-teal-400/20 text-slate-300 text-sm leading-relaxed text-justify">
-                    Članstvo je pomembno, ker posameznik nima glasu, organizirana skupnost pa ga ima. Sodelovanje kluba s SVAMZ pa mu daje strokovno, pravno in institucionalno legitimnost ter glas v nacionalnih in evropskih zakonodajnih procesih, kjer se odloča o prihodnosti historičnih i youngtimer vozil; brez te povezave bi bil klub zgolj interesna skupina brez realnega vpliva, ne pa del sistema, ki dolgoročno ščiti pravico do obstoja, uporabe i priznanja teh vozil.
-                  </div>
-
-                  <p className="text-slate-300 leading-relaxed text-center font-medium">
-                    Z včlanitvijo v klub i SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. i 90. let kot živo dediščino, jim zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni i cenjeni tudi čez 10, 20 ali 30 let.
-                  </p>
-
-                  <div className="text-center pt-6">
-                    <p className="text-xl sm:text-2xl font-black text-pink-500 uppercase tracking-widest mb-2">Članstvo ni strošek.</p>
-                    <p className="text-slate-400 italic">Je zavestna naložba v prihodnost avtomobilske kulture, ki ti je blizu.</p>
-                  </div>
-
-                  <div className="pt-8 border-t border-white/10 text-center">
-                    <p className="text-lg sm:text-xl font-bold text-teal-400 mb-2">👉 Če razumeš, zakaj ti tvoj avto pomeni več kot le kos pločevine, potem Avtonostalgija 80&90 ni le klub.</p>
-                    <p className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tighter">Je tvoj prostor. Skupaj smo močnejši!</p>
-                  </div>
                 </div>
               </div>
             </div>
           </div>
-          
           <div className="flex justify-center mt-12">
-            <button 
-              onClick={() => setShowMembershipModal(true)}
-              className="px-12 py-5 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-2xl font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(20,184,166,0.4)] text-xl cursor-pointer"
-            >
-              Postani član zdaj
-            </button>
+            <button onClick={() => setShowMembershipModal(true)} className="px-12 py-5 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-2xl font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(20,184,166,0.4)] text-xl cursor-pointer">Postani član zdaj</button>
           </div>
         </div>
       </div>
@@ -655,7 +483,6 @@ const Hero = () => {
   const parts = title.split(' ');
   const yearPart = parts.pop();
   const namePart = parts.join(' ');
-
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -664,63 +491,29 @@ const Hero = () => {
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
         <h1 className="retro-font font-black mb-4 sm:mb-6 tracking-tighter uppercase text-center w-full flex flex-col items-center">
-          <span className="text-[6.2vw] xs:text-[7.5vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl whitespace-nowrap block neon-text-pink leading-none pb-2 sm:pb-4">
-            {namePart}
-          </span>
-          <span className="text-[12vw] xs:text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl block neon-text-teal text-teal-400 leading-none">
-            {yearPart}
-          </span>
+          <span className="text-[6.2vw] xs:text-[7.5vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl whitespace-nowrap block neon-text-pink leading-none pb-2 sm:pb-4">{namePart}</span>
+          <span className="text-[12vw] xs:text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl block neon-text-teal text-teal-400 leading-none">{yearPart}</span>
         </h1>
-        <p className="text-sm sm:text-lg md:text-2xl text-teal-400 font-light mb-8 sm:mb-12 tracking-[0.2em] sm:tracking-[0.3em] uppercase italic opacity-90 text-center w-full max-w-3xl mx-auto">
-          {t.hero.subtitle}
-        </p>
+        <p className="text-sm sm:text-lg md:text-2xl text-teal-400 font-light mb-8 sm:mb-12 tracking-[0.2em] sm:tracking-[0.3em] uppercase italic opacity-90 text-center w-full max-w-3xl mx-auto">{t.hero.subtitle}</p>
         <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 w-full max-w-xs sm:max-w-none mx-auto">
-          <button onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-pink-500 hover:bg-pink-600 text-white rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 shadow-lg uppercase tracking-widest cursor-pointer relative z-20">
-            {t.sections.events}
-          </button>
-          <button onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 border-2 border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-slate-950 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 uppercase tracking-widest cursor-pointer relative z-20">
-            {t.sections.news}
-          </button>
-          <button onClick={() => document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 shadow-lg uppercase tracking-widest cursor-pointer relative z-20">
-            Včlani se
-          </button>
+          <button onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-pink-500 hover:bg-pink-600 text-white rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 shadow-lg uppercase tracking-widest cursor-pointer relative z-20">{translations[lang].sections.events}</button>
+          <button onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 border-2 border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-slate-950 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 uppercase tracking-widest cursor-pointer relative z-20">{translations[lang].sections.news}</button>
+          <button onClick={() => document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 shadow-lg uppercase tracking-widest cursor-pointer relative z-20">Včlani se</button>
         </div>
       </div>
     </section>
   );
 };
 
-const Lightbox = ({ images, currentIndex, onClose, onPrev, onNext }: { images: string[], currentIndex: number, onClose: () => void, onPrev: () => void, onNext: () => void }) => (
-  <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 cursor-pointer" onClick={onClose}>
-    <button className="absolute top-4 right-4 sm:top-6 sm:right-6 text-white p-2 sm:p-3 bg-white/10 hover:bg-pink-500 rounded-full z-[110] transition-colors cursor-pointer" onClick={onClose} aria-label="Close lightbox"><X size={28} /></button>
-    {images.length > 1 && (
-      <>
-        <button className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 text-white p-2 sm:p-4 bg-white/5 hover:bg-teal-400 hover:text-slate-950 rounded-full z-[110] transition-all cursor-pointer" onClick={(e) => { e.stopPropagation(); onPrev(); }}><ArrowLeft size={32} /></button>
-        <button className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 text-white p-2 sm:p-4 bg-white/5 hover:bg-teal-400 hover:text-slate-950 rounded-full z-[110] transition-all cursor-pointer" onClick={(e) => { e.stopPropagation(); onNext(); }}><ArrowRight size={32} /></button>
-      </>
-    )}
-    <div className="relative w-full max-w-4xl max-h-[80vh] flex flex-col items-center justify-center px-4" onClick={(e) => e.stopPropagation()}>
-      <img src={images[currentIndex]} className="max-w-full max-h-full object-contain rounded-lg shadow-2xl border border-white/5" alt="Enlarged" />
-      <div className="absolute bottom-[-40px] text-teal-400 text-xs sm:text-sm font-black tracking-[0.5em] uppercase">{currentIndex + 1} / {images.length}</div>
-    </div>
-  </div>
-);
-
 const LoginPageOverlay = ({ onClose }: { onClose: () => void }) => {
   const { setIsAdmin, setShowAdmin } = useApp();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (username === 'ADMIN8090' && password === 't2Qy!BD$Q$(eFV8R') { 
-      setIsAdmin(true); 
-      onClose();
-      setShowAdmin(true);
-    } 
-    else { alert('Napačno uporabniško ime ali geslo!'); }
+    if (username === 'ADMIN8090' && password === 't2Qy!BD$Q$(eFV8R') { setIsAdmin(true); onClose(); setShowAdmin(true); } 
+    else alert('Napačno uporabniško ime ali geslo!');
   };
-
   return (
     <div className="fixed inset-0 z-[70] glass flex items-center justify-center p-4">
       <div className="bg-slate-900 p-8 sm:p-10 rounded-3xl w-full max-w-sm border border-pink-500/30 shadow-2xl relative">
@@ -757,7 +550,6 @@ const AdminList = ({ title, icon, items, onAdd, onEdit, onDelete, lang }: any) =
           </div>
         </div>
       ))}
-      {items.length === 0 && <div className="text-center py-6 sm:py-8 text-slate-600 text-[10px] uppercase tracking-widest italic border-2 border-dashed border-slate-900 rounded-2xl">Seznam je prazen</div>}
     </div>
   </div>
 );
@@ -767,85 +559,35 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
   const [showForm, setShowForm] = useState<'article' | 'event' | 'gallery' | 'settings' | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    titleSi: '', titleEn: '', excerptSi: '', excerptEn: '', contentSi: '', contentEn: '',
-    image: '', location: '', date: new Date().toISOString().split('T')[0], galleryImages: [] as string[], author: 'Admin', category: 'Blog'
-  });
-
+  const [formData, setFormData] = useState({ titleSi: '', titleEn: '', excerptSi: '', excerptEn: '', contentSi: '', contentEn: '', image: '', location: '', date: new Date().toISOString().split('T')[0], galleryImages: [] as string[], author: 'Admin', category: 'Blog' });
   const [settingsData, setSettingsData] = useState<SiteSettings>(settings);
-
   const handleEdit = (type: 'article' | 'event' | 'gallery', item: any) => {
     setEditingId(item.id);
     setShowForm(type);
-    if (type === 'gallery') {
-      setFormData({ ...formData, titleSi: item.title.si, titleEn: item.title.en, galleryImages: item.images || [] });
-    } else {
-      setFormData({
-        titleSi: item.titleSi, titleEn: item.titleEn,
-        excerptSi: item.excerptSi || '',
-        excerptEn: item.excerptEn || '',
-        contentSi: item.contentSi || '',
-        contentEn: item.contentEn || '',
-        image: item.image, location: item.location || '', date: item.date || new Date().toISOString().split('T')[0],
-        galleryImages: [], author: item.author || 'Admin', category: item.category || 'Blog'
-      });
-    }
+    if (type === 'gallery') setFormData({ ...formData, titleSi: item.title.si, titleEn: item.title.en, galleryImages: item.images || [] });
+    else setFormData({ titleSi: item.title.si, titleEn: item.title.en, excerptSi: (type === 'article' ? item.excerpt?.si : item.description?.si) || '', excerptEn: (type === 'article' ? item.excerpt?.en : item.description?.en) || '', contentSi: (type === 'article' ? item.content?.si : '') || '', contentEn: (type === 'article' ? item.content?.en : '') || '', image: item.image, location: item.location || '', date: item.date || new Date().toISOString().split('T')[0], galleryImages: [], author: item.author || 'Admin', category: item.category || 'Blog' });
   };
-
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
-    const fieldName = e.target.name;
-
     setUploading(true);
     try {
       if (showForm === 'gallery') {
-        const maxWidth = 800;
-        const quality = 0.4;
-        const currentCount = formData.galleryImages.length;
-        const allowedCount = 25 - currentCount;
-        
-        const fileArray = Array.from(files).slice(0, allowedCount);
-        const compressedResults = await Promise.all(
-          fileArray.map(file => compressImage(file as File, maxWidth, quality))
-        );
-        
-        setFormData(prev => ({ 
-          ...prev, 
-          galleryImages: [...prev.galleryImages, ...compressedResults] 
-        }));
+        const fileArray = Array.from(files).slice(0, 25 - formData.galleryImages.length);
+        const compressedResults = await Promise.all(fileArray.map(file => compressImage(file as File, 800, 0.4)));
+        setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...compressedResults] }));
       } else {
-        const file = files[0] as File;
-        const maxWidth = 1000;
-        const quality = 0.45;
-        const compressed = await compressImage(file as File, maxWidth, quality);
-        
-        if (showForm === 'settings') {
-          setSettingsData(prev => ({ ...prev, [fieldName]: compressed }));
-        } else {
-          setFormData(prev => ({ ...prev, image: compressed }));
-        }
+        const compressed = await compressImage(files[0] as File, 1000, 0.45);
+        if (showForm === 'settings') setSettingsData(prev => ({ ...prev, [e.target.name]: compressed }));
+        else setFormData(prev => ({ ...prev, image: compressed }));
       }
-    } catch (err) { 
-      alert("Napaka pri nalaganju slike."); 
-    } finally { 
-      setUploading(false); 
-    }
+    } catch (err) { alert("Napaka pri nalaganju slike."); } finally { setUploading(false); }
   };
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (showForm === 'settings') { 
-      setSettings(settingsData); 
-      addLog('update', 'settings', 'site-settings'); 
-      setShowForm(null); 
-      return; 
-    }
-
+    if (showForm === 'settings') { setSettings(settingsData); addLog('update', 'settings', 'site-settings'); setShowForm(null); return; }
     const id = editingId || Date.now().toString();
     const slug = (formData.titleEn || formData.titleSi).toLowerCase().replace(/[^a-z0-9]/g, '-');
-
     if (showForm === 'article') {
       const artData: Article = { id, slug, title: { si: formData.titleSi, en: formData.titleEn }, excerpt: { si: formData.excerptSi, en: formData.excerptEn }, content: { si: formData.contentSi, en: formData.contentEn }, image: formData.image, author: formData.author, date: formData.date, category: formData.category, tags: [] };
       setArticles(prev => editingId ? prev.map(a => a.id === id ? artData : a) : [artData, ...prev]);
@@ -861,199 +603,37 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     }
     setShowForm(null); setEditingId(null);
   };
-
   return (
     <div className="fixed inset-0 z-[70] glass flex items-start justify-center p-4 lg:p-12 overflow-y-auto">
       <div className="bg-slate-900 w-full max-w-7xl rounded-3xl p-6 sm:p-12 border border-purple-500/30 shadow-2xl relative my-8">
         <button className="absolute top-4 right-4 sm:top-8 sm:right-8 p-3 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors cursor-pointer" onClick={onClose}><X size={20} /></button>
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-10 sm:mb-16 gap-6">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-6">
           <div className="text-center sm:text-left"><h1 className="retro-font text-2xl sm:text-3xl text-teal-400 tracking-tighter uppercase font-black">Nadzorna Plošča</h1></div>
           <div className="flex items-center gap-4">
              <button onClick={() => { setSettingsData(settings); setShowForm('settings'); }} className="flex items-center gap-2 bg-indigo-950/50 border border-indigo-500/30 px-6 py-3 rounded-xl hover:bg-indigo-500 transition-all font-bold uppercase tracking-widest text-xs text-indigo-400"><Settings size={16} /> Nastavitve</button>
              <button onClick={() => { setIsAdmin(false); onClose(); }} className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-xl hover:bg-pink-500 transition-all font-bold uppercase tracking-widest text-xs"><LogOut size={16} /> Odjava</button>
           </div>
         </div>
-
-        {showForm === 'settings' && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          <AdminList title="Članki" icon={<ImageIcon size={20} className="text-pink-500" />} items={articles} onAdd={() => { setEditingId(null); setFormData({ ...formData, galleryImages: [] }); setShowForm('article'); }} onEdit={(item: any) => handleEdit('article', item)} onDelete={(id: string) => { setArticles(prev => prev.filter(a => a.id !== id)); addLog('delete', 'article', id); }} lang={lang} />
+          <AdminList title="Dogodki" icon={<Calendar size={20} className="text-teal-400" />} items={events} onAdd={() => { setEditingId(null); setFormData({ ...formData, galleryImages: [] }); setShowForm('event'); }} onEdit={(item: any) => handleEdit('event', item)} onDelete={(id: string) => { setEvents(prev => prev.filter(e => e.id !== id)); addLog('delete', 'event', id); }} lang={lang} />
+        </div>
+        <div className="grid grid-cols-1 gap-8">
+           <AdminList title="Galerija" icon={<ImageIcon size={20} className="text-purple-500" />} items={gallery} onAdd={() => { setEditingId(null); setFormData({ ...formData, galleryImages: [] }); setShowForm('gallery'); }} onEdit={(item: any) => handleEdit('gallery', item)} onDelete={(id: string) => { setGallery(prev => prev.filter(g => g.id !== id)); addLog('delete', 'gallery', id); }} lang={lang} />
+        </div>
+        {showForm && (
           <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
-            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-2xl border border-indigo-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
-              <h2 className="retro-font text-xl sm:text-2xl text-indigo-400 mb-6 sm:mb-8 uppercase text-center font-black">Nastavitve Strani</h2>
-              <div className="space-y-6 mb-8">
-                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Člani</label>
-                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.memberCount} onChange={e => setSettingsData({...settingsData, memberCount: e.target.value})} />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Dogodki</label>
-                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.eventCount} onChange={e => setSettingsData({...settingsData, eventCount: e.target.value})} />
-                    </div>
-                 </div>
-                 
-                 <div>
-                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Slika "Zgodba o strasti"</label>
-                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3 transition-colors">
-                       <input type="file" name="aboutImage" className="hidden" onChange={handleFileUpload} />
-                       <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400 font-bold uppercase tracking-widest text-[10px]">
-                          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži sliko
-                       </div>
-                    </label>
-                    <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs mb-2" value={settingsData.aboutImage} onChange={e => setSettingsData({...settingsData, aboutImage: e.target.value})} />
-                 </div>
-
-                 <div>
-                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Hero ozadje</label>
-                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3 transition-colors">
-                       <input type="file" name="heroImage" className="hidden" onChange={handleFileUpload} />
-                       <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400 font-bold uppercase tracking-widest text-[10px]">
-                          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži ozadje
-                       </div>
-                    </label>
-                    <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={settingsData.heroImage} onChange={e => setSettingsData({...settingsData, heroImage: e.target.value})} />
-                 </div>
-              </div>
-              <div className="flex gap-4">
-                <button type="submit" className="flex-1 py-4 bg-indigo-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-indigo-600 transition-colors">Shrani</button>
+            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-4xl border border-pink-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
+              <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-6 uppercase text-center font-black">{editingId ? 'Uredi' : 'Ustvari'}</h2>
+              <div className="flex gap-4 mt-8">
+                <button type="submit" className="flex-1 py-4 bg-pink-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-pink-600 transition-colors">Shrani</button>
                 <button type="button" onClick={() => setShowForm(null)} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-slate-700 transition-colors">Prekliči</button>
               </div>
             </form>
           </div>
         )}
-
-        {showForm && showForm !== 'settings' && (
-          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
-            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-4xl border border-pink-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
-              <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-6 sm:mb-8 uppercase text-center font-black">{editingId ? 'Uredi' : 'Ustvari'}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-10">
-                <div className="space-y-4">
-                  <input required placeholder="Naslov (SI)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.titleSi} onChange={e => setFormData({...formData, titleSi: e.target.value})} />
-                  <input required placeholder="Title (EN)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.titleEn} onChange={e => setFormData({...formData, titleEn: e.target.value})} />
-                  {(showForm === 'article' || showForm === 'event') && (
-                    <><textarea required placeholder="Povzetek (SI)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-20 outline-none text-sm" value={formData.excerptSi} onChange={e => setFormData({...formData, excerptSi: e.target.value})} /><textarea required placeholder="Summary (EN)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-20 outline-none text-sm" value={formData.excerptEn} onChange={e => setFormData({...formData, excerptEn: e.target.value})} /></>
-                  )}
-                </div>
-                <div className="space-y-4">
-                  {showForm === 'gallery' ? (
-                    <div className="space-y-4">
-                      <label className="block p-6 sm:p-8 border-2 border-dashed border-slate-700 rounded-xl transition-colors text-center cursor-pointer group hover:border-teal-400">
-                        <input type="file" accept="image/*" multiple className="hidden" onChange={handleFileUpload} />
-                        <p className="text-[10px] uppercase tracking-widest text-slate-400">Dodaj slike (do 25)</p>
-                      </label>
-                      <div className="grid grid-cols-5 gap-2 max-h-40 overflow-y-auto p-2 bg-slate-950/50 rounded-xl">
-                        {formData.galleryImages.map((img, idx) => (
-                          <div key={idx} className="aspect-square rounded overflow-hidden relative group border border-slate-800">
-                            <img src={img} className="w-full h-full object-cover" alt="Preview" />
-                            <button type="button" onClick={() => setFormData(prev => ({...prev, galleryImages: prev.galleryImages.filter((_, i) => i !== idx)}))} className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-bl">
-                              <Trash2 size={10} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <><textarea required placeholder="Vsebina (SI)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-24 sm:h-32 outline-none text-sm" value={formData.contentSi} onChange={e => setFormData({...formData, contentSi: e.target.value})} /><textarea required placeholder="Content (EN)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-24 sm:h-32 outline-none text-sm" value={formData.contentEn} onChange={e => setFormData({...formData, contentEn: e.target.value})} /></>
-                  )}
-                  {showForm !== 'gallery' && (
-                    <div className="space-y-2">
-                      <label className="block p-3 border-2 border-dashed border-slate-700 rounded-xl text-center cursor-pointer hover:border-teal-400 transition-colors">
-                        <input type="file" accept="image/*" className="hidden" onChange={handleFileUpload} />
-                        <p className="text-[10px] uppercase tracking-widest text-slate-400">Naloži naslovno sliko</p>
-                      </label>
-                      <input placeholder="Ali URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
-                    </div>
-                  )}
-                  <div className="grid grid-cols-2 gap-4">
-                    <input type="date" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
-                    {showForm === 'event' && <input placeholder="Lokacija" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />}
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6"><button type="submit" disabled={uploading} className="flex-1 py-4 bg-pink-500 rounded-xl font-black shadow-xl uppercase tracking-widest text-sm cursor-pointer disabled:opacity-50 hover:bg-pink-600 transition-colors">Shrani</button><button type="button" onClick={() => { setShowForm(null); setEditingId(null); }} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm cursor-pointer hover:bg-slate-700">Prekliči</button></div>
-            </form>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
-          <div className="lg:col-span-3 space-y-12 sm:space-y-16">
-            <AdminList title="Članki" icon={<ImageIcon className="text-pink-500" />} items={articles} onAdd={() => setShowForm('article')} onEdit={(item: any) => handleEdit('article', item)} onDelete={(id: string) => { setArticles(prev => prev.filter(x => x.id !== id)); addLog('delete', 'article', id); }} lang={lang} />
-            <AdminList title="Dogodki" icon={<Calendar className="text-teal-400" />} items={events} onAdd={() => setShowForm('event')} onEdit={(item: any) => handleEdit('event', item)} onDelete={(id: string) => { setEvents(prev => prev.filter(x => x.id !== id)); addLog('delete', 'event', id); }} lang={lang} />
-            <AdminList title="Galerije" icon={<ExternalLink className="text-purple-400" />} items={gallery} onAdd={() => setShowForm('gallery')} onEdit={(item: any) => handleEdit('gallery', item)} onDelete={(id: string) => { setGallery(prev => prev.filter(x => x.id !== id)); addLog('delete', 'gallery', id); }} lang={lang} />
-          </div>
-          <div className="lg:col-span-1"><div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 shadow-xl"><h2 className="font-black text-[10px] mb-4 text-pink-500 tracking-widest uppercase">Dnevnik Aktivnosti</h2><div className="space-y-3 max-h-[500px] overflow-y-auto">{logs.length === 0 ? <p className="text-slate-600 italic text-[9px] uppercase">Brez zapisov.</p> : logs.map(log => (<div key={log.id} className="text-[9px] border-l-2 border-slate-800 pl-3 py-2 bg-slate-900/50 rounded-r-lg"><div className="text-slate-500 font-mono text-[7px] mb-1">{new Date(log.timestamp).toLocaleTimeString()}</div><div className="text-slate-200"><span className={`font-black uppercase ${log.action === 'create' ? 'text-teal-400' : 'text-pink-500'}`}>{log.action}</span> {log.type}</div></div>))}</div></div></div>
-        </div>
       </div>
     </div>
-  );
-};
-
-const MainContent = () => {
-  const { lang, events, articles, gallery, settings, setShowMembershipModal } = useApp();
-  const [activeGallery, setActiveGallery] = useState<GalleryItem | null>(null);
-  const [activeArticle, setActiveArticle] = useState<Article | null>(null);
-  const [activeEvent, setActiveEvent] = useState<Event | null>(null);
-  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const t = translations[lang];
-
-  return (
-    <>
-      {activeArticle && (
-        <div className="fixed inset-0 z-[60] glass flex items-center justify-center p-4 lg:p-12 overflow-y-auto">
-          <div className="bg-slate-900 w-full max-w-5xl rounded-3xl overflow-hidden border border-pink-500/30 relative flex flex-col shadow-2xl max-h-[90vh]">
-            <button className="absolute top-4 right-4 p-2 bg-slate-800/80 rounded-full hover:bg-pink-500 transition-colors cursor-pointer z-[70]" onClick={() => setActiveArticle(null)}><X size={20} /></button>
-            <div className="overflow-y-auto"><div className="w-full h-48 sm:h-[400px] md:h-[500px] overflow-hidden"><img src={activeArticle.image} className="w-full h-full object-cover" alt={activeArticle.title[lang]} /></div><div className="p-6 sm:p-10"><span className="bg-pink-500/20 text-pink-500 px-3 py-1 rounded-full text-[10px] font-black uppercase mb-4 inline-block">{activeArticle.category}</span><h2 className="retro-font text-xl sm:text-3xl text-teal-400 mb-6 uppercase">{activeArticle.title[lang]}</h2><div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap">{activeArticle.content[lang]}</div></div></div>
-          </div>
-        </div>
-      )}
-      {activeEvent && (
-        <div className="fixed inset-0 z-[60] glass flex items-center justify-center p-4 lg:p-12 overflow-y-auto">
-          <div className="bg-slate-900 w-full max-w-6xl rounded-3xl overflow-hidden border border-teal-500/30 relative flex flex-col shadow-2xl max-h-[90vh]">
-            <button className="absolute top-4 right-4 p-2 bg-slate-800/80 rounded-full hover:bg-teal-400 transition-colors cursor-pointer z-[70]" onClick={() => setActiveEvent(null)}><X size={20} /></button>
-            <div className="overflow-y-auto grid grid-cols-1 lg:grid-cols-2"><div className="h-48 sm:h-72 lg:h-full"><img src={activeEvent.image} className="w-full h-full object-cover" alt={activeEvent.title[lang]} /></div><div className="p-6 sm:p-10"><div className="flex flex-wrap items-center gap-6 mb-6"><div className="flex items-center text-slate-400 text-xs font-black uppercase"><Calendar size={16} className="mr-2 text-pink-500" /> {activeEvent.date}</div><div className="flex items-center text-slate-400 text-xs font-black uppercase"><MapPin size={16} className="mr-2 text-teal-400" /> {activeEvent.location}</div></div><h2 className="retro-font text-xl sm:text-3xl text-teal-400 mb-6 uppercase">{activeEvent.title[lang]}</h2><div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap">{activeEvent.description[lang]}</div></div></div>
-          </div>
-        </div>
-      )}
-      {activeGallery && (
-        <div className="fixed inset-0 z-[60] glass flex items-center justify-center p-4 lg:p-12 overflow-y-auto">
-          <div className="bg-slate-900 w-full max-w-7xl rounded-3xl p-6 sm:p-10 border border-pink-500/30 relative max-h-[90vh] overflow-y-auto">
-            <button className="absolute top-4 right-4 sm:top-8 sm:right-8 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors cursor-pointer" onClick={() => setActiveGallery(null)}><X size={20} /></button>
-            <h2 className="retro-font text-xl sm:text-3xl text-teal-400 mb-6 uppercase border-b border-slate-800 pb-4">{activeGallery.title[lang]}</h2>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{activeGallery.images.map((img, idx) => (<div key={idx} className="relative group cursor-zoom-in overflow-hidden rounded-xl aspect-square" onClick={() => setLightboxIndex(idx)}><img src={img} className="w-full h-full object-cover" alt={`Gallery ${idx}`} /></div>))}</div>
-          </div>
-        </div>
-      )}
-      {activeGallery && lightboxIndex !== null && (
-        <Lightbox images={activeGallery.images} currentIndex={lightboxIndex} onClose={() => setLightboxIndex(null)} onPrev={() => setLightboxIndex(prev => prev! > 0 ? prev! - 1 : activeGallery.images.length - 1)} onNext={() => setLightboxIndex(prev => prev! < activeGallery.images.length - 1 ? prev! + 1 : 0)} />
-      )}
-
-      <Hero />
-      <Section id="about" title={t.sections.introTitle} gradient="bg-gradient-to-b from-slate-950 to-indigo-900">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-center">
-          <div className="space-y-6 sm:space-y-8 text-center sm:text-left">
-            <p className="text-lg sm:text-2xl text-slate-300 leading-relaxed font-light">Avtonostalgija 80&90 ni zgolj klub, je skupnost ljubiteljev analogne dobe.</p>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4"><div className="p-4 sm:p-8 glass rounded-2xl border border-pink-500/20 text-center"><div className="text-3xl sm:text-5xl font-black text-pink-500 mb-1 sm:mb-2">{settings.memberCount}</div><div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Članov</div><a href="https://www.facebook.com/share/g/19R6ZkvvVd/?mibextid=wwXIfr" target="_blank" rel="noopener noreferrer" className="block mt-2 text-[10px] text-pink-500 hover:text-white font-black uppercase tracking-widest transition-colors">Obišči Facebook</a></div><div className="p-4 sm:p-8 glass rounded-2xl border border-teal-500/20 text-center"><div className="text-3xl sm:text-5xl font-black text-teal-400 mb-1 sm:mb-2">{settings.eventCount}</div><div className="text-[9px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Dogodkov</div></div></div>
-          </div>
-          <div className="relative group px-4 sm:px-0"><div className="absolute -inset-2 sm:-inset-4 bg-gradient-to-r from-pink-500 to-teal-400 rounded-2xl blur opacity-20 transition duration-1000"></div><img src={settings.aboutImage} className="relative z-10 rounded-2xl border border-white/10 shadow-2xl w-full" alt="Passion" /></div>
-        </div>
-      </Section>
-
-      <Section id="events" title={t.sections.events} gradient="bg-gradient-to-b from-indigo-900 to-purple-900">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-10">{events.map((event) => (<div key={event.id} onClick={() => setActiveEvent(event)} className="group bg-slate-900 rounded-2xl overflow-hidden border border-slate-800 hover:border-pink-500 transition-all shadow-2xl cursor-pointer"><div className="aspect-[16/10] overflow-hidden"><img src={event.image} className="w-full h-full object-cover" alt={event.title[lang]} /></div><div className="p-6 sm:p-8"><div className="flex items-center text-[10px] text-slate-400 mb-3 font-black uppercase"><Calendar size={14} className="mr-2 text-pink-500" /> {event.date}</div><h3 className="text-lg sm:text-2xl font-bold mb-3 sm:mb-4 group-hover:text-pink-500 transition-colors uppercase leading-tight line-clamp-2">{event.title[lang]}</h3><p className="text-[10px] sm:text-sm text-slate-400 flex items-center font-bold uppercase"><MapPin size={16} className="text-teal-400 mr-2" /> {event.location}</p></div></div>))}</div>
-      </Section>
-
-      <Section id="news" title={t.sections.news} gradient="bg-gradient-to-b from-purple-900 to-teal-900">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-12">{articles.map((article) => (<div key={article.id} onClick={() => setActiveArticle(article)} className="flex flex-col sm:flex-row gap-6 sm:gap-8 items-start sm:items-center glass p-6 sm:p-8 rounded-3xl border border-white/5 group hover:bg-white/10 transition-all cursor-pointer"><div className="w-full sm:w-44 lg:w-56 h-44 lg:h-56 shrink-0 overflow-hidden rounded-2xl border border-white/10"><img src={article.image} className="w-full h-full object-cover" alt={article.title[lang]} /></div><div className="flex-1 space-y-3"><span className="bg-pink-500/20 text-pink-500 px-3 py-1 rounded-full text-[9px] font-black uppercase">{article.category}</span><h3 className="text-xl sm:text-2xl font-black group-hover:text-teal-400 transition-colors uppercase line-clamp-2 leading-tight">{article.title[lang]}</h3><p className="text-slate-400 text-xs sm:text-sm line-clamp-2 opacity-80">{article.excerpt[lang]}</p><div className="text-pink-500 text-[10px] font-black uppercase flex items-center gap-2 group-hover:translate-x-2 transition-transform pt-1">{t.common.readMore} <ChevronRight size={14} /></div></div></div>))}</div>
-      </Section>
-
-      <Section id="gallery" title={t.sections.gallery} gradient="bg-gradient-to-b from-teal-900 to-slate-950">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-10">{gallery.map((item) => (<div key={item.id} className="relative group cursor-pointer overflow-hidden rounded-3xl shadow-2xl aspect-[4/3] border border-slate-800 hover:border-teal-400 transition-all" onClick={() => setActiveGallery(item)}><img src={item.images[0]} className="w-full h-full object-cover transition duration-1000 group-hover:scale-110" alt={item.title[lang]} /><div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex flex-col justify-end p-6 sm:p-10"><h3 className="retro-font text-lg sm:text-2xl text-white mb-2 uppercase">{item.title[lang]}</h3><div className="text-teal-400 text-[9px] font-black uppercase flex items-center gap-2"><ImageIcon size={16} /> {item.images.length} fotografij</div></div></div>))}</div>
-      </Section>
-
-      <YoungtimerSection />
-
-      <Section id="contact" title={t.nav.contact} gradient="bg-gradient-to-t from-black to-slate-950">
-        <div className="max-w-4xl mx-auto space-y-10 sm:space-y-12"><p className="text-lg sm:text-2xl text-slate-300 font-light italic text-center">"Klasika, ki jo pišete vi."</p><div className="space-y-6 sm:space-y-8 px-4"><a href="mailto:avtonostalgija8090@gmail.com" className="flex items-center justify-center gap-4 glass p-6 sm:p-12 rounded-3xl border border-pink-500/20 text-center hover:bg-pink-500/10 transition-all group overflow-hidden relative"><Mail className="text-pink-500 shrink-0" size={28} /><p className="text-slate-200 group-hover:text-pink-500 font-black text-sm sm:text-xl md:text-3xl tracking-widest uppercase transition-colors break-all leading-tight">avtonostalgija8090@gmail.com</p></a><div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">{[{ roleKey: 'president', name: 'Janez Tomc', tel: '+386 51 319 618' }, { roleKey: 'vicePresident', name: 'Darko Šturm', tel: '+386 31 790 605' }, { roleKey: 'secretary', name: 'Damir Sterle', tel: '+386 31 759 331' }].map((contact, idx) => (<a key={idx} href={`tel:${contact.tel.replace(/\s/g, '')}`} className="glass p-6 sm:p-8 rounded-2xl border border-teal-500/20 hover:border-teal-400 transition-all flex flex-col items-center text-center space-y-2"><div className="w-10 h-10 bg-teal-500/10 rounded-full flex items-center justify-center mb-1"><Phone className="text-teal-400" size={18} /></div><p className="text-pink-500 text-[9px] font-black uppercase tracking-widest">{t.contactRoles[contact.roleKey as keyof typeof t.contactRoles]}</p><p className="text-white text-base sm:text-lg font-bold uppercase">{contact.name}</p><p className="text-teal-400 font-mono text-xs">{contact.tel}</p></a>))}</div></div></div>
-      </Section>
-    </>
   );
 };
 
@@ -1062,97 +642,187 @@ const App = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [showMembershipModal, setShowMembershipModal] = useState(false);
-  
-  const [articles, setArticles] = useState<Article[]>(INITIAL_ARTICLES);
-  const [events, setEvents] = useState<Event[]>(INITIAL_EVENTS);
-  const [gallery, setGallery] = useState<GalleryItem[]>(INITIAL_GALLERY);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [gallery, setGallery] = useState<GalleryItem[]>([]);
   const [logs, setLogs] = useState<ActivityLog[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
-
-  // Tracker for synced state to avoid redundant upserts
-  const lastSyncedRef = useRef<Record<string, string>>({});
+  const [showMembershipModal, setShowMembershipModal] = useState(false);
 
   useEffect(() => {
-    const loadContent = async () => {
-      // Parallel loading of segmented collections and single-row items
-      const [art, ev, gal, lg, sett] = await Promise.all([
-        fetchPersistedData('an_articles'),
-        fetchPersistedData('an_events'),
-        fetchPersistedData('an_gallery'),
-        fetchPersistedData('an_logs'),
-        fetchPersistedData('an_settings')
-      ]);
-      
-      if (art) setArticles(art);
-      if (ev) setEvents(ev);
-      if (gal) setGallery(gal);
-      if (lg) setLogs(lg);
-      if (sett) setSettings(sett);
-      
-      setHasLoaded(true);
+    const load = async () => {
+      const storedArticles = await fetchPersistedData('an_articles');
+      const storedEvents = await fetchPersistedData('an_events');
+      const storedGallery = await fetchPersistedData('an_gallery');
+      const storedLogs = await fetchPersistedData('an_logs');
+      const storedSettings = await fetchPersistedData('an_settings');
+      if (storedArticles) setArticles(storedArticles);
+      if (storedEvents) setEvents(storedEvents);
+      if (storedGallery) setGallery(storedGallery);
+      if (storedLogs) setLogs(storedLogs);
+      if (storedSettings) setSettings(storedSettings);
     };
-    loadContent();
+    load();
   }, []);
 
-  useEffect(() => {
-    if (!hasLoaded) return;
-    
-    const saveToStorage = async () => {
-      const dataToSync = {
-        'an_articles': articles,
-        'an_events': events,
-        'an_gallery': gallery,
-        'an_logs': logs,
-        'an_settings': settings
-      };
+  useEffect(() => { persistData('an_articles', articles); }, [articles]);
+  useEffect(() => { persistData('an_events', events); }, [events]);
+  useEffect(() => { persistData('an_gallery', gallery); }, [gallery]);
+  useEffect(() => { persistData('an_logs', logs); }, [logs]);
+  useEffect(() => { persistData('an_settings', settings); }, [settings]);
 
-      // Only sync keys that actually changed
-      const keysToSync = Object.entries(dataToSync).filter(([key, value]) => {
-        const stringified = JSON.stringify(value);
-        if (lastSyncedRef.current[key] === stringified) return false;
-        lastSyncedRef.current[key] = stringified;
-        return true;
-      });
-
-      if (keysToSync.length === 0) return;
-
-      setIsSaving(true);
-      try {
-        // Sync items (segmented sync is handled inside persistData)
-        for (const [key, value] of keysToSync) {
-          await persistData(key, value);
-        }
-      } catch (e) {
-        console.error("Critical app-level save error", e);
-      } finally {
-        setIsSaving(false);
-      }
-    };
-
-    // Debounce to prevent rapid fire sync
-    const timer = setTimeout(saveToStorage, 1200);
-    return () => clearTimeout(timer);
-  }, [articles, events, gallery, logs, settings, hasLoaded]);
-
-  const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => { 
-    setLogs(prev => [{ id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() }, ...prev]); 
+  const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => {
+    const newLog: ActivityLog = { id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() };
+    setLogs(prev => [newLog, ...prev.slice(0, 49)]);
   };
 
   return (
-    <AppContext.Provider value={{ lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin, articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog, isSaving, setIsSaving, settings, setSettings, showMembershipModal, setShowMembershipModal }}>
-      <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-pink-500 font-sans tracking-tight overflow-x-hidden">
+    <AppContext.Provider value={{
+      lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin,
+      articles, setArticles, events, setEvents, gallery, setGallery, logs, addLog,
+      isSaving, setIsSaving, settings, setSettings, showMembershipModal, setShowMembershipModal
+    }}>
+      <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-pink-500/30 selection:text-pink-400">
         <Navbar />
-        {isSaving && <div className="fixed bottom-4 right-4 z-[99] glass px-4 py-2 rounded-full border border-teal-500/50 flex items-center gap-2 text-[9px] font-black uppercase text-teal-400 shadow-2xl"><Loader2 size={10} className="animate-spin" /> Sinhronizacija z oblakom...</div>}
-        <main className="w-full">
-          <MainContent />
-          {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
-          {showAdmin && isAdmin && <AdminCMSOverlay onClose={() => setShowAdmin(false)} />}
-          {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
+        <main>
+          <Hero />
+          
+          <Section id="about" title={translations[lang].sections.introTitle} gradient="bg-gradient-to-b from-slate-950 to-indigo-950">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 items-center">
+              <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 text-center lg:text-left">
+                <p className="text-base sm:text-xl leading-relaxed text-slate-300 font-light">
+                  Naš namen je predvsem druženje enako mislečih, izmenjava izkušenj in seveda ohranjanje tehnične kulture. Naši začetki segajo v avgust 2018, ko sva Tomaž Beguš in Janez Tomc postavila Facebook stran in malo kasneje tudi <a href="https://www.facebook.com/groups/avtonostalgija" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-teal-400 transition-colors underline">skupino</a>. V začetku leta 2020 smo registrirali uradni klub in se kmalu pridružili zvezi SVAMZ. Prvo Slovensko youngtimer srečanje smo organizirali 11. 5. 2019; z leti je postalo tradicionalno in vsako leto bolj izpopolnjeno.
+                </p>
+                <div className="grid grid-cols-2 gap-6 sm:gap-8 pt-6">
+                  <div>
+                    <div className="retro-font text-3xl sm:text-4xl text-pink-500 font-black mb-1">35,00</div>
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">SLEDILCEV</div>
+                  </div>
+                  <div>
+                    <div className="retro-font text-3xl sm:text-4xl text-teal-400 font-black mb-1">30+</div>
+                    <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">DOGODKOV</div>
+                  </div>
+                </div>
+              </div>
+              <div className="relative order-1 lg:order-2 group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-pink-500 to-teal-400 rounded-[2rem] blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <img src={settings.aboutImage} className="relative rounded-[2rem] shadow-2xl border border-white/10 w-full object-cover aspect-video sm:aspect-square lg:aspect-video" alt="About" />
+              </div>
+            </div>
+          </Section>
+
+          <Section id="news" title={translations[lang].sections.news} gradient="bg-gradient-to-b from-indigo-950 to-purple-950">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {articles.map(article => (
+                <article key={article.id} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all hover:-translate-y-2">
+                  <div className="aspect-video overflow-hidden">
+                    <img src={article.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={article.title[lang]} />
+                  </div>
+                  <div className="p-8 space-y-4">
+                    <div className="flex justify-between items-center text-[10px] uppercase tracking-widest text-slate-500 font-bold">
+                      <span>{article.category}</span>
+                      <span>{new Date(article.date).toLocaleDateString()}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{article.title[lang]}</h3>
+                    <p className="text-slate-400 text-sm line-clamp-3 leading-relaxed">{article.excerpt[lang]}</p>
+                    <button className="pt-4 flex items-center gap-2 text-teal-400 font-black uppercase tracking-widest text-[10px] group/btn">
+                      {translations[lang].common.readMore} <ChevronRight size={14} className="group-hover/btn:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </Section>
+
+          <Section id="events" title={translations[lang].sections.events} gradient="bg-gradient-to-b from-purple-950 to-slate-950">
+            <div className="space-y-6">
+              {events.map(event => (
+                <div key={event.id} className="group flex flex-col lg:flex-row bg-slate-900/50 rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-teal-400/50 transition-all">
+                  <div className="lg:w-1/3 aspect-video lg:aspect-auto overflow-hidden">
+                    <img src={event.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={event.title[lang]} />
+                  </div>
+                  <div className="p-8 lg:p-12 flex-1 flex flex-col justify-center space-y-6">
+                    <div className="flex flex-wrap gap-6 text-[10px] uppercase tracking-[0.2em] font-black">
+                      <div className="flex items-center gap-2 text-pink-500"><Calendar size={14} /> {new Date(event.date).toLocaleDateString()}</div>
+                      <div className="flex items-center gap-2 text-teal-400"><MapPin size={14} /> {event.location}</div>
+                    </div>
+                    <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tighter">{event.title[lang]}</h3>
+                    <p className="text-slate-400 leading-relaxed text-sm sm:text-base">{event.description[lang]}</p>
+                    <button className="w-fit px-8 py-3 bg-white/5 hover:bg-teal-400 hover:text-slate-950 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all border border-white/10">Podrobnosti dogodka</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Section>
+
+          <div className="bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950">
+            <Section id="gallery" title={translations[lang].sections.gallery} gradient="bg-transparent">
+               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {gallery.flatMap(item => item.images).slice(0, 12).map((img, i) => (
+                    <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-white/5 cursor-pointer group relative">
+                      <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Gallery" />
+                      <div className="absolute inset-0 bg-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                         <ImageIcon className="text-white" size={24} />
+                      </div>
+                    </div>
+                  ))}
+               </div>
+            </Section>
+            <YoungtimerSection transparent />
+          </div>
+
+          <Section id="contact" title={translations[lang].nav.contact} gradient="bg-slate-950">
+            <div className="max-w-4xl mx-auto space-y-12 text-center sm:text-left">
+              <div className="space-y-4">
+                <h3 className="retro-font text-2xl text-teal-400 uppercase tracking-widest">Kje nas najdete?</h3>
+                <p className="text-slate-400 leading-relaxed">Pridružite se nam na naših srečanjih ali nas kontaktirajte preko spodnjih podatkov.</p>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all group">
+                  <div className="flex items-center gap-4 mb-3 justify-center sm:justify-start">
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-all shadow-lg"><Phone size={18} /></div>
+                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Janez Tomc</div>
+                  </div>
+                  <div className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-1">Predsednik</div>
+                  <div className="text-lg font-black tracking-tight">051 319 618</div>
+                </div>
+                <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all group">
+                  <div className="flex items-center gap-4 mb-3 justify-center sm:justify-start">
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-all shadow-lg"><Phone size={18} /></div>
+                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Darko Šturm</div>
+                  </div>
+                  <div className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-1">Podpredsednik</div>
+                  <div className="text-lg font-black tracking-tight">031 790 605</div>
+                </div>
+                <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all group">
+                  <div className="flex items-center gap-4 mb-3 justify-center sm:justify-start">
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-all shadow-lg"><Phone size={18} /></div>
+                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Damir Sterle</div>
+                  </div>
+                  <div className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-1">Tajnik</div>
+                  <div className="text-lg font-black tracking-tight">+386 31 759 331</div>
+                </div>
+              </div>
+              <div className="glass p-8 rounded-3xl border border-teal-400/20 flex flex-col items-center justify-center group hover:border-teal-400/50 transition-all">
+                <Mail className="text-teal-400 mb-4 group-hover:scale-110 transition-transform" size={32} />
+                <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-black mb-2">Pišite nam na</div>
+                <a href="mailto:avtonostalgija8090@gmail.com" className="text-xl sm:text-2xl font-black text-white hover:text-teal-400 transition-colors tracking-tight">avtonostalgija8090@gmail.com</a>
+              </div>
+            </div>
+          </Section>
         </main>
-        <footer className="bg-gradient-to-b from-slate-950 to-indigo-950 border-t border-purple-500/20 py-16 text-center"><div className="max-w-7xl mx-auto space-y-8"><h3 className="retro-font text-2xl sm:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-teal-400 uppercase">Avtonostalgija 80&90</h3><div className="text-[10px] font-black uppercase tracking-[1em] text-slate-700 opacity-50">&copy; 2024 Vse pravice pridržane.</div></div></footer>
+
+        <footer className="py-12 border-t border-white/5 bg-slate-950 text-center">
+          <div className="max-w-7xl mx-auto px-4 space-y-8">
+            <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" className="h-12 mx-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" alt="Logo" />
+            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-500 font-bold">© {new Date().getFullYear()} AVTONOSTALGIJA 80&90. Vse pravice pridržane.</p>
+          </div>
+        </footer>
+
+        {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
+        {showAdmin && <AdminCMSOverlay onClose={() => setShowAdmin(false)} />}
+        {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
       </div>
     </AppContext.Provider>
   );
