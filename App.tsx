@@ -285,7 +285,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] glass flex items-center justify-center p-4 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] glass flex items-start justify-center p-4 overflow-y-auto">
       <div className="bg-slate-900 w-full max-w-2xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 p-6 sm:p-10">
         <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors" onClick={onClose}><X size={20} /></button>
         <h2 className="retro-font text-xl sm:text-2xl text-teal-400 mb-8 uppercase text-center font-black tracking-tighter">Vloga za včlanitev</h2>
@@ -493,8 +493,8 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
           size={24} 
         />
       </button>
-      <div className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-        <div className="p-5 sm:p-6 pt-0 text-slate-400 leading-relaxed font-light text-sm sm:text-base border-t border-white/5 bg-slate-950/30">
+      <div className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-max opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+        <div className="p-5 sm:p-6 pt-0 text-slate-400 leading-relaxed font-light text-sm sm:text-base border-t border-white/5 bg-slate-950/30 whitespace-pre-wrap">
           {answer}
         </div>
       </div>
@@ -521,38 +521,9 @@ const YoungtimerSection = () => {
             <FAQItem question={t.faq.q3} answer={t.faq.a3} />
             <FAQItem question={t.faq.q4} answer={t.faq.a4} />
             <FAQItem question={t.faq.q5} answer={t.faq.a5} />
-          </div>
-        </div>
-
-        <div className="space-y-6 sm:space-y-8 pt-6 sm:pt-10">
-          <h3 className="retro-font text-xl sm:text-2xl text-pink-500 uppercase tracking-widest text-center">{t.faq.manifestoTitle}</h3>
-          <div className="glass p-6 sm:p-12 rounded-3xl sm:rounded-[2rem] border border-white/10 shadow-2xl relative group overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-teal-400/5 blur-[60px] group-hover:bg-pink-500/10 transition-colors duration-1000" />
-            <div className="relative z-10 space-y-8 sm:space-y-12">
-              <div className="prose prose-invert max-w-none text-slate-300 text-sm sm:text-base md:text-lg leading-relaxed text-left sm:text-justify break-words px-2 sm:px-0 space-y-8">
-                <div>
-                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Kaj je youngtimer?</h4>
-                  <p className="mb-4">
-                    To je vozilo, ki se je praviloma izdelovalo v obdobju 80-ih in 90-ih let, je ohranjeno, originalno, tehnično zanimivo in, kot radi rečemo, ima dušo. Z youngtimerjem ima lastnik neko dolgoročno vizijo – ohranjati ga za prihodnje rodove.
-                  </p>
-                </div>
-                <div>
-                  <h4 className="text-xl sm:text-2xl font-black text-teal-400 uppercase tracking-tighter mb-4">Oldtimer ali Youngtimer?</h4>
-                  <p>
-                    Lep primer je honda NSX, ki je že praznovala 30. obletnico predstavitve in ima lahko vse pogoje za pridobitev uradnega starodobniškega statusa. Youngtimer je primeren izraz.
-                  </p>
-                </div>
-                <div className="border-l-4 border-pink-500 pl-6 py-4 bg-pink-500/5 italic text-slate-200 text-lg sm:text-xl font-medium">
-                  Ljubitelji youngtimerjev gojimo tehnično kulturo določenega obdobja.
-                </div>
-                <div className="flex justify-end pt-12">
-                  <div className="text-right">
-                    <p className="text-pink-500 font-black uppercase tracking-widest text-lg sm:text-xl">Ekipa Avtonostalgije 80&90</p>
-                    <div className="w-16 h-1 bg-gradient-to-r from-teal-400 to-pink-500 ml-auto mt-2 rounded-full" />
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FAQItem question={t.faq.q6} answer={t.faq.a6} />
+            <FAQItem question={t.faq.q7} answer={t.faq.a7} />
+            <FAQItem question={t.faq.q8} answer={t.faq.a8} />
           </div>
         </div>
 
@@ -567,7 +538,7 @@ const YoungtimerSection = () => {
                 <div className="space-y-8 relative z-10">
                   <div className="space-y-4">
                     <p className="text-lg sm:text-xl text-slate-100 font-bold leading-relaxed">
-                      Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitete, mojih spominov in tehnične kulture svojega časa.
+                      Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitety, mojih spominov in tehnične kulture svojega časa.
                     </p>
                     <p className="text-lg sm:text-xl text-slate-100 font-bold leading-relaxed">
                       Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.
@@ -810,11 +781,11 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
       setFormData({ ...formData, titleSi: item.title.si, titleEn: item.title.en, galleryImages: item.images || [] });
     } else {
       setFormData({
-        titleSi: item.title.si, titleEn: item.title.en,
-        excerptSi: item.excerpt?.si || item.description?.si || '',
-        excerptEn: item.excerpt?.en || item.description?.en || '',
-        contentSi: item.content?.si || '',
-        contentEn: item.content?.en || '',
+        titleSi: item.titleSi, titleEn: item.titleEn,
+        excerptSi: item.excerptSi || '',
+        excerptEn: item.excerptEn || '',
+        contentSi: item.contentSi || '',
+        contentEn: item.contentEn || '',
         image: item.image, location: item.location || '', date: item.date || new Date().toISOString().split('T')[0],
         galleryImages: [], author: item.author || 'Admin', category: item.category || 'Blog'
       });
@@ -836,7 +807,6 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         
         const fileArray = Array.from(files).slice(0, allowedCount);
         const compressedResults = await Promise.all(
-          // Adding explicit type casting to File to resolve TypeScript inference issues
           fileArray.map(file => compressImage(file as File, maxWidth, quality))
         );
         
@@ -845,7 +815,6 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
           galleryImages: [...prev.galleryImages, ...compressedResults] 
         }));
       } else {
-        // Adding explicit type casting to File to resolve TypeScript inference issues
         const file = files[0] as File;
         const maxWidth = 1000;
         const quality = 0.45;
