@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings, Clock } from 'lucide-react';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
@@ -110,6 +110,62 @@ const useApp = () => {
   const context = useContext(AppContext);
   if (!context) throw new Error('useApp must be used within AppProvider');
   return context;
+};
+
+const Modal = ({ children, onClose }: { children?: React.ReactNode; onClose: () => void }) => (
+  <div className="fixed inset-0 z-[100] glass flex items-center justify-center p-4 overflow-y-auto">
+    <div className="bg-slate-900 w-full max-w-4xl rounded-3xl border border-white/10 shadow-2xl relative my-8 p-6 sm:p-10 animate-in fade-in zoom-in duration-300">
+      <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-10" onClick={onClose}><X size={20} /></button>
+      {children}
+    </div>
+  </div>
+);
+
+const DetailView = ({ item, type, onClose }: { item: any; type: 'article' | 'event'; onClose: () => void }) => {
+  const { lang } = useApp();
+  const title = item.title[lang];
+  const content = type === 'article' ? item.content?.[lang] : item.description?.[lang];
+  const date = new Date(item.date).toLocaleDateString();
+
+  return (
+    <Modal onClose={onClose}>
+      <div className="space-y-6">
+        <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl border border-white/5">
+          <img src={item.image} className="w-full h-full object-cover" alt={title} />
+        </div>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-4 text-[10px] uppercase tracking-widest font-black text-slate-500">
+            {type === 'article' && <span className="text-pink-500">{item.category}</span>}
+            <span className="flex items-center gap-1"><Calendar size={12} /> {date}</span>
+            {type === 'event' && <span className="flex items-center gap-1 text-teal-400"><MapPin size={12} /> {item.location}</span>}
+            {item.author && <span className="flex items-center gap-1"><User size={12} /> {item.author}</span>}
+          </div>
+          <h2 className="retro-font text-2xl sm:text-4xl text-white font-black uppercase tracking-tighter leading-tight">{title}</h2>
+          <div className="prose prose-invert max-w-none">
+            <p className="text-slate-300 leading-relaxed text-sm sm:text-lg whitespace-pre-wrap">{content}</p>
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+const GalleryLightbox = ({ images, initialIndex, onClose }: { images: string[]; initialIndex: number; onClose: () => void }) => {
+  const [index, setIndex] = useState(initialIndex);
+  const handlePrev = (e: React.MouseEvent) => { e.stopPropagation(); setIndex(prev => (prev > 0 ? prev - 1 : images.length - 1)); };
+  const handleNext = (e: React.MouseEvent) => { e.stopPropagation(); setIndex(prev => (prev < images.length - 1 ? prev + 1 : 0)); };
+
+  return (
+    <div className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center p-4 cursor-default" onClick={onClose}>
+      <button className="absolute top-6 right-6 p-4 text-white hover:text-pink-500 transition-colors" onClick={onClose}><X size={32} /></button>
+      <button className="absolute left-6 p-4 text-white hover:text-pink-500 transition-colors hidden sm:block" onClick={handlePrev}><ArrowLeft size={48} /></button>
+      <button className="absolute right-6 p-4 text-white hover:text-pink-500 transition-colors hidden sm:block" onClick={handleNext}><ArrowRight size={48} /></button>
+      <img src={images[index]} className="max-w-full max-h-[85vh] object-contain shadow-2xl animate-in zoom-in fade-in duration-300" alt="Gallery" />
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-slate-500 font-bold uppercase tracking-widest text-xs">
+        {index + 1} / {images.length}
+      </div>
+    </div>
+  );
 };
 
 const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
@@ -561,12 +617,30 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({ titleSi: '', titleEn: '', excerptSi: '', excerptEn: '', contentSi: '', contentEn: '', image: '', location: '', date: new Date().toISOString().split('T')[0], galleryImages: [] as string[], author: 'Admin', category: 'Blog' });
   const [settingsData, setSettingsData] = useState<SiteSettings>(settings);
+
   const handleEdit = (type: 'article' | 'event' | 'gallery', item: any) => {
     setEditingId(item.id);
     setShowForm(type);
-    if (type === 'gallery') setFormData({ ...formData, titleSi: item.title.si, titleEn: item.title.en, galleryImages: item.images || [] });
-    else setFormData({ titleSi: item.title.si, titleEn: item.title.en, excerptSi: (type === 'article' ? item.excerpt?.si : item.description?.si) || '', excerptEn: (type === 'article' ? item.excerpt?.en : item.description?.en) || '', contentSi: (type === 'article' ? item.content?.si : '') || '', contentEn: (type === 'article' ? item.content?.en : '') || '', image: item.image, location: item.location || '', date: item.date || new Date().toISOString().split('T')[0], galleryImages: [], author: item.author || 'Admin', category: item.category || 'Blog' });
+    if (type === 'gallery') {
+      setFormData({ ...formData, titleSi: item.title.si, titleEn: item.title.en, galleryImages: item.images || [] });
+    } else {
+      setFormData({
+        titleSi: item.title.si, 
+        titleEn: item.title.en,
+        excerptSi: (type === 'article' ? item.excerpt?.si : item.description?.si) || '',
+        excerptEn: (type === 'article' ? item.excerpt?.en : item.description?.en) || '',
+        contentSi: (type === 'article' ? item.content?.si : '') || '',
+        contentEn: (type === 'article' ? item.content?.en : '') || '',
+        image: item.image, 
+        location: item.location || '', 
+        date: item.date || new Date().toISOString().split('T')[0],
+        galleryImages: [], 
+        author: item.author || 'Admin', 
+        category: item.category || 'Blog'
+      });
+    }
   };
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -583,9 +657,15 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
       }
     } catch (err) { alert("Napaka pri nalaganju slike."); } finally { setUploading(false); }
   };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (showForm === 'settings') { setSettings(settingsData); addLog('update', 'settings', 'site-settings'); setShowForm(null); return; }
+    if (showForm === 'settings') { 
+      setSettings(settingsData); 
+      addLog('update', 'settings', 'site-settings'); 
+      setShowForm(null); 
+      return; 
+    }
     const id = editingId || Date.now().toString();
     const slug = (formData.titleEn || formData.titleSi).toLowerCase().replace(/[^a-z0-9]/g, '-');
     if (showForm === 'article') {
@@ -603,6 +683,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     }
     setShowForm(null); setEditingId(null);
   };
+
   return (
     <div className="fixed inset-0 z-[70] glass flex items-start justify-center p-4 lg:p-12 overflow-y-auto">
       <div className="bg-slate-900 w-full max-w-7xl rounded-3xl p-6 sm:p-12 border border-purple-500/30 shadow-2xl relative my-8">
@@ -614,6 +695,114 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
              <button onClick={() => { setIsAdmin(false); onClose(); }} className="flex items-center gap-2 bg-slate-800 px-6 py-3 rounded-xl hover:bg-pink-500 transition-all font-bold uppercase tracking-widest text-xs"><LogOut size={16} /> Odjava</button>
           </div>
         </div>
+
+        {showForm === 'settings' && (
+          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
+            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-2xl border border-indigo-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
+              <h2 className="retro-font text-xl sm:text-2xl text-indigo-400 mb-8 uppercase text-center font-black">Nastavitve Strani</h2>
+              <div className="space-y-6 mb-8">
+                 <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Sledilci</label>
+                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.memberCount} onChange={e => setSettingsData({...settingsData, memberCount: e.target.value})} />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Dogodki</label>
+                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.eventCount} onChange={e => setSettingsData({...settingsData, eventCount: e.target.value})} />
+                    </div>
+                 </div>
+                 <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Slika "Zgodba o strasti"</label>
+                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-indigo-400 text-center cursor-pointer group mb-3 transition-colors">
+                       <input type="file" name="aboutImage" className="hidden" onChange={handleFileUpload} />
+                       <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-indigo-400 font-bold uppercase tracking-widest text-[10px]">
+                          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži sliko
+                       </div>
+                    </label>
+                    <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs mb-2" value={settingsData.aboutImage} onChange={e => setSettingsData({...settingsData, aboutImage: e.target.value})} />
+                 </div>
+                 <div>
+                    <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Hero ozadje</label>
+                    <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-pink-500 text-center cursor-pointer group mb-3 transition-colors">
+                       <input type="file" name="heroImage" className="hidden" onChange={handleFileUpload} />
+                       <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-pink-500 font-bold uppercase tracking-widest text-[10px]">
+                          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži ozadje
+                       </div>
+                    </label>
+                    <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={settingsData.heroImage} onChange={e => setSettingsData({...settingsData, heroImage: e.target.value})} />
+                 </div>
+              </div>
+              <div className="flex gap-4">
+                <button type="submit" className="flex-1 py-4 bg-indigo-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-indigo-600 transition-colors">Shrani</button>
+                <button type="button" onClick={() => setShowForm(null)} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-slate-700 transition-colors">Prekliči</button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {showForm && showForm !== 'settings' && (
+          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
+            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-4xl border border-pink-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
+              <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-6 uppercase text-center font-black">{editingId ? 'Uredi' : 'Ustvari'}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="space-y-4">
+                  <input required placeholder="Naslov (SI)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.titleSi} onChange={e => setFormData({...formData, titleSi: e.target.value})} />
+                  <input required placeholder="Title (EN)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={formData.titleEn} onChange={e => setFormData({...formData, titleEn: e.target.value})} />
+                  {(showForm === 'article' || showForm === 'event') && (
+                    <>
+                      <textarea required placeholder="Povzetek (SI)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-20 outline-none text-sm" value={formData.excerptSi} onChange={e => setFormData({...formData, excerptSi: e.target.value})} />
+                      <textarea required placeholder="Summary (EN)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-20 outline-none text-sm" value={formData.excerptEn} onChange={e => setFormData({...formData, excerptEn: e.target.value})} />
+                    </>
+                  )}
+                </div>
+                <div className="space-y-4">
+                  {showForm === 'article' && (
+                    <>
+                      <textarea required placeholder="Vsebina (SI)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-32 outline-none text-sm" value={formData.contentSi} onChange={e => setFormData({...formData, contentSi: e.target.value})} />
+                      <textarea required placeholder="Content (EN)" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 h-32 outline-none text-sm" value={formData.contentEn} onChange={e => setFormData({...formData, contentEn: e.target.value})} />
+                    </>
+                  )}
+                  {showForm !== 'gallery' && (
+                    <div className="space-y-4">
+                      <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-pink-500 text-center cursor-pointer group transition-colors">
+                        <input type="file" className="hidden" onChange={handleFileUpload} />
+                        <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-pink-500 font-bold uppercase tracking-widest text-[10px]">
+                          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži sliko
+                        </div>
+                      </label>
+                      <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} />
+                      {showForm === 'event' && <input placeholder="Lokacija" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} />}
+                      <input type="date" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} />
+                    </div>
+                  )}
+                  {showForm === 'gallery' && (
+                    <div className="space-y-4">
+                      <label className="block p-4 border-2 border-dashed border-slate-700 rounded-xl hover:border-pink-500 text-center cursor-pointer group transition-colors">
+                        <input type="file" multiple className="hidden" onChange={handleFileUpload} />
+                        <div className="flex items-center justify-center gap-2 text-slate-400 group-hover:text-pink-500 font-bold uppercase tracking-widest text-[10px]">
+                          {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Dodaj slike
+                        </div>
+                      </label>
+                      <div className="grid grid-cols-4 gap-2">
+                        {formData.galleryImages.map((img, i) => (
+                          <div key={i} className="relative aspect-square rounded-lg overflow-hidden border border-slate-800">
+                            <img src={img} className="w-full h-full object-cover" alt="" />
+                            <button type="button" onClick={() => setFormData(prev => ({...prev, galleryImages: prev.galleryImages.filter((_, idx) => idx !== i)}))} className="absolute top-1 right-1 p-1 bg-red-500 rounded-full text-white"><X size={10} /></button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-4">
+                <button type="submit" className="flex-1 py-4 bg-pink-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-pink-600 transition-colors">Shrani</button>
+                <button type="button" onClick={() => setShowForm(null)} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-slate-700 transition-colors">Prekliči</button>
+              </div>
+            </form>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
           <AdminList title="Članki" icon={<ImageIcon size={20} className="text-pink-500" />} items={articles} onAdd={() => { setEditingId(null); setFormData({ ...formData, galleryImages: [] }); setShowForm('article'); }} onEdit={(item: any) => handleEdit('article', item)} onDelete={(id: string) => { setArticles(prev => prev.filter(a => a.id !== id)); addLog('delete', 'article', id); }} lang={lang} />
           <AdminList title="Dogodki" icon={<Calendar size={20} className="text-teal-400" />} items={events} onAdd={() => { setEditingId(null); setFormData({ ...formData, galleryImages: [] }); setShowForm('event'); }} onEdit={(item: any) => handleEdit('event', item)} onDelete={(id: string) => { setEvents(prev => prev.filter(e => e.id !== id)); addLog('delete', 'event', id); }} lang={lang} />
@@ -621,17 +810,6 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         <div className="grid grid-cols-1 gap-8">
            <AdminList title="Galerija" icon={<ImageIcon size={20} className="text-purple-500" />} items={gallery} onAdd={() => { setEditingId(null); setFormData({ ...formData, galleryImages: [] }); setShowForm('gallery'); }} onEdit={(item: any) => handleEdit('gallery', item)} onDelete={(id: string) => { setGallery(prev => prev.filter(g => g.id !== id)); addLog('delete', 'gallery', id); }} lang={lang} />
         </div>
-        {showForm && (
-          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
-            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-4xl border border-pink-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
-              <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-6 uppercase text-center font-black">{editingId ? 'Uredi' : 'Ustvari'}</h2>
-              <div className="flex gap-4 mt-8">
-                <button type="submit" className="flex-1 py-4 bg-pink-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:bg-pink-600 transition-colors">Shrani</button>
-                <button type="button" onClick={() => setShowForm(null)} className="flex-1 py-4 bg-slate-800 rounded-xl font-black uppercase tracking-widest text-sm hover:bg-slate-700 transition-colors">Prekliči</button>
-              </div>
-            </form>
-          </div>
-        )}
       </div>
     </div>
   );
@@ -649,6 +827,11 @@ const App = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
+  
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [selectedGallery, setSelectedGallery] = useState<{ images: string[]; index: number } | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -662,15 +845,16 @@ const App = () => {
       if (storedGallery) setGallery(storedGallery);
       if (storedLogs) setLogs(storedLogs);
       if (storedSettings) setSettings(storedSettings);
+      setIsLoaded(true);
     };
     load();
   }, []);
 
-  useEffect(() => { persistData('an_articles', articles); }, [articles]);
-  useEffect(() => { persistData('an_events', events); }, [events]);
-  useEffect(() => { persistData('an_gallery', gallery); }, [gallery]);
-  useEffect(() => { persistData('an_logs', logs); }, [logs]);
-  useEffect(() => { persistData('an_settings', settings); }, [settings]);
+  useEffect(() => { if (isLoaded) persistData('an_articles', articles); }, [articles, isLoaded]);
+  useEffect(() => { if (isLoaded) persistData('an_events', events); }, [events, isLoaded]);
+  useEffect(() => { if (isLoaded) persistData('an_gallery', gallery); }, [gallery, isLoaded]);
+  useEffect(() => { if (isLoaded) persistData('an_logs', logs); }, [logs, isLoaded]);
+  useEffect(() => { if (isLoaded) persistData('an_settings', settings); }, [settings, isLoaded]);
 
   const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => {
     const newLog: ActivityLog = { id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() };
@@ -696,11 +880,11 @@ const App = () => {
                 </p>
                 <div className="grid grid-cols-2 gap-6 sm:gap-8 pt-6">
                   <div>
-                    <div className="retro-font text-3xl sm:text-4xl text-pink-500 font-black mb-1">35,00</div>
+                    <div className="retro-font text-3xl sm:text-4xl text-pink-500 font-black mb-1">{settings.memberCount}</div>
                     <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">SLEDILCEV</div>
                   </div>
                   <div>
-                    <div className="retro-font text-3xl sm:text-4xl text-teal-400 font-black mb-1">30+</div>
+                    <div className="retro-font text-3xl sm:text-4xl text-teal-400 font-black mb-1">{settings.eventCount}</div>
                     <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">DOGODKOV</div>
                   </div>
                 </div>
@@ -715,7 +899,7 @@ const App = () => {
           <Section id="news" title={translations[lang].sections.news} gradient="bg-gradient-to-b from-indigo-950 to-purple-950">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {articles.map(article => (
-                <article key={article.id} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all hover:-translate-y-2">
+                <article key={article.id} onClick={() => setSelectedArticle(article)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all hover:-translate-y-2 cursor-pointer">
                   <div className="aspect-video overflow-hidden">
                     <img src={article.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={article.title[lang]} />
                   </div>
@@ -738,7 +922,7 @@ const App = () => {
           <Section id="events" title={translations[lang].sections.events} gradient="bg-gradient-to-b from-purple-950 to-slate-950">
             <div className="space-y-6">
               {events.map(event => (
-                <div key={event.id} className="group flex flex-col lg:flex-row bg-slate-900/50 rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-teal-400/50 transition-all">
+                <div key={event.id} onClick={() => setSelectedEvent(event)} className="group flex flex-col lg:flex-row bg-slate-900/50 rounded-[2.5rem] overflow-hidden border border-white/5 hover:border-teal-400/50 transition-all cursor-pointer">
                   <div className="lg:w-1/3 aspect-video lg:aspect-auto overflow-hidden">
                     <img src={event.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" alt={event.title[lang]} />
                   </div>
@@ -759,8 +943,8 @@ const App = () => {
           <div className="bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950">
             <Section id="gallery" title={translations[lang].sections.gallery} gradient="bg-transparent">
                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {gallery.flatMap(item => item.images).slice(0, 12).map((img, i) => (
-                    <div key={i} className="aspect-square rounded-2xl overflow-hidden border border-white/5 cursor-pointer group relative">
+                  {gallery.flatMap(item => item.images).slice(0, 100).map((img, i, arr) => (
+                    <div key={i} onClick={() => setSelectedGallery({ images: arr, index: i })} className="aspect-square rounded-2xl overflow-hidden border border-white/5 cursor-pointer group relative">
                       <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Gallery" />
                       <div className="absolute inset-0 bg-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                          <ImageIcon className="text-white" size={24} />
@@ -823,6 +1007,10 @@ const App = () => {
         {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
         {showAdmin && <AdminCMSOverlay onClose={() => setShowAdmin(false)} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
+        
+        {selectedArticle && <DetailView item={selectedArticle} type="article" onClose={() => setSelectedArticle(null)} />}
+        {selectedEvent && <DetailView item={selectedEvent} type="event" onClose={() => setSelectedEvent(null)} />}
+        {selectedGallery && <GalleryLightbox images={selectedGallery.images} initialIndex={selectedGallery.index} onClose={() => setSelectedGallery(null)} />}
       </div>
     </AppContext.Provider>
   );
