@@ -942,12 +942,30 @@ const App = () => {
 
           <div className="bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950">
             <Section id="gallery" title={translations[lang].sections.gallery} gradient="bg-transparent">
-               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {gallery.flatMap(item => item.images).slice(0, 100).map((img, i, arr) => (
-                    <div key={i} onClick={() => setSelectedGallery({ images: arr, index: i })} className="aspect-square rounded-2xl overflow-hidden border border-white/5 cursor-pointer group relative">
-                      <img src={img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" alt="Gallery" />
-                      <div className="absolute inset-0 bg-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                         <ImageIcon className="text-white" size={24} />
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {gallery.map(item => (
+                    <div key={item.id} onClick={() => setSelectedGallery({ images: item.images, index: 0 })} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-purple-500/50 transition-all hover:-translate-y-2 cursor-pointer shadow-2xl">
+                      <div className="aspect-video overflow-hidden relative">
+                        {item.images.length > 0 ? (
+                          <img src={item.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.title[lang]} />
+                        ) : (
+                          <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>
+                        )}
+                        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white flex items-center gap-1 border border-white/10">
+                          <ImageIcon size={12} /> {item.images.length}
+                        </div>
+                        <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                           <div className="bg-white/10 backdrop-blur-md p-4 rounded-full border border-white/20">
+                              <ExternalLink className="text-white" size={24} />
+                           </div>
+                        </div>
+                      </div>
+                      <div className="p-8 space-y-2">
+                        <h3 className="text-xl font-black text-white group-hover:text-purple-400 transition-colors uppercase tracking-tight leading-tight">{item.title[lang]}</h3>
+                        <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
+                          Klikni za ogled ({item.images.length} slik)
+                        </p>
                       </div>
                     </div>
                   ))}
