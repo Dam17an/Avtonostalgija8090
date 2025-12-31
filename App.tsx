@@ -416,7 +416,7 @@ const Navbar = () => {
     <nav className="fixed w-full z-50 glass border-b border-purple-500/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer relative z-50 -ml-10 sm:-ml-14 lg:-ml-16">
+          <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer relative z-50 ml-0 lg:-ml-16">
             <img 
               src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" 
               alt="Avtonostalgija Logo" 
