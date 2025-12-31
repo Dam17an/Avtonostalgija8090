@@ -353,7 +353,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
           </div>
 
           <div className="text-[10px] text-slate-400 italic px-1 pt-2">
-            Članarina bo plačana ob prevzemu certifikata, ki jo boste prejeli po pošti od SVAMZ. Tale email je zgolj potrdilo o včlanitvi v Avtonostalgija 80&90.
+            Članarino lahko poravnate preko povezave ali QR kode, ki jo boste prejeli po elektronski pošti po oddaji vloge.
           </div>
 
           <button 
@@ -416,11 +416,12 @@ const Navbar = () => {
     <nav className="fixed w-full z-50 glass border-b border-purple-500/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <div onClick={() => handleNavClick('hero')} className="flex items-center space-x-2 cursor-pointer relative z-50">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-pink-500 to-teal-400 rounded-full flex items-center justify-center font-bold text-white shadow-lg text-sm sm:text-base">AN</div>
-            <span className="retro-font text-base sm:text-xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-teal-400 truncate">
-              80 & 90
-            </span>
+          <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer relative z-50 -ml-10 sm:-ml-14 lg:-ml-16">
+            <img 
+              src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" 
+              alt="Avtonostalgija Logo" 
+              className="h-10 sm:h-12 w-auto object-contain"
+            />
           </div>
 
           <div className="hidden lg:flex items-center space-x-4 text-xs xl:text-sm font-medium">
@@ -547,7 +548,7 @@ const YoungtimerSection = () => {
 
                   <div className="py-6 border-y border-white/5">
                     <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-4">Avtonostalgija 80&90 ni klub popustov.</p>
-                    <p className="text-slate-300 leading-relaxed">Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev in oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
+                    <p className="text-slate-300 leading-relaxed">Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev i oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
                   </div>
 
                   <div className="space-y-6">
@@ -568,7 +569,7 @@ const YoungtimerSection = () => {
                   </div>
 
                   <div className="p-6 bg-slate-950/50 rounded-2xl border border-slate-800 italic text-slate-400 text-sm">
-                    Brez skupnosti zakonodaja ne deluje v našo korist. Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov in – kar je najpomembneje – ni prihodnosti za naše avtomobile.
+                    Brez skupnosti zakonodaja ne deluje v našo korist. Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov i – kar je najpomembneje – ni prihodnosti za naše avtomobile.
                   </div>
                 </div>
               </div>
@@ -612,11 +613,11 @@ const YoungtimerSection = () => {
                   </div>
 
                   <div className="bg-teal-400/5 p-8 rounded-3xl border border-teal-400/20 text-slate-300 text-sm leading-relaxed text-justify">
-                    Članstvo je pomembno, ker posameznik nima glasu, organizirana skupnost pa ga ima. Sodelovanje kluba s SVAMZ pa mu daje strokovno, pravno in institucionalno legitimnost ter glas v nacionalnih in evropskih zakonodajnih procesih, kjer se odloča o prihodnosti historičnih in youngtimer vozil; brez te povezave bi bil klub zgolj interesna skupina brez realnega vpliva, ne pa del sistema, ki dolgoročno ščiti pravico do obstoja, uporabe in priznanja teh vozil.
+                    Članstvo je pomembno, ker posameznik nima glasu, organizirana skupnost pa ga ima. Sodelovanje kluba s SVAMZ pa mu daje strokovno, pravno in institucionalno legitimnost ter glas v nacionalnih in evropskih zakonodajnih procesih, kjer se odloča o prihodnosti historičnih i youngtimer vozil; brez te povezave bi bil klub zgolj interesna skupina brez realnega vpliva, ne pa del sistema, ki dolgoročno ščiti pravico do obstoja, uporabe i priznanja teh vozil.
                   </div>
 
                   <p className="text-slate-300 leading-relaxed text-center font-medium">
-                    Z včlanitvijo v klub in SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. in 90. let kot živo dediščino, jim zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni in cenjeni tudi čez 10, 20 ali 30 let.
+                    Z včlanitvijo v klub i SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. i 90. let kot živo dediščino, jim zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni i cenjeni tudi čez 10, 20 ali 30 let.
                   </p>
 
                   <div className="text-center pt-6">
