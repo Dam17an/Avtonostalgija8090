@@ -69,7 +69,7 @@ V našem klubu nemamo zbiralca z verjetno največjim arhivom avtomobilskega tisk
 
 <b>Originalnost:</b>
 - Vozilo mora biti načeloma tovarniško originalno oziroma avtentično. Če ima predelave (platišča, amortizerji, izpuh ipd.), morajo biti te v duhu časa.
-- Pri bolj množičnih modelih iz konca 90-ih je zahtevana popolna originalnost.
+- Pri bolj množičnih modelih iz začetka 2000-ih je zahtevana popolna originalnost.
 - Obvezna je odstranitev vgrajene plinske inštalacije, če jo vozilo ima.
 
 <b>Starost vozila in modela:</b>
@@ -79,7 +79,7 @@ V našem klubu nemamo zbiralca z verjetno največjim arhivom avtomobilskega tisk
 - Veljavnost certifikata je od enega do največ petih let in se ne podaljša, če se lastnik ne drži zgoraj zapisanih smernic.
 
 <b>Ugodnosti:</b>
-- Zavarovalnica lahko prizna enak popust kot za starodobna vozila.
+- Zavarovalnica lahko prizna enak popust kot za starodobna vozila. Dejanski popust predhodno prevrite pri zavarovalnici.
 
 <div style="font-size: 1.25rem; font-weight: 900; color: #14b8a6; margin-top: 1.5rem; margin-bottom: 0.75rem;">Pogoji za pridobitev starodobnik certifikata (Zakon o motornih vozilih – ZMV-1, 24. člen):</div>
 - ohranjeno ali pravilno restavrirano v originalno stanje,
