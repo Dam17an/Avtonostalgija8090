@@ -632,7 +632,7 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/5 to-slate-950/40"></div>
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
-        <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-2.png" alt="Logo" className="h-20 sm:h-32 w-auto mb-4 sm:mb-8 object-contain" />
+        <img src="./images/hero-logo.png" alt="Logo" className="h-20 sm:h-32 w-auto mb-4 sm:mb-8 object-contain" />
         <h1 className="retro-font font-black mb-4 sm:mb-6 tracking-tighter uppercase text-center w-full flex flex-col items-center">
           <span className="text-[6.2vw] xs:text-[7.5vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl whitespace-nowrap block neon-text-pink leading-none pb-2 sm:pb-4">{namePart}</span>
           <span className="text-[12vw] xs:text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl block neon-text-teal text-teal-400 leading-none">{yearPart}</span>
