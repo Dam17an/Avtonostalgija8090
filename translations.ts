@@ -52,7 +52,7 @@ V našem klubu nemamo zbiralca z verjetno največjim arhivom avtomobilskega tisk
       q8: 'Kakšni so pogoji za pridobitev certifikata',
       a8: `V sodelovanju s Slovensko veteransko avto-moto zvezo (SVAMZ) in v skladu s smernicami FIVA naš klub ureja tudi pridobitev youngtimer certifikatov (mladodobnik) za perspektivna ljubiteljska vozila, ki še niso dopolnila 30 let. Ker želimo preprečiti zlorabe, smo postavili stroge kriterije.
 
-<b>Pogoji za pridobitev youngtimer (mladodobnik) certifikata:</b>
+<div style="font-size: 1.25rem; font-weight: 900; color: #14b8a6; margin-top: 1.5rem; margin-bottom: 0.75rem;">Pogoji za pridobitev youngtimer (mladodobnik) certifikata:</div>
 - Vozilo mora biti ljubiteljsko voženo in vzdrževano. Vožnja pozimi in uporaba za vsakodnevna opravila nima nič skupnega z ohranjanjem tehnične kulture.
 
 <b>Zaveza k omejenemu številu letno prevoženih kilometrov:</b>
@@ -82,7 +82,7 @@ V našem klubu nemamo zbiralca z verjetno največjim arhivom avtomobilskega tisk
 <b>Ugodnosti:</b>
 - Zavarovalnica lahko prizna enak popust kot za starodobna vozila.
 
-<b>Pogoji za pridobitev starodobnik certifikata (Zakon o motornih vozilih – ZMV-1, 24. člen):</b>
+<div style="font-size: 1.25rem; font-weight: 900; color: #14b8a6; margin-top: 1.5rem; margin-bottom: 0.75rem;">Pogoji za pridobitev starodobnik certifikata (Zakon o motornih vozilih – ZMV-1, 24. člen):</div>
 - ohranjeno ali pravilno restavrirano v originalno stanje,
 - izdelano pred več kot 30 leti,
 - ohranjeno skladno s svojo originalno konstrukcijsko sestavo in obliko,

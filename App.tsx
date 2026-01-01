@@ -629,8 +629,8 @@ const Hero = () => {
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img src={settings.heroImage} className="w-full h-full object-cover brightness-[0.85]" alt="Hero Background" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/10 to-slate-950/60"></div>
+        <img src={settings.heroImage} className="w-full h-full object-cover brightness-[1.0]" alt="Hero Background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/5 to-slate-950/40"></div>
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
         <h1 className="retro-font font-black mb-4 sm:mb-6 tracking-tighter uppercase text-center w-full flex flex-col items-center">
@@ -731,6 +731,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
+    const inputName = e.target.name;
     setUploading(true);
     try {
       if (showForm === 'gallery') {
@@ -739,8 +740,11 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...compressedResults] }));
       } else {
         const compressed = await compressImage(files[0] as File, 1920, 0.85);
-        if (showForm === 'settings') setSettingsData(prev => ({ ...prev, [e.target.name]: compressed }));
-        else setFormData(prev => ({ ...prev, image: compressed }));
+        if (showForm === 'settings') {
+          setSettingsData(prev => ({ ...prev, [inputName]: compressed }));
+        } else {
+          setFormData(prev => ({ ...prev, image: compressed }));
+        }
       }
     } catch (err) { alert("Napaka pri nalaganju slike."); } finally { setUploading(false); }
   };
@@ -791,11 +795,11 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Sledilci</label>
-                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.memberCount} onChange={e => setSettingsData({...settingsData, memberCount: e.target.value})} />
+                      <input name="memberCount" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.memberCount} onChange={e => setSettingsData({...settingsData, memberCount: e.target.value})} />
                     </div>
                     <div>
                       <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Dogodki</label>
-                      <input className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.eventCount} onChange={e => setSettingsData({...settingsData, eventCount: e.target.value})} />
+                      <input name="eventCount" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 outline-none text-sm" value={settingsData.eventCount} onChange={e => setSettingsData({...settingsData, eventCount: e.target.value})} />
                     </div>
                  </div>
                  <div>
@@ -963,7 +967,7 @@ const App = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 items-center">
               <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 text-center lg:text-left">
                 <p className="text-base sm:text-xl leading-relaxed text-slate-300 font-light">
-                  Naš namen je predvjesten druženje enako mislečih, izmenjava izkušenj in seveda ohranjanje tehnične kulture. Naši začetki segajo v avgust 2018, ko sva Tomaž Beguš in Janez Tomc postavila Facebook stran in malo kasneje tudi <a href="https://www.facebook.com/groups/avtonostalgija" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-teal-400 transition-colors underline">skupino</a>. V začetku leta 2020 smo registrirali uradni klub in se kmalu pridružili zvezi SVAMZ. Prvo Slovensko youngtimer srečanje smo organizirali 11. 5. 2019; z leti je postalo tradicionalno in vsako leto bolj izpopolnjeno.
+                  Naš namen je predvsem druženje enako mislečih, izmenjava izkušenj in seveda ohranjanje tehnične kulture. Naši začetki segajo v avgust 2018, ko sva Tomaž Beguš in Janez Tomc postavila Facebook stran in malo kasneje tudi <a href="https://www.facebook.com/groups/avtonostalgija" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-teal-400 transition-colors underline">skupino</a>. V začetku leta 2020 smo registrirali uradni klub in se kmalu pridružili zvezi SVAMZ. Prvo Slovensko youngtimer srečanje smo organizirali 11. 5. 2019; z leti je postalo tradicionalno in vsako leto bolj izpopolnjeno.
                 </p>
                 <div className="grid grid-cols-2 gap-6 sm:gap-8 pt-6">
                   <div>
@@ -1102,10 +1106,14 @@ const App = () => {
           </Section>
         </main>
 
-        <footer className="py-12 border-t border-white/5 bg-slate-950 text-center">
-          <div className="max-w-7xl mx-auto px-4 space-y-8">
+        <footer className="py-16 border-t border-white/5 bg-slate-950 text-center">
+          <div className="max-w-7xl mx-auto px-4 space-y-10">
             <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" className="h-12 mx-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all" alt="Logo" />
-            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-500 font-bold">© {new Date().getFullYear()} AVTONOSTALGIJA 80&90. Vse pravice pridržane.</p>
+            <div className="space-y-4 max-w-2xl mx-auto">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-400 font-bold">Klub ljubiteljev mladodobnikov Avtonostalgija 80&90 • Trinkova ulica 58, 1000 Ljubljana</p>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-slate-500 font-medium">Davčna št.: 55751369 • Matična št.: 4120493000<br/>IBAN SI56 6100 0002 3775 920 (26.2.2020, DH d.d.)</p>
+            </div>
+            <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600 font-bold pt-6 border-t border-white/5">© {new Date().getFullYear()} AVTONOSTALGIJA 80&90. Vse pravice pridržane.</p>
           </div>
         </footer>
 
