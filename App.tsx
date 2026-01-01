@@ -571,7 +571,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                   <div className="space-y-4">
                     <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Kaj pomeni članstvo v praksi?</h4>
-                    <p className="font-bold text-slate-200">Članstvo pomeni dostop do znanja, podpore in skupne moči:</p>
+                    <p className="font-bold text-slate-200">Članstvo pomeni dostop do znanja, podpore and skupne moči:</p>
                     <ul className="space-y-3">
                       {[
                         "strokovno vodenje postopkov certificiranja in tehničnih vprašanj,",
@@ -626,12 +626,12 @@ const Hero = () => {
   const yearPart = parts.pop();
   const namePart = parts.join(' ');
   return (
-    <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+    <section id="hero" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img src={settings.heroImage} className="w-full h-full object-cover brightness-[1.0]" alt="Hero Background" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/5 to-slate-950/40"></div>
       </div>
-      <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
+      <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center min-h-screen pt-24 pb-20">
         <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-2.png" alt="Logo" className="h-32 sm:h-48 md:h-64 w-auto mb-8 sm:mb-12 object-contain" />
         <h1 className="retro-font font-black mb-4 sm:mb-6 tracking-tighter uppercase text-center w-full flex flex-col items-center">
           <span className="text-[6.2vw] xs:text-[7.5vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl whitespace-nowrap block neon-text-pink leading-none pb-2 sm:pb-4">{namePart}</span>
