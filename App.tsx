@@ -465,7 +465,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
         <ChevronDown className={`text-pink-500 shrink-0 transition-transform duration-500 ${isOpen ? 'rotate-180' : ''}`} size={24} />
       </button>
       <div className={`transition-all duration-500 ease-in-out ${isOpen ? 'max-h-max opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-        <div className="p-5 sm:p-6 pt-0 text-slate-400 leading-relaxed font-light text-sm sm:text-base border-t border-white/5 bg-slate-950/30 whitespace-pre-wrap">{answer}</div>
+        <div className="p-5 sm:p-6 pt-0 text-slate-400 leading-relaxed font-light text-sm sm:text-base border-t border-white/5 bg-slate-950/30 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: answer }} />
       </div>
     </div>
   );
