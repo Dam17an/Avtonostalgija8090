@@ -54,7 +54,7 @@ const fetchPersistedData = async (key: string) => {
   }
 };
 
-const compressImage = (file: File, maxWidth = 1000, quality = 0.45): Promise<string> => {
+const compressImage = (file: File, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -499,25 +499,74 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
             <div className="grid grid-cols-1 gap-8">
               <div className="glass p-8 sm:p-12 rounded-[2.5rem] border border-white/10 relative overflow-hidden group">
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/10 blur-[80px] group-hover:bg-teal-400/10 transition-colors duration-1000" />
-                <div className="space-y-8 relative z-10">
-                  <div className="space-y-4">
-                    <p className="text-lg sm:text-xl text-slate-100 font-bold leading-relaxed">Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitety, mojih spominov in tehnične kulture svojega časa.</p>
-                    <p className="text-lg sm:text-xl text-slate-100 font-bold leading-relaxed">Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.</p>
+                <div className="space-y-8 relative z-10 text-slate-300 leading-relaxed">
+                  <div className="space-y-4 text-lg sm:text-xl text-slate-100 font-bold">
+                    <p>Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitete, mojih spominov in tehnične kulture svojega časa.</p>
+                    <p>Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.</p>
                   </div>
+
                   <div className="py-6 border-y border-white/5">
-                    <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-4">Avtonostalgija 80&90 ni klub popustov.</p>
-                    <p className="text-slate-300 leading-relaxed">Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev i oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
+                    <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-2">Avtonostalgija 80&90 ni klub popustov.</p>
+                    <p>Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev in oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
                   </div>
-                  <div className="space-y-6">
+
+                  <div className="space-y-4">
                     <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Klub obstaja zato, da:</h4>
-                    <ul className="space-y-4">
-                      {["zastopa lastnike vozil v dialogu z zakonodajo v Sloveniji in Evropski uniji,", "ohranja pravico do uporabe, vožnje in dolgoročne vrednosti mladodobnih in starodobnih vozil,", "gradi okolje, v katerem so avtomobili 80. in 90. let prepoznani kot tehniška in kulturna dediščina,", "povezuje znanje, izkušnje in ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."].map((item, i) => (
-                        <li key={i} className="flex items-start gap-4 text-slate-300">
+                    <ul className="space-y-3">
+                      {[
+                        "zastopa lastnike vozil v dialogu z zakonodajo v Sloveniji in Evropski uniji,",
+                        "ohranja pravico do uporabe, vožnje in dolgoročne vrednosti mladodobnih in starodobnih vozil,",
+                        "gradi okolje, v katerem so avtomobili 80. in 90. let prepoznani kot tehniška in kulturna dediščina,",
+                        "povezuje znanje, izkušnje in ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-3">
                           <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-2 shrink-0 shadow-[0_0_8px_#ec4899]" />
                           <span>{item}</span>
                         </li>
                       ))}
                     </ul>
+                  </div>
+
+                  <div className="p-6 bg-slate-950/50 rounded-2xl border border-white/5 italic">
+                    <p className="font-bold text-slate-100 mb-2">Brez skupnosti zakonodaja ne deluje v našo korist.</p>
+                    <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov in – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Kaj pomeni članstvo v praksi?</h4>
+                    <p className="font-bold text-slate-200">Članstvo pomeni dostop do znanja, podpore in skupne moči:</p>
+                    <ul className="space-y-3">
+                      {[
+                        "strokovno vodenje postopkov certificiranja in tehničnih vprašanj,",
+                        "stalno spremljanje zakonodajnih sprememb in aktivnosti doma ter v tujini,",
+                        "pomoč pri homologacijah, uvozu, predelavah in vrednotenju vozil,",
+                        "možnost aktivnega sodelovanja na klubskih dogodkih, vožnjah in tehničnih dnevih,",
+                        "večjo vidnost in priložnosti za vozila (mediji, filmi, razstave, posebni dogodki),",
+                        "povezovanje s skupnostjo, ki deli iste vrednote, razumevanje in strast."
+                      ].map((item, i) => (
+                        <li key={i} className="flex items-start gap-3">
+                          <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0 shadow-[0_0_8px_#14b8a6]" />
+                          <span>{item}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <p>Članstvo je pomembno, ker posameznik nima glasu, organizirana skupnost pa ga ima. Sodelovanje kluba s SVAMZ pa mu daje strokovno, pravno in institucionalno legitimnost ter glas v nacionalnih in evropskih zakonodajnih procesih, kjer se odloča o prihodnosti historičnih in youngtimer vozil; brez te povezave bi bil klub zgolj interesna skupina brez realnega vpliva, ne pa del sistema, ki dolgoročno ščiti pravico do obstoja, uporabe in priznanja teh vozil.</p>
+
+                  <p>Z včlanitvijo v klub in SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. in 90. let kot živo dediščino, jim zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni in cenjeni tudi čez 10, 20 ali 30 let.</p>
+
+                  <div className="py-4 text-center">
+                    <p className="text-xl font-black text-pink-500 uppercase tracking-widest mb-1">Članstvo ni strošek.</p>
+                    <p className="text-slate-400 font-bold uppercase text-xs tracking-widest">Je zavestna naložba v prihodnost avtomobilske kulture, ki ti je blizu.</p>
+                  </div>
+
+                  <div className="p-6 border border-teal-500/30 rounded-2xl bg-teal-500/5 text-center sm:text-left">
+                    <p className="text-slate-100 font-bold leading-relaxed">
+                      👉 Če razumeš, zakaj ti tvoj avto pomeni več kot le kos pločevine, potem Avtonostalgija 80&90 ni le klub. 
+                      <br className="hidden sm:block" />
+                      <span className="text-teal-400 uppercase font-black text-lg tracking-tighter">Je tvoj prostor. Skupaj smo močnejši!</span>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -648,10 +697,10 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     try {
       if (showForm === 'gallery') {
         const fileArray = Array.from(files).slice(0, 25 - formData.galleryImages.length);
-        const compressedResults = await Promise.all(fileArray.map(file => compressImage(file as File, 800, 0.4)));
+        const compressedResults = await Promise.all(fileArray.map(file => compressImage(file as File, 1920, 0.85)));
         setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...compressedResults] }));
       } else {
-        const compressed = await compressImage(files[0] as File, 1000, 0.45);
+        const compressed = await compressImage(files[0] as File, 1920, 0.85);
         if (showForm === 'settings') setSettingsData(prev => ({ ...prev, [e.target.name]: compressed }));
         else setFormData(prev => ({ ...prev, image: compressed }));
       }
