@@ -49,7 +49,7 @@ V našem klubu nemamo zbiralca z verjetno največjim arhivom avtomobilskega tisk
       q7: 'ZAKAJ JE POLEG VOZILA POMEMBEN TUDI ŽIVLJENJSKI SLOG NJEGOVEGA OBDOBJA?',
       a7: 'Starejše ljubiteljsko vozilo ni samo kup pločevine in plastike, ampak v sebi nosi tudi zgodbo. Takšno vozilo je veliko bolj zanimivo, če ga znaš postaviti v njegov čas. Življenjski slog je že od nekdaj del avtomobilskih revij, pa naj gre za žensko lepoto, modo, ure, HI-FI, fotografske aparate, kolesa, navtiko, turizem ipd. Pop kultura in dogodki tistega časa so prav tako nekakšna zgodba avtomobila.',
       q8: 'Kakšni so pogoji za pridobitev certifikata',
-      a8: `V sodelovanju s Slovensko veteransko avto-moto zvezo (SVAMZ) in v skladu s smernicami FIVA naš klub ureja tudi pridobitev youngtimer certifikatov (mladodobnik) za perspektivna ljubiteljska vozila, ki še niso dopolnila 30 let. Ker želimo preprečiti zlorabe, smo postavili stroge kriterije.
+      a8: `V sodelovanju s Slovensko veteransko avto-moto zvezo (SVAMZ) in v skladu s smernicami FIVA naš klub ureja tudi pridobitev youngtimer certifikatov (mladodobnik) za perspektivna ljubiteljska vozila, ki še niso dopolnila 30 let. Ker želimo preprečiti zlorabe, smo postavili stroge kriterije. Uredimo vam certifikat tudi za vašega starodobnika.
 
 <div style="font-size: 1.25rem; font-weight: 900; color: #14b8a6; margin-top: 1.5rem; margin-bottom: 0.75rem;">Pogoji za pridobitev youngtimer (mladodobnik) certifikata:</div>
 - Vozilo mora biti ljubiteljsko voženo in vzdrževano. Vožnja pozimi in uporaba za vsakodnevna opravila nima nič skupnega z ohranjanjem tehnične kulture.
