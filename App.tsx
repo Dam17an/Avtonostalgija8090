@@ -591,8 +591,8 @@ const Hero = () => {
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img src={settings.heroImage} className="w-full h-full object-cover brightness-[0.3]" alt="Hero Background" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/40 to-slate-950"></div>
+        <img src={settings.heroImage} className="w-full h-full object-cover brightness-[0.6]" alt="Hero Background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/20 to-slate-950/80"></div>
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
         <h1 className="retro-font font-black mb-4 sm:mb-6 tracking-tighter uppercase text-center w-full flex flex-col items-center">
