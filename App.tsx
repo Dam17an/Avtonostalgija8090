@@ -295,81 +295,119 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
 
   return (
     <div className="fixed inset-0 z-[100] glass flex items-start justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 w-full max-w-2xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 p-6 sm:p-10">
-        <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors" onClick={onClose}><X size={20} /></button>
-        <h2 className="retro-font text-xl sm:text-2xl text-teal-400 mb-8 uppercase text-center font-black tracking-tighter">Vloga za včlanitev</h2>
-        <form onSubmit={handleFormSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Ime in priimek</label>
-              <input required name="name" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Janez Novak" />
+      <div className="bg-slate-900 w-full max-w-5xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 overflow-hidden flex flex-col md:flex-row">
+        <div className="flex-1 p-6 sm:p-10 border-b md:border-b-0 md:border-r border-slate-800">
+          <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-10" onClick={onClose}><X size={20} /></button>
+          <h2 className="retro-font text-xl sm:text-2xl text-teal-400 mb-8 uppercase text-center font-black tracking-tighter">Vloga za včlanitev</h2>
+          <form onSubmit={handleFormSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Ime in priimek</label>
+                <input required name="name" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Janez Novak" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Naslov</label>
+                <input required name="address" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Ulica 1, 1000 Ljubljana" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Telefon</label>
+                <input required name="phone" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="041 123 456" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">E-pošta</label>
+                <input required type="email" name="email" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="janez@novak.si" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">EMŠO</label>
+                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="0101980500123" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Kraj rojstva</label>
+                <input required name="birth_place" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Ljubljana" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Tip vozila</label>
+                <input required name="vehicle_type" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Golf MK2" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Velikost majice</label>
+                <select required name="shirt_size" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm">
+                  <option value="S">S</option>
+                  <option value="M">M</option>
+                  <option value="L">L</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                </select>
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Naslov</label>
-              <input required name="address" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Ulica 1, 1000 Ljubljana" />
+            <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 text-[11px] leading-relaxed text-slate-400 text-justify">
+              S podpisom izjavljam, da želim postati član-ica kluba AVTONOSTALGIJA 80&90, klub ljubiteljev mladodobnikov in, da sprejemam statut kluba ter sem se pripravljen-a ravnati po njem.
+              Klubu dovoljujem zbiranje, obdelavo in uporabo mojih osebnih podatkov za potrebe delovanja kluba, pri čemer je dolžno ravnati v skladu z določili Zakona o varstvu osebnih podatkov. Dovoljujem tudi javno objavljanje slikovnega, video in zvočnega materiala, ki prikazuje dejavnost društva in vsebuje moje posnetke.
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Telefon</label>
-              <input required name="phone" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="041 123 456" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
+              <SignaturePad onSave={setSignature} />
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Datum</label>
+                <input required type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" />
+              </div>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">E-pošta</label>
-              <input required type="email" name="email" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="janez@novak.si" />
+            <div className="flex items-start gap-3 px-1">
+              <input required type="checkbox" id="agreement" className="mt-1 accent-teal-400" />
+              <label htmlFor="agreement" className="text-[10px] text-slate-500 leading-snug">
+                Z uporabo tega obrazca se strinjate s shranjevanjem in obdelavo vaših podatkov na tej spletni strani.*
+              </label>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">EMŠO</label>
-              <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="0101980500123" />
+            <button type="submit" disabled={submitting} className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50">
+              {submitting ? <Loader2 className="animate-spin mx-auto" /> : "Pošlji vlogo za včlanitev"}
+            </button>
+          </form>
+        </div>
+        <div className="w-full md:w-80 lg:w-96 p-6 sm:p-10 bg-slate-950/50 flex flex-col space-y-6">
+          <div className="space-y-4">
+            <h3 className="text-teal-400 font-black uppercase tracking-widest text-sm">Navodila za plačilo</h3>
+            <p className="text-[11px] text-slate-400 leading-relaxed">Članarino 25 EUR lahko nakažete preko spletne banke na TRR ali plačate preko plačilnega naloga na pošti, banki ali hranilnici. Navodila za izpolnjevanje UPN naloga so na voljo spodaj.</p>
+          </div>
+          <div className="space-y-4 pt-4 border-t border-slate-800">
+            <div>
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Koda namena</div>
+              <div className="text-xs font-mono text-slate-200">OTHR</div>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Kraj rojstva</label>
-              <input required name="birth_place" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Ljubljana" />
+            <div>
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Namen</div>
+              <div className="text-xs font-mono text-slate-200">Članarina IME_PRIIMEK_ČLANA 2025</div>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Tip vozila</label>
-              <input required name="vehicle_type" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Golf MK2" />
+            <div>
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Znesek</div>
+              <div className="text-xs font-mono text-slate-200">25,00 EUR</div>
             </div>
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Velikost majice</label>
-              <select required name="shirt_size" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm">
-                <option value="S">S</option>
-                <option value="M">M</option>
-                <option value="L">L</option>
-                <option value="XL">XL</option>
-                <option value="XXL">XXL</option>
-              </select>
+            <div>
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">BIC banke prejemnika</div>
+              <div className="text-xs font-mono text-slate-200">HDELSI22</div>
+            </div>
+            <div>
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">IBAN</div>
+              <div className="text-xs font-mono text-slate-200">SI56 6100 0002 3775 920</div>
+            </div>
+            <div>
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Referenca</div>
+              <div className="text-xs font-mono text-slate-200">SI00 “yyyymmdd” – primer: SI00 20200325</div>
+            </div>
+            <div>
+              <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Naziv prejemnika</div>
+              <div className="text-xs font-mono text-slate-200">KLUB AVTONOSTALGIJA 80&90<br/>Trinkova 58, 1000 Ljubljana</div>
             </div>
           </div>
-          <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 text-[11px] leading-relaxed text-slate-400 text-justify">
-            S podpisom izjavljam, da želim postati član-ica kluba AVTONOSTALGIJA 80&90, klub ljubiteljev mladodobnikov in, da sprejemam statut kluba ter sem se pripravljen-a ravnati po njem.
-            Klubu dovoljujem zbiranje, obdelavo in uporabo mojih osebnih podatkov za potrebe delovanja kluba, pri čemer je dolžno ravnati v skladu z določili Zakona o varstvu osebnih podatkov. Dovoljujem tudi javno objavljanje slikovnega, video in zvočnega materiala, ki prikazuje dejavnost društva in vsebuje moje posnetke.
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
-            <SignaturePad onSave={setSignature} />
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Datum</label>
-              <input required type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" />
-            </div>
-          </div>
-          <div className="flex items-start gap-3 px-1">
-            <input required type="checkbox" id="agreement" className="mt-1 accent-teal-400" />
-            <label htmlFor="agreement" className="text-[10px] text-slate-500 leading-snug">
-              Z uporabo tega obrazca se strinjate s shranjevanjem in obdelavo vaših podatkov na tej spletni strani.*
-            </label>
-          </div>
-          <div className="text-[10px] text-slate-400 italic px-1 pt-2">
+          <div className="mt-auto pt-6 text-[9px] text-slate-500 italic leading-snug">
             Članarino lahko poravnate preko povezave ali QR kode, ki jo boste prejeli po elektronski pošti po oddaji vloge.
           </div>
-          <button type="submit" disabled={submitting} className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50">
-            {submitting ? <Loader2 className="animate-spin mx-auto" /> : "Pošlji vlogo za včlanitev"}
-          </button>
-        </form>
+        </div>
       </div>
     </div>
   );
 };
 
 const INITIAL_SETTINGS: SiteSettings = {
-  heroImage: 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?auto=format&fit=crop&q=80&w=1920',
+  heroImage: 'https://cdn.discordapp.com/attachments/1180963437984092244/1455924065842892850/Gemini_Generated_Image_2za4n12za4n12za4.png?ex=69572733&is=6955d5b3&hm=034d0794c2573369d0d60e5f3e62391d03e637e100d33386f92d1c994a867734',
   aboutImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1200',
   memberCount: '35,00',
   eventCount: '30+'
@@ -591,8 +629,8 @@ const Hero = () => {
   return (
     <section id="hero" className="relative h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img src={settings.heroImage} className="w-full h-full object-cover brightness-[0.6]" alt="Hero Background" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/20 to-slate-950/80"></div>
+        <img src={settings.heroImage} className="w-full h-full object-cover brightness-[0.85]" alt="Hero Background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/10 to-slate-950/60"></div>
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
         <h1 className="retro-font font-black mb-4 sm:mb-6 tracking-tighter uppercase text-center w-full flex flex-col items-center">
@@ -768,7 +806,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                           {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži sliko
                        </div>
                     </label>
-                    <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs mb-2" value={settingsData.aboutImage} onChange={e => setSettingsData({...settingsData, aboutImage: e.target.value})} />
+                    <input name="aboutImage" placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs mb-2" value={settingsData.aboutImage} onChange={e => setSettingsData({...settingsData, aboutImage: e.target.value})} />
                  </div>
                  <div>
                     <label className="block text-[10px] uppercase tracking-widest text-slate-500 mb-2">Hero ozadje</label>
@@ -778,7 +816,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
                           {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />} Naloži ozadje
                        </div>
                     </label>
-                    <input placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={settingsData.heroImage} onChange={e => setSettingsData({...settingsData, heroImage: e.target.value})} />
+                    <input name="heroImage" placeholder="URL slike" className="w-full bg-slate-950 p-3 rounded-lg border border-slate-700 text-xs" value={settingsData.heroImage} onChange={e => setSettingsData({...settingsData, heroImage: e.target.value})} />
                  </div>
               </div>
               <div className="flex gap-4">
@@ -925,7 +963,7 @@ const App = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 sm:gap-16 items-center">
               <div className="space-y-6 sm:space-y-8 order-2 lg:order-1 text-center lg:text-left">
                 <p className="text-base sm:text-xl leading-relaxed text-slate-300 font-light">
-                  Naš namen je predvsem druženje enako mislečih, izmenjava izkušenj in seveda ohranjanje tehnične kulture. Naši začetki segajo v avgust 2018, ko sva Tomaž Beguš in Janez Tomc postavila Facebook stran in malo kasneje tudi <a href="https://www.facebook.com/groups/avtonostalgija" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-teal-400 transition-colors underline">skupino</a>. V začetku leta 2020 smo registrirali uradni klub in se kmalu pridružili zvezi SVAMZ. Prvo Slovensko youngtimer srečanje smo organizirali 11. 5. 2019; z leti je postalo tradicionalno in vsako leto bolj izpopolnjeno.
+                  Naš namen je predvjesten druženje enako mislečih, izmenjava izkušenj in seveda ohranjanje tehnične kulture. Naši začetki segajo v avgust 2018, ko sva Tomaž Beguš in Janez Tomc postavila Facebook stran in malo kasneje tudi <a href="https://www.facebook.com/groups/avtonostalgija" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-teal-400 transition-colors underline">skupino</a>. V začetku leta 2020 smo registrirali uradni klub in se kmalu pridružili zvezi SVAMZ. Prvo Slovensko youngtimer srečanje smo organizirali 11. 5. 2019; z leti je postalo tradicionalno in vsako leto bolj izpopolnjeno.
                 </p>
                 <div className="grid grid-cols-2 gap-6 sm:gap-8 pt-6">
                   <div>
