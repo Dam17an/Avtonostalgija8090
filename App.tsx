@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings, Clock } from 'lucide-react';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
@@ -409,7 +408,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
 const INITIAL_SETTINGS: SiteSettings = {
   heroImage: 'https://cdn.discordapp.com/attachments/1180963437984092244/1455924065842892850/Gemini_Generated_Image_2za4n12za4n12za4.png?ex=69572733&is=6955d5b3&hm=034d0794c2573369d0d60e5f3e62391d03e637e100d33386f92d1c994a867734',
   aboutImage: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1200',
-  memberCount: '35,00',
+  memberCount: '3,500',
   eventCount: '30+'
 };
 
@@ -633,6 +632,7 @@ const Hero = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-950/5 to-slate-950/40"></div>
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full flex flex-col items-center justify-center h-full">
+        <img src="./images/hero-logo.png" alt="Logo" className="h-20 sm:h-32 w-auto mb-4 sm:mb-8 object-contain" />
         <h1 className="retro-font font-black mb-4 sm:mb-6 tracking-tighter uppercase text-center w-full flex flex-col items-center">
           <span className="text-[6.2vw] xs:text-[7.5vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl whitespace-nowrap block neon-text-pink leading-none pb-2 sm:pb-4">{namePart}</span>
           <span className="text-[12vw] xs:text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl block neon-text-teal text-teal-400 leading-none">{yearPart}</span>
