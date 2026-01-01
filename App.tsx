@@ -385,7 +385,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
             </div>
             <div>
               <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Namen</div>
-              <div className="text-xs font-mono text-slate-200">Članarina IME_PRIIMEK_ČLANA 2025</div>
+              <div className="text-xs font-mono text-slate-200">Članarina IME_PRIIMEK_ČLANA 2026</div>
             </div>
             <div>
               <div className="text-[9px] uppercase font-bold text-slate-500 tracking-widest">Znesek</div>
