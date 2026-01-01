@@ -112,9 +112,21 @@ const useApp = () => {
 };
 
 const Modal = ({ children, onClose }: { children?: React.ReactNode; onClose: () => void }) => (
-  <div className="fixed inset-0 z-[100] glass flex items-center justify-center p-4 overflow-y-auto">
-    <div className="bg-slate-900 w-full max-w-4xl rounded-3xl border border-white/10 shadow-2xl relative my-8 p-6 sm:p-10 animate-in fade-in zoom-in duration-300">
-      <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-10" onClick={onClose}><X size={20} /></button>
+  <div 
+    className="fixed inset-0 z-[100] glass flex items-start justify-center p-4 overflow-y-auto cursor-pointer"
+    onClick={onClose}
+  >
+    <div 
+      className="bg-slate-900 w-full max-w-4xl rounded-3xl border border-white/10 shadow-2xl relative my-8 p-6 sm:p-10 animate-in fade-in zoom-in duration-300 cursor-default"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <button 
+        className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-20 shadow-lg text-white" 
+        onClick={onClose}
+        aria-label="Close modal"
+      >
+        <X size={24} />
+      </button>
       {children}
     </div>
   </div>
@@ -293,10 +305,10 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] glass flex items-start justify-center p-4 overflow-y-auto">
-      <div className="bg-slate-900 w-full max-w-5xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 overflow-hidden flex flex-col md:flex-row">
+    <div className="fixed inset-0 z-[100] glass flex items-start justify-center p-4 overflow-y-auto cursor-pointer" onClick={onClose}>
+      <div className="bg-slate-900 w-full max-w-5xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 overflow-hidden flex flex-col md:flex-row cursor-default" onClick={(e) => e.stopPropagation()}>
         <div className="flex-1 p-6 sm:p-10 border-b md:border-b-0 md:border-r border-slate-800">
-          <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-10" onClick={onClose}><X size={20} /></button>
+          <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-10 text-white" onClick={onClose} aria-label="Close modal"><X size={24} /></button>
           <h2 className="retro-font text-xl sm:text-2xl text-teal-400 mb-8 uppercase text-center font-black tracking-tighter">Vloga za včlanitev</h2>
           <form onSubmit={handleFormSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -659,8 +671,8 @@ const LoginPageOverlay = ({ onClose }: { onClose: () => void }) => {
   };
   return (
     <div className="fixed inset-0 z-[70] glass flex items-center justify-center p-4">
-      <div className="bg-slate-900 p-8 sm:p-10 rounded-3xl w-full max-w-sm border border-pink-500/30 shadow-2xl relative">
-        <button className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white" onClick={onClose}><X size={24} /></button>
+      <div className="bg-slate-900 p-8 sm:p-10 rounded-3xl w-full max-sm border border-pink-500/30 shadow-2xl relative">
+        <button className="absolute top-4 right-4 p-2 text-slate-400 hover:text-white" onClick={onClose} aria-label="Close login"><X size={24} /></button>
         <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-8 text-center uppercase tracking-tighter font-black">Vstop za ekipo</h2>
         <form onSubmit={handleLogin} className="space-y-6">
           <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full bg-slate-950/50 border border-slate-800 rounded-lg px-4 sm:px-6 py-3 focus:border-pink-500 outline-none text-center tracking-widest text-sm" placeholder="Username" required />
@@ -776,9 +788,9 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] glass flex items-start justify-center p-4 lg:p-12 overflow-y-auto">
-      <div className="bg-slate-900 w-full max-w-7xl rounded-3xl p-6 sm:p-12 border border-purple-500/30 shadow-2xl relative my-8">
-        <button className="absolute top-4 right-4 sm:top-8 sm:right-8 p-3 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors cursor-pointer" onClick={onClose}><X size={20} /></button>
+    <div className="fixed inset-0 z-[70] glass flex items-start justify-center p-4 lg:p-12 overflow-y-auto cursor-pointer" onClick={onClose}>
+      <div className="bg-slate-900 w-full max-w-7xl rounded-3xl p-6 sm:p-12 border border-purple-500/30 shadow-2xl relative my-8 cursor-default" onClick={(e) => e.stopPropagation()}>
+        <button className="absolute top-4 right-4 sm:top-8 sm:right-8 p-3 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors cursor-pointer text-white z-10" onClick={onClose} aria-label="Close CMS"><X size={20} /></button>
         <div className="flex flex-col sm:flex-row justify-between items-center mb-10 gap-6">
           <div className="text-center sm:text-left"><h1 className="retro-font text-2xl sm:text-3xl text-teal-400 tracking-tighter uppercase font-black">Nadzorna Plošča</h1></div>
           <div className="flex items-center gap-4">
@@ -788,8 +800,8 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         </div>
 
         {showForm === 'settings' && (
-          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
-            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-2xl border border-indigo-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4 cursor-pointer" onClick={() => setShowForm(null)}>
+            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-2xl border border-indigo-500/50 max-h-[90vh] overflow-y-auto shadow-2xl cursor-default" onClick={(e) => e.stopPropagation()}>
               <h2 className="retro-font text-xl sm:text-2xl text-indigo-400 mb-8 uppercase text-center font-black">Nastavitve Strani</h2>
               <div className="space-y-6 mb-8">
                  <div className="grid grid-cols-2 gap-4">
@@ -832,8 +844,8 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         )}
 
         {showForm && showForm !== 'settings' && (
-          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4">
-            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-4xl border border-pink-500/50 max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="fixed inset-0 z-[80] bg-slate-950/98 flex items-center justify-center p-4 cursor-pointer" onClick={() => setShowForm(null)}>
+            <form onSubmit={handleSubmit} className="bg-slate-900 p-6 sm:p-8 rounded-2xl w-full max-w-4xl border border-pink-500/50 max-h-[90vh] overflow-y-auto shadow-2xl cursor-default" onClick={(e) => e.stopPropagation()}>
               <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-6 uppercase text-center font-black">{editingId ? 'Uredi' : 'Ustvari'}</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="space-y-4">
