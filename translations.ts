@@ -1,4 +1,3 @@
-
 export const translations = {
   si: {
     nav: {
@@ -62,7 +61,7 @@ V našem klubu nemamo zbiralca z verjetno največjim arhivom avtomobilskega tisk
 - Vozilo mora biti hranjeno v garaži oziroma na suhem.
 
 <b>Lastništvo dodatnega vozila:</b>
-- Lastnik mora imeti še en avtomobil za vsakodnevna uporabo.
+- Lastnik mora imeti še ein avtomobil za vsakodnevna uporabo.
 
 <b>Ohranjenost:</b>
 - Načeloma je zahtevano stanje ohranjenosti 1 ali 2 (pri čemer je 1 najboljše stanje na petstopenjski lestvici).
@@ -90,21 +89,21 @@ V našem klubu nemamo zbiralca z verjetno največjim arhivom avtomobilskega tisk
 
 <b>Ugodnosti:</b>
 - <b>Znižane dajatve za uporabo cest (cestnina):</b> Če je v prometnem dovoljenju vpisan status starodobnika, je letna dajatev za uporabo cest lahko znatno nižja – do 80 % popusta.
-- <b>Nižji stroški obveznega zavarovanja:</b> Lastniki starodobnih vozil običajno plačujejo bistveno nižje premije obveznega zavarovanja (včasih tudi 80–90 % nižje kot za običajna vozila), saj zavarovalnice upoštevajo, da se vozila uporabljajo le občasno.
+- <b>Nižji stroški obveznega zavarovanja:</b> Lastniki starodobnih vozih običajno plačujejo bistveno nižje premije obveznega zavarovanja (včasih tudi 80–90 % nižje kot za običajna vozila), saj zavarovalnice upoštevajo, da se vozila uporabljajo le občasno.
 - <b>Oprostitev davka na motorna vozila (DMV):</b> Starodobna vozila so lahko oproščena plačila DMV, če so registrirana kot starodobniki in se uporabljajo kot taka. To je še posebej pomembno pri uvozu iz tujine in prvi registraciji.
 
 <b>Kaj ugodnosti niso:</b>
 - Status starodobnika ali mladodobnika ne pomeni avtomatske oprostitve tehničnih pregledov; vozilo mora še vedno izpolnjevati vse pogoje za vključitev v promet (tehnično brezhibnost).
 
 <b>Postopek za pridobitev statusa starodobnika:</b>
-- Kontaktirate Slovensko veteransko avto-moto zvezo (SVAMZ) ali najbližjega tehničnega komisarja.
+- Kontaktirate Slovensko veteransko avto-moto zvezo (SVAMZ) ali najbližjega tehničnega komisarja. (<a href="https://svamz.com/vloge-za-certifikate/" target="_blank" rel="noopener noreferrer" style="color: #ec4899; text-decoration: underline;">https://svamz.com/vloge-za-certifikate/</a>)
 - Izpolnite vlogo in predložite potrebne dokumente (dokazilo o lastništvu, prometno dovoljenje ipd.).
 - Ogled vozila opravi tehnični komisar, ki tudi pripravi dokumentacijo.
 - SVAMZ izda:
   - Poročilo o uvrstitvi vozila v razred starodobnih vozil,
   - zapisnik o oceni,
   - certifikat.
-- Status se vpiše v potrdilo o skladnosti in v prometno dovoljenje.`
+- Status se vpiše v potrdilo o skladnosti in v prometno dovoljenje (pri pooblaščenih organizacijah in tehničnih pregledih).`
     },
     contactRoles: {
       president: 'Predsednik',
