@@ -1,60 +1,20 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings, Clock, Cookie } from 'lucide-react';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
+import { getArticles } from './api/articles';
+import { getEvents } from './api/events';
+import { getGalleries } from './api/galleries';
+import { getSettings } from './api/settings';
 
-// --- SHARED BACKEND CONFIGURATION ---
-const SUPABASE_URL = 'https://jtkhmwwbwlvqwwxlvdoa.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a2htd3did2x2cXd3eGx2ZG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MzQyMjYsImV4cCI6MjA4MjQxMDIyNn0.MWiSmvEwjuoafmrwbjEtQFrYW1iqDbSAYmZJjNkG7zE';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-// --- STORAGE UTILITIES ---
-const persistData = async (key: string, data: any) => {
-  try {
-    const isCollection = ['an_articles', 'an_events', 'an_gallery'].includes(key) && Array.isArray(data);
-    if (isCollection) {
-      const listKey = `${key}_list`;
-      const ids = data.map((item: any) => item.id);
-      await supabase.from('an_content').upsert({ key: listKey, data: ids });
-      await Promise.all(data.map(item => 
-        supabase.from('an_content').upsert({ key: `${key}_item_${item.id}`, data: item })
-      ));
-    } else {
-      await supabase.from('an_content').upsert({ key, data });
-    }
-  } catch (e: any) {
-    console.error(`Supabase Sync Error [${key}]:`, e.message);
-  }
+// --- STORAGE STUBS (REPLACING SUPABASE) ---
+const uploadImage = async (blob: Blob, folder: string) => {
+  console.warn('Image upload is currently disabled in read-only mode.');
+  return URL.createObjectURL(blob); // Temporary local preview
 };
 
-const fetchPersistedData = async (key: string) => {
-  try {
-    const isCollection = ['an_articles', 'an_events', 'an_gallery'].includes(key);
-    if (isCollection) {
-      const { data: listResult } = await supabase.from('an_content').select('data').eq('key', `${key}_list`).maybeSingle();
-      const ids = listResult?.data;
-      if (ids && Array.isArray(ids)) {
-        const itemKeys = ids.map(id => `${key}_item_${id}`);
-        const { data: itemsResult } = await supabase.from('an_content').select('data').in('key', itemKeys);
-        if (itemsResult) {
-          const dataMap = new Map(itemsResult.map(r => [r.data.id, r.data]));
-          return ids.map(id => dataMap.get(id)).filter(Boolean);
-        }
-      }
-      return [];
-    }
-    const { data, error } = await supabase.from('an_content').select('data').eq('key', key).maybeSingle();
-    if (data) return data.data;
-    if (error) throw error;
-    return null;
-  } catch (e: any) {
-    console.error(`Supabase Fetch Error [${key}]:`, e);
-    return null;
-  }
-};
-
-const compressImageToBlob = (file: File, maxWidth = 1920, quality = 0.8): Promise<Blob> => {
+// Helper to compress image before upload
+const compressImageToBlob = (file: File, maxWidth: number, quality: number): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -65,34 +25,33 @@ const compressImageToBlob = (file: File, maxWidth = 1920, quality = 0.8): Promis
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
+
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
         }
+
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Compression failed'));
-        }, 'image/jpeg', quality);
-      };
-      img.onerror = reject;
-    };
-    reader.onerror = reject;
-  });
-};
 
-const uploadImage = async (blob: Blob, folder: string) => {
-  const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-  const { data, error } = await supabase.storage.from('media').upload(fileName, blob, {
-    contentType: 'image/jpeg',
-    upsert: true
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              resolve(blob);
+            } else {
+              reject(new Error('Canvas to Blob conversion failed'));
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
   });
-  if (error) throw error;
-  const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(data.path);
-  return publicUrl;
 };
 
 const AppContext = createContext<{
@@ -561,7 +520,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/10 blur-[80px] group-hover:bg-teal-400/10 transition-colors duration-1000" />
                 <div className="space-y-8 relative z-10 text-slate-300 leading-relaxed">
                   <div className="space-y-4 text-lg sm:text-xl text-slate-100 font-bold">
-                    <p>Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitete, mojih spominov in tehnične kulture svojega časa.</p>
+                    <p>Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitety, mojih spominov in tehnične kulture svojega časa.</p>
                     <p>Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.</p>
                   </div>
 
@@ -804,8 +763,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...urls] }));
       } else {
         const blob = await compressImageToBlob(files[0] as File, 1920, 0.8);
-        const folder = showForm === 'settings' ? 'settings' : (showForm || 'misc');
-        const url = await uploadImage(blob, folder);
+        const url = await uploadImage(blob, 'misc');
         if (showForm === 'settings') {
           setSettingsData(prev => ({ ...prev, [inputName]: url }));
         } else {
@@ -814,7 +772,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
       }
     } catch (err) { 
       console.error(err);
-      alert("Napaka pri nalaganju slike. Preverite povezavo ali velikost datoteke."); 
+      alert("Napaka pri nalaganju slike."); 
     } finally { 
       setUploading(false); 
     }
@@ -998,30 +956,26 @@ const App = () => {
 
   useEffect(() => {
     const load = async () => {
-      const storedArticles = await fetchPersistedData('an_articles');
-      const storedEvents = await fetchPersistedData('an_events');
-      const storedGallery = await fetchPersistedData('an_gallery');
-      const storedLogs = await fetchPersistedData('an_logs');
-      const storedSettings = await fetchPersistedData('an_settings');
-      const storedCookieConsent = localStorage.getItem('an_cookie_consent');
-      
-      if (storedArticles) setArticles(storedArticles);
-      if (storedEvents) setEvents(storedEvents);
-      if (storedGallery) setGallery(storedGallery);
-      if (storedLogs) setLogs(storedLogs);
-      if (storedSettings) setSettings(storedSettings);
-      if (storedCookieConsent !== null) setCookieConsent(storedCookieConsent === 'true');
-      
-      setIsLoaded(true);
+      try {
+        const [fetchedArticles, fetchedEvents, fetchedGalleries, fetchedSettings] = await Promise.all([
+          getArticles(),
+          getEvents(),
+          getGalleries(),
+          getSettings()
+        ]);
+        
+        if (fetchedArticles) setArticles(fetchedArticles);
+        if (fetchedEvents) setEvents(fetchedEvents);
+        if (fetchedGalleries) setGallery(fetchedGalleries);
+        if (fetchedSettings) setSettings(fetchedSettings);
+      } catch (err) {
+        console.error('Failed to load content from API:', err);
+      } finally {
+        setIsLoaded(true);
+      }
     };
     load();
   }, []);
-
-  useEffect(() => { if (isLoaded) persistData('an_articles', articles); }, [articles, isLoaded]);
-  useEffect(() => { if (isLoaded) persistData('an_events', events); }, [events, isLoaded]);
-  useEffect(() => { if (isLoaded) persistData('an_gallery', gallery); }, [gallery, isLoaded]);
-  useEffect(() => { if (isLoaded) persistData('an_logs', logs); }, [logs, isLoaded]);
-  useEffect(() => { if (isLoaded) persistData('an_settings', settings); }, [settings, isLoaded]);
 
   const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => {
     const newLog: ActivityLog = { id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() };
@@ -1029,7 +983,6 @@ const App = () => {
   };
 
   const handleCookieConsent = (accept: boolean) => {
-    localStorage.setItem('an_cookie_consent', accept.toString());
     setCookieConsent(accept);
   };
 
@@ -1209,7 +1162,6 @@ const App = () => {
         {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
         {showAdmin && <AdminCMSOverlay onClose={() => setShowAdmin(false)} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
-        {cookieConsent === null && <CookieBanner onAccept={() => handleCookieConsent(true)} onDecline={() => handleCookieConsent(false)} />}
         
         {selectedArticle && <DetailView item={selectedArticle} type="article" onClose={() => setSelectedArticle(null)} />}
         {selectedEvent && <DetailView item={selectedEvent} type="event" onClose={() => setSelectedEvent(null)} />}
