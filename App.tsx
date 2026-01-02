@@ -53,7 +53,7 @@ const fetchPersistedData = async (key: string) => {
   }
 };
 
-const compressImageToBlob = (file: File, maxWidth = 1920, quality = 0.8): Promise<Blob> => {
+const compressImage = (file: File, maxWidth = 1920, quality = 0.8): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -72,26 +72,12 @@ const compressImageToBlob = (file: File, maxWidth = 1920, quality = 0.8): Promis
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Compression failed'));
-        }, 'image/jpeg', quality);
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = reject;
     };
     reader.onerror = reject;
   });
-};
-
-const uploadImage = async (blob: Blob, folder: string) => {
-  const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
-  const { data, error } = await supabase.storage.from('media').upload(fileName, blob, {
-    contentType: 'image/jpeg',
-    upsert: true
-  });
-  if (error) throw error;
-  const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(data.path);
-  return publicUrl;
 };
 
 const AppContext = createContext<{
@@ -566,7 +552,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                   <div className="py-6 border-y border-white/5">
                     <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-2">Avtonostalgija 80&90 ni klub popustov.</p>
-                    <p>Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev and oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
+                    <p>Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev in oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
                   </div>
 
                   <div className="space-y-4">
@@ -791,29 +777,18 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     setUploading(true);
     try {
       if (showForm === 'gallery') {
-        const fileArray = Array.from(files).slice(0, 100 - formData.galleryImages.length);
-        const uploadPromises = fileArray.map(async (file) => {
-           const blob = await compressImageToBlob(file as File, 1920, 0.8);
-           return uploadImage(blob, 'gallery');
-        });
-        const urls = await Promise.all(uploadPromises);
-        setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...urls] }));
+        const fileArray = Array.from(files).slice(0, 25 - formData.galleryImages.length);
+        const compressedResults = await Promise.all(fileArray.map(file => compressImage(file as File, 1920, 0.85)));
+        setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...compressedResults] }));
       } else {
-        const blob = await compressImageToBlob(files[0] as File, 1920, 0.8);
-        const folder = showForm === 'settings' ? 'settings' : (showForm || 'misc');
-        const url = await uploadImage(blob, folder);
+        const compressed = await compressImage(files[0] as File, 1920, 0.85);
         if (showForm === 'settings') {
-          setSettingsData(prev => ({ ...prev, [inputName]: url }));
+          setSettingsData(prev => ({ ...prev, [inputName]: compressed }));
         } else {
-          setFormData(prev => ({ ...prev, image: url }));
+          setFormData(prev => ({ ...prev, image: compressed }));
         }
       }
-    } catch (err) { 
-      console.error(err);
-      alert("Napaka pri nalaganju slike. Preverite povezavo ali velikost datoteke."); 
-    } finally { 
-      setUploading(false); 
-    }
+    } catch (err) { alert("Napaka pri nalaganju slike."); } finally { setUploading(false); }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
