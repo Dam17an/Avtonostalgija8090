@@ -3,6 +3,18 @@ import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIc
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
+import { Content } from './components/Content';
+
+function App() {
+    return (
+        <div>
+            <h1>My Website</h1>
+            <Content />
+        </div>
+    );
+}
+
+export default App;
 
 // --- SHARED BACKEND CONFIGURATION ---
 const SUPABASE_URL = 'https://jtkhmwwbwlvqwwxlvdoa.supabase.co';
