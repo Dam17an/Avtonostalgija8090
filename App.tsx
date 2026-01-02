@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
-import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings, Clock } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings, Clock, Cookie } from 'lucide-react';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
@@ -53,7 +53,7 @@ const fetchPersistedData = async (key: string) => {
   }
 };
 
-const compressImage = (file: File, maxWidth = 1920, quality = 0.8): Promise<string> => {
+const compressImageToBlob = (file: File, maxWidth = 1920, quality = 0.8): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -72,12 +72,26 @@ const compressImage = (file: File, maxWidth = 1920, quality = 0.8): Promise<stri
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Compression failed'));
+        }, 'image/jpeg', quality);
       };
       img.onerror = reject;
     };
     reader.onerror = reject;
   });
+};
+
+const uploadImage = async (blob: Blob, folder: string) => {
+  const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+  const { data, error } = await supabase.storage.from('media').upload(fileName, blob, {
+    contentType: 'image/jpeg',
+    upsert: true
+  });
+  if (error) throw error;
+  const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(data.path);
+  return publicUrl;
 };
 
 const AppContext = createContext<{
@@ -443,7 +457,7 @@ const Navbar = () => {
     { label: t.sections.news, id: 'news' },
     { label: t.sections.events, id: 'events' },
     { label: t.sections.gallery, id: 'gallery' },
-    { label: t.sections.youngtimerTitle, id: 'youngtimer' },
+    { label: t.faq.title, id: 'youngtimer' },
     { label: t.nav.contact, id: 'contact' }
   ];
   return (
@@ -524,13 +538,9 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
   const { lang, setShowMembershipModal } = useApp();
   const t = translations[lang];
   return (
-    <Section id="youngtimer" title={t.sections.youngtimerTitle} gradient={transparent ? "bg-transparent" : "bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950"}>
+    <Section id="youngtimer" title={t.faq.title} gradient={transparent ? "bg-transparent" : "bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950"}>
       <div className="max-w-4xl mx-auto space-y-12 sm:space-y-16">
         <div className="space-y-6">
-          <div className="flex items-center gap-4 mb-6 sm:mb-10 justify-center sm:justify-start">
-            <MessageSquare className="text-pink-500 shrink-0" size={28} />
-            <h3 className="retro-font text-xl sm:text-2xl text-teal-400 uppercase tracking-widest">{t.faq.title}</h3>
-          </div>
           <div className="space-y-4">
             <FAQItem question={t.faq.q1} answer={t.faq.a1} />
             <FAQItem question={t.faq.q2} answer={t.faq.a2} />
@@ -556,7 +566,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                   <div className="py-6 border-y border-white/5">
                     <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-2">Avtonostalgija 80&90 ni klub popustov.</p>
-                    <p>Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev in oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
+                    <p>Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev and oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
                   </div>
 
                   <div className="space-y-4">
@@ -649,14 +659,48 @@ const Hero = () => {
           <span className="text-[6.2vw] xs:text-[7.5vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl whitespace-nowrap block neon-text-pink leading-none pb-2 sm:pb-4">{namePart}</span>
           <span className="text-[12vw] xs:text-[11vw] sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl block neon-text-teal text-teal-400 leading-none">{yearPart}</span>
         </h1>
-        <p className="text-sm sm:text-lg md:text-2xl text-teal-400 font-light mb-8 sm:mb-12 tracking-[0.2em] sm:tracking-[0.3em] uppercase italic opacity-90 text-center w-full max-w-3xl mx-auto">{t.hero.subtitle}</p>
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 sm:gap-6 w-full max-w-xs sm:max-w-none mx-auto">
+        <p className="text-sm sm:text-lg md:text-2xl text-teal-400 font-light mb-8 sm:mb-12 tracking-[0.2em] sm:tracking-[0.3em] uppercase italic opacity-90 text-center w-full max-w-3xl mx-auto" style={{ textShadow: '1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff' }}>{t.hero.subtitle}</p>
+        <div className="flex flex-col sm:flex-row flex-wrap justify-center items-center gap-4 sm:gap-6 w-full max-w-xs sm:max-w-4xl mx-auto">
           <button onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-pink-500 hover:bg-pink-600 text-white rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 shadow-lg uppercase tracking-widest cursor-pointer relative z-20">{translations[lang].sections.events}</button>
           <button onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 border-2 border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-slate-950 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 uppercase tracking-widest cursor-pointer relative z-20">{translations[lang].sections.news}</button>
           <button onClick={() => document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 shadow-lg uppercase tracking-widest cursor-pointer relative z-20">Včlani se</button>
+          <a href="https://svamz.com/" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 border-2 border-white/20 text-white hover:border-white hover:bg-white/10 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 uppercase tracking-widest cursor-pointer relative z-20 flex items-center justify-center gap-2 shadow-lg">SVAMZ <ExternalLink size={18} /></a>
         </div>
       </div>
     </section>
+  );
+};
+
+const CookieBanner = ({ onAccept, onDecline }: { onAccept: () => void; onDecline: () => void }) => {
+  const { lang } = useApp();
+  const t = translations[lang].cookies;
+  return (
+    <div className="fixed bottom-0 left-0 right-0 z-[100] glass p-4 sm:p-6 border-t border-teal-500/30 animate-in slide-in-from-bottom duration-500">
+      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-4 text-center md:text-left">
+          <div className="w-12 h-12 rounded-full bg-teal-500/10 flex items-center justify-center text-teal-400 shrink-0 hidden sm:flex">
+            <Cookie size={24} />
+          </div>
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed max-w-3xl">
+            {t.message}
+          </p>
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={onDecline}
+            className="flex-1 md:flex-none px-6 py-2.5 rounded-xl border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 transition-all text-[10px] sm:text-xs uppercase font-black tracking-widest cursor-pointer"
+          >
+            {t.decline}
+          </button>
+          <button 
+            onClick={onAccept}
+            className="flex-1 md:flex-none px-6 py-2.5 rounded-xl bg-teal-500 text-slate-950 hover:bg-teal-400 transition-all text-[10px] sm:text-xs uppercase font-black tracking-widest shadow-[0_0_20px_rgba(20,184,166,0.3)] cursor-pointer"
+          >
+            {t.accept}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -747,18 +791,29 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     setUploading(true);
     try {
       if (showForm === 'gallery') {
-        const fileArray = Array.from(files).slice(0, 25 - formData.galleryImages.length);
-        const compressedResults = await Promise.all(fileArray.map(file => compressImage(file as File, 1920, 0.85)));
-        setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...compressedResults] }));
+        const fileArray = Array.from(files).slice(0, 100 - formData.galleryImages.length);
+        const uploadPromises = fileArray.map(async (file) => {
+           const blob = await compressImageToBlob(file as File, 1920, 0.8);
+           return uploadImage(blob, 'gallery');
+        });
+        const urls = await Promise.all(uploadPromises);
+        setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...urls] }));
       } else {
-        const compressed = await compressImage(files[0] as File, 1920, 0.85);
+        const blob = await compressImageToBlob(files[0] as File, 1920, 0.8);
+        const folder = showForm === 'settings' ? 'settings' : (showForm || 'misc');
+        const url = await uploadImage(blob, folder);
         if (showForm === 'settings') {
-          setSettingsData(prev => ({ ...prev, [inputName]: compressed }));
+          setSettingsData(prev => ({ ...prev, [inputName]: url }));
         } else {
-          setFormData(prev => ({ ...prev, image: compressed }));
+          setFormData(prev => ({ ...prev, image: url }));
         }
       }
-    } catch (err) { alert("Napaka pri nalaganju slike."); } finally { setUploading(false); }
+    } catch (err) { 
+      console.error(err);
+      alert("Napaka pri nalaganju slike. Preverite povezavo ali velikost datoteke."); 
+    } finally { 
+      setUploading(false); 
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -930,6 +985,7 @@ const App = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [settings, setSettings] = useState<SiteSettings>(INITIAL_SETTINGS);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
+  const [cookieConsent, setCookieConsent] = useState<boolean | null>(null);
   
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -943,11 +999,15 @@ const App = () => {
       const storedGallery = await fetchPersistedData('an_gallery');
       const storedLogs = await fetchPersistedData('an_logs');
       const storedSettings = await fetchPersistedData('an_settings');
+      const storedCookieConsent = localStorage.getItem('an_cookie_consent');
+      
       if (storedArticles) setArticles(storedArticles);
       if (storedEvents) setEvents(storedEvents);
       if (storedGallery) setGallery(storedGallery);
       if (storedLogs) setLogs(storedLogs);
       if (storedSettings) setSettings(storedSettings);
+      if (storedCookieConsent !== null) setCookieConsent(storedCookieConsent === 'true');
+      
       setIsLoaded(true);
     };
     load();
@@ -962,6 +1022,11 @@ const App = () => {
   const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => {
     const newLog: ActivityLog = { id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() };
     setLogs(prev => [newLog, ...prev.slice(0, 49)]);
+  };
+
+  const handleCookieConsent = (accept: boolean) => {
+    localStorage.setItem('an_cookie_consent', accept.toString());
+    setCookieConsent(accept);
   };
 
   return (
@@ -1090,7 +1155,7 @@ const App = () => {
                     <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Janez Tomc</div>
                   </div>
                   <div className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-1">Predsednik</div>
-                  <div className="text-lg font-black tracking-tight">051 319 618</div>
+                  <div className="text-lg font-black tracking-tight">+386 51 319 618</div>
                 </div>
                 <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all group">
                   <div className="flex items-center gap-4 mb-3 justify-center sm:justify-start">
@@ -1098,7 +1163,7 @@ const App = () => {
                     <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Darko Šturm</div>
                   </div>
                   <div className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-1">Podpredsednik</div>
-                  <div className="text-lg font-black tracking-tight">031 790 605</div>
+                  <div className="text-lg font-black tracking-tight">+386 31 790 605</div>
                 </div>
                 <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all group">
                   <div className="flex items-center gap-4 mb-3 justify-center sm:justify-start">
@@ -1107,6 +1172,14 @@ const App = () => {
                   </div>
                   <div className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-1">Tajnik</div>
                   <div className="text-lg font-black tracking-tight">+386 31 759 331</div>
+                </div>
+                <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all group lg:col-start-2">
+                  <div className="flex items-center gap-4 mb-3 justify-center sm:justify-start">
+                    <div className="w-10 h-10 rounded-xl bg-pink-500/10 flex items-center justify-center text-pink-500 group-hover:bg-pink-500 group-hover:text-white transition-all shadow-lg"><Phone size={18} /></div>
+                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black">Tomaž Beguš</div>
+                  </div>
+                  <div className="text-slate-100 font-bold uppercase tracking-widest text-xs mb-1">Idejni vodja kluba</div>
+                  <div className="text-lg font-black tracking-tight">+386 41 512 723</div>
                 </div>
               </div>
               <div className="glass p-8 rounded-3xl border border-teal-400/20 flex flex-col items-center justify-center group hover:border-teal-400/50 transition-all">
@@ -1132,6 +1205,7 @@ const App = () => {
         {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
         {showAdmin && <AdminCMSOverlay onClose={() => setShowAdmin(false)} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
+        {cookieConsent === null && <CookieBanner onAccept={() => handleCookieConsent(true)} onDecline={() => handleCookieConsent(false)} />}
         
         {selectedArticle && <DetailView item={selectedArticle} type="article" onClose={() => setSelectedArticle(null)} />}
         {selectedEvent && <DetailView item={selectedEvent} type="event" onClose={() => setSelectedEvent(null)} />}
