@@ -1,20 +1,59 @@
 import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
 import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings, Clock, Cookie } from 'lucide-react';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
-import { getArticles } from './api/articles';
-import { getEvents } from './api/events';
-import { getGalleries } from './api/galleries';
-import { getSettings } from './api/settings';
 
-// --- STORAGE STUBS (REPLACING SUPABASE) ---
-const uploadImage = async (blob: Blob, folder: string) => {
-  console.warn('Image upload is currently disabled in read-only mode.');
-  return URL.createObjectURL(blob); // Temporary local preview
+// --- SHARED BACKEND CONFIGURATION ---
+const SUPABASE_URL = 'https://jtkhmwwbwlvqwwxlvdoa.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a2htd3did2x2cXd3eGx2ZG9hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY4MzQyMjYsImV4cCI6MjA4MjQxMDIyNn0.MWiSmvEwjuoafmrwbjEtQFrYW1iqDbSAYmZJjNkG7zE';
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// --- STORAGE UTILITIES ---
+const persistData = async (key: string, data: any) => {
+  try {
+    const isCollection = ['an_articles', 'an_events', 'an_gallery'].includes(key) && Array.isArray(data);
+    if (isCollection) {
+      const listKey = `${key}_list`;
+      const ids = data.map((item: any) => item.id);
+      await supabase.from('an_content').upsert({ key: listKey, data: ids });
+      await Promise.all(data.map(item => 
+        supabase.from('an_content').upsert({ key: `${key}_item_${item.id}`, data: item })
+      ));
+    } else {
+      await supabase.from('an_content').upsert({ key, data });
+    }
+  } catch (e: any) {
+    console.error(`Supabase Sync Error [${key}]:`, e.message);
+  }
 };
 
-// Helper to compress image before upload
-const compressImageToBlob = (file: File, maxWidth: number, quality: number): Promise<Blob> => {
+const fetchPersistedData = async (key: string) => {
+  try {
+    const isCollection = ['an_articles', 'an_events', 'an_gallery'].includes(key);
+    if (isCollection) {
+      const { data: listResult } = await supabase.from('an_content').select('data').eq('key', `${key}_list`).maybeSingle();
+      const ids = listResult?.data;
+      if (ids && Array.isArray(ids)) {
+        const itemPromises = ids.map(async (id) => {
+          const { data: itemResult } = await supabase.from('an_content').select('data').eq('key', `${key}_item_${id}`).maybeSingle();
+          return itemResult?.data;
+        });
+        const items = await Promise.all(itemPromises);
+        return items.filter(Boolean);
+      }
+    }
+    const { data, error } = await supabase.from('an_content').select('data').eq('key', key).maybeSingle();
+    if (data) return data.data;
+    if (error) throw error;
+    return null;
+  } catch (e: any) {
+    console.error(`Supabase Fetch Error [${key}]:`, e);
+    return null;
+  }
+};
+
+const compressImageToBlob = (file: File, maxWidth = 1920, quality = 0.8): Promise<Blob> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -25,33 +64,34 @@ const compressImageToBlob = (file: File, maxWidth: number, quality: number): Pro
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
-
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
         }
-
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error('Canvas to Blob conversion failed'));
-            }
-          },
-          'image/jpeg',
-          quality
-        );
+        canvas.toBlob((blob) => {
+          if (blob) resolve(blob);
+          else reject(new Error('Compression failed'));
+        }, 'image/jpeg', quality);
       };
-      img.onerror = (err) => reject(err);
+      img.onerror = reject;
     };
-    reader.onerror = (err) => reject(err);
+    reader.onerror = reject;
   });
+};
+
+const uploadImage = async (blob: Blob, folder: string) => {
+  const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.jpg`;
+  const { data, error } = await supabase.storage.from('media').upload(fileName, blob, {
+    contentType: 'image/jpeg',
+    upsert: true
+  });
+  if (error) throw error;
+  const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(data.path);
+  return publicUrl;
 };
 
 const AppContext = createContext<{
@@ -520,7 +560,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-pink-500/10 blur-[80px] group-hover:bg-teal-400/10 transition-colors duration-1000" />
                 <div className="space-y-8 relative z-10 text-slate-300 leading-relaxed">
                   <div className="space-y-4 text-lg sm:text-xl text-slate-100 font-bold">
-                    <p>Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitety, mojih spominov in tehnične kulture svojega časa.</p>
+                    <p>Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitete, mojih spominov in tehnične kulture svojega časa.</p>
                     <p>Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.</p>
                   </div>
 
@@ -624,10 +664,7 @@ const Hero = () => {
           <button onClick={() => document.getElementById('events')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-pink-500 hover:bg-pink-600 text-white rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 shadow-lg uppercase tracking-widest cursor-pointer relative z-20">{translations[lang].sections.events}</button>
           <button onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 border-2 border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-slate-950 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 uppercase tracking-widest cursor-pointer relative z-20">{translations[lang].sections.news}</button>
           <button onClick={() => document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' })} className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 shadow-lg uppercase tracking-widest cursor-pointer relative z-20">Včlani se</button>
-          <div className="flex flex-col items-center gap-2 w-full sm:w-auto">
-            <img src="https://svamz.com/wp-content/uploads/2023/01/logo200.jpg" alt="SVAMZ Logo" className="h-8 sm:h-10 w-auto object-contain relative z-20" />
-            <a href="https://svamz.com/" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 border-2 border-white/20 text-white hover:border-white hover:bg-white/10 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 uppercase tracking-widest cursor-pointer relative z-20 flex items-center justify-center gap-2 shadow-lg">SVAMZ <ExternalLink size={18} /></a>
-          </div>
+          <a href="https://svamz.com/" target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 border-2 border-white/20 text-white hover:border-white hover:bg-white/10 rounded-xl retro-font text-xs sm:text-lg transition-all transform hover:scale-105 uppercase tracking-widest cursor-pointer relative z-20 flex items-center justify-center gap-2 shadow-lg">SVAMZ <ExternalLink size={18} /></a>
         </div>
       </div>
     </section>
@@ -702,7 +739,7 @@ const AdminList = ({ title, icon, items, onAdd, onEdit, onDelete, lang }: any) =
         <div key={item.id} className="flex flex-col sm:flex-row items-center justify-between p-3 sm:p-4 bg-slate-900/40 rounded-2xl border border-slate-800 hover:border-slate-700 transition-all group gap-4">
           <div className="flex items-center gap-4 overflow-hidden w-full">
             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl overflow-hidden shadow-lg shrink-0 border border-slate-800 bg-black">
-              <img src={item.image || (item.images && item.images[0])} className="w-full h-full object-cover" alt="Thumb" onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=100')} />
+              <img src={item.image || item.images?.[0]} className="w-full h-full object-cover" alt="Thumb" onError={(e) => (e.currentTarget.src = 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=100')} />
             </div>
             <span className="font-bold text-xs sm:text-sm truncate tracking-tight uppercase text-slate-200">{item.title[lang]}</span>
           </div>
@@ -754,7 +791,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
     setUploading(true);
     try {
       if (showForm === 'gallery') {
-        const fileArray = Array.from(files);
+        const fileArray = Array.from(files).slice(0, 100 - formData.galleryImages.length);
         const uploadPromises = fileArray.map(async (file) => {
            const blob = await compressImageToBlob(file as File, 1920, 0.8);
            return uploadImage(blob, 'gallery');
@@ -763,7 +800,8 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
         setFormData(prev => ({ ...prev, galleryImages: [...prev.galleryImages, ...urls] }));
       } else {
         const blob = await compressImageToBlob(files[0] as File, 1920, 0.8);
-        const url = await uploadImage(blob, 'misc');
+        const folder = showForm === 'settings' ? 'settings' : (showForm || 'misc');
+        const url = await uploadImage(blob, folder);
         if (showForm === 'settings') {
           setSettingsData(prev => ({ ...prev, [inputName]: url }));
         } else {
@@ -772,7 +810,7 @@ const AdminCMSOverlay = ({ onClose }: { onClose: () => void }) => {
       }
     } catch (err) { 
       console.error(err);
-      alert("Napaka pri nalaganju slike."); 
+      alert("Napaka pri nalaganju slike. Preverite povezavo ali velikost datoteke."); 
     } finally { 
       setUploading(false); 
     }
@@ -956,26 +994,30 @@ const App = () => {
 
   useEffect(() => {
     const load = async () => {
-      try {
-        const [fetchedArticles, fetchedEvents, fetchedGalleries, fetchedSettings] = await Promise.all([
-          getArticles(),
-          getEvents(),
-          getGalleries(),
-          getSettings()
-        ]);
-        
-        if (fetchedArticles) setArticles(fetchedArticles);
-        if (fetchedEvents) setEvents(fetchedEvents);
-        if (fetchedGalleries) setGallery(fetchedGalleries);
-        if (fetchedSettings) setSettings(fetchedSettings);
-      } catch (err) {
-        console.error('Failed to load content from API:', err);
-      } finally {
-        setIsLoaded(true);
-      }
+      const storedArticles = await fetchPersistedData('an_articles');
+      const storedEvents = await fetchPersistedData('an_events');
+      const storedGallery = await fetchPersistedData('an_gallery');
+      const storedLogs = await fetchPersistedData('an_logs');
+      const storedSettings = await fetchPersistedData('an_settings');
+      const storedCookieConsent = localStorage.getItem('an_cookie_consent');
+      
+      if (storedArticles) setArticles(storedArticles);
+      if (storedEvents) setEvents(storedEvents);
+      if (storedGallery) setGallery(storedGallery);
+      if (storedLogs) setLogs(storedLogs);
+      if (storedSettings) setSettings(storedSettings);
+      if (storedCookieConsent !== null) setCookieConsent(storedCookieConsent === 'true');
+      
+      setIsLoaded(true);
     };
     load();
   }, []);
+
+  useEffect(() => { if (isLoaded) persistData('an_articles', articles); }, [articles, isLoaded]);
+  useEffect(() => { if (isLoaded) persistData('an_events', events); }, [events, isLoaded]);
+  useEffect(() => { if (isLoaded) persistData('an_gallery', gallery); }, [gallery, isLoaded]);
+  useEffect(() => { if (isLoaded) persistData('an_logs', logs); }, [logs, isLoaded]);
+  useEffect(() => { if (isLoaded) persistData('an_settings', settings); }, [settings, isLoaded]);
 
   const addLog = (action: ActivityLog['action'], type: ActivityLog['type'], targetId: string) => {
     const newLog: ActivityLog = { id: Date.now().toString(), action, type, targetId, timestamp: new Date().toISOString() };
@@ -983,6 +1025,7 @@ const App = () => {
   };
 
   const handleCookieConsent = (accept: boolean) => {
+    localStorage.setItem('an_cookie_consent', accept.toString());
     setCookieConsent(accept);
   };
 
@@ -1071,13 +1114,13 @@ const App = () => {
                   {gallery.map(item => (
                     <div key={item.id} onClick={() => setSelectedGallery({ images: item.images, index: 0 })} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-purple-500/50 transition-all hover:-translate-y-2 cursor-pointer shadow-2xl">
                       <div className="aspect-video overflow-hidden relative">
-                        {item.images && item.images.length > 0 ? (
+                        {item.images.length > 0 ? (
                           <img src={item.images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.title[lang]} />
                         ) : (
                           <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>
                         )}
                         <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black text-white flex items-center gap-1 border border-white/10">
-                          <ImageIcon size={12} /> {item.images ? item.images.length : 0}
+                          <ImageIcon size={12} /> {item.images.length}
                         </div>
                         <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                            <div className="bg-white/10 backdrop-blur-md p-4 rounded-full border border-white/20">
@@ -1089,7 +1132,7 @@ const App = () => {
                         <h3 className="text-xl font-black text-white group-hover:text-purple-400 transition-colors uppercase tracking-tight leading-tight">{item.title[lang]}</h3>
                         <p className="text-slate-500 text-[10px] uppercase tracking-widest font-black flex items-center gap-2">
                           <span className="w-1.5 h-1.5 rounded-full bg-purple-500 shadow-[0_0_8px_#a855f7]"></span>
-                          Klikni za ogled ({item.images ? item.images.length : 0} slik)
+                          Klikni za ogled ({item.images.length} slik)
                         </p>
                       </div>
                     </div>
@@ -1162,6 +1205,7 @@ const App = () => {
         {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
         {showAdmin && <AdminCMSOverlay onClose={() => setShowAdmin(false)} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
+        {cookieConsent === null && <CookieBanner onAccept={() => handleCookieConsent(true)} onDecline={() => handleCookieConsent(false)} />}
         
         {selectedArticle && <DetailView item={selectedArticle} type="article" onClose={() => setSelectedArticle(null)} />}
         {selectedEvent && <DetailView item={selectedEvent} type="event" onClose={() => setSelectedEvent(null)} />}
