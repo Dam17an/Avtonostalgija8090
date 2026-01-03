@@ -3,18 +3,55 @@ import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIc
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
-import { Content } from './components/Content';
 
-function App() {
-    return (
-        <div>
-            <h1>My Website</h1>
-            <Content />
-        </div>
-    );
-}
+// STRAPI TYPES (renamed to avoid conflicts)
+type StrapiArticle = {
+    id: number;
+    attributes: {
+        title: string;
+        content: string;
+        coverImage?: {
+            data?: {
+                attributes: {
+                    url: string;
+                };
+            };
+        };
+    };
+};
 
-export default App;
+type StrapiGallery = {
+    id: number;
+    attributes: {
+        title: string;
+        images?: {
+            data: {
+                attributes: {
+                    url: string;
+                };
+            }[];
+        };
+    };
+};
+
+type StrapiAnnouncement = {
+    id: number;
+    attributes: {
+        title: string;
+        content: string;
+        date: string;
+        hour: string;
+        coverImage?: {
+            data?: {
+                attributes: {
+                    url: string;
+                };
+            };
+        };
+    };
+};
+
+const STRAPI_URL = 'https://my-backend-production-220b.up.railway.app';
 
 // --- SHARED BACKEND CONFIGURATION ---
 const SUPABASE_URL = 'https://jtkhmwwbwlvqwwxlvdoa.supabase.co';
