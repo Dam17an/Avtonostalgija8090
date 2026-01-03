@@ -593,7 +593,7 @@ const Hero = () => {
     <section id="hero" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://my-backend-production-220b.up.railway.app/uploads/Gemini_Generated_Image_2za4n12za4n12za4_14ef9e6619.png" 
+          src="https://my-backend-production-220b.up.railway.app/uploads/Gemini_Generated_Image_2za4n12za4n12za4_3cf33c7b31.png" 
           className="w-full h-full object-cover block" 
           alt="Hero" 
         />
