@@ -4,7 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { translations } from './translations';
 import { Language, Article, Event, GalleryItem, ActivityLog, SiteSettings } from './types';
 
-// STRAPI TYPES (renamed to avoid conflicts)
+// STRAPI TYPES
 type StrapiArticle = {
     id: number;
     attributes: {
