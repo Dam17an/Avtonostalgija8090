@@ -717,7 +717,7 @@ const App = () => {
                 </div>
               </div>
               <img 
-                src="https://my-backend-production-220b.up.railway.app/uploads/IMG_1053_1_05fb20dbcf.jpg" 
+                src="https://my-backend-production-220b.up.railway.app/uploads/IMG_1053_b94aabeced.jpg" 
                 className="rounded-[2rem] shadow-2xl border border-white/10 w-full object-cover block h-auto" 
                 alt="About" 
               />
