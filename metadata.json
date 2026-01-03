@@ -1,5 +1,5 @@
 {
   "name": "Avtonostalgija 80&90",
-  "description": "A modern retro-inspired web application celebrating 80s and 90s car culture in Slovenia with multi-language support and a custom CMS.",
+  "description": "Modern retro Slovenian car culture platform powered by Strapi v5.",
   "requestFramePermissions": []
 }

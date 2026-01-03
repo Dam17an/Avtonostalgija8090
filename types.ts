@@ -1,10 +1,4 @@
-
 export type Language = 'si' | 'en';
-
-export interface NavLink {
-  label: string;
-  path: string;
-}
 
 export interface SiteSettings {
   heroImage: string;
@@ -13,41 +7,32 @@ export interface SiteSettings {
   eventCount: string;
 }
 
-export interface Article {
-  id: string;
-  title: Record<Language, string>;
-  slug: string;
-  excerpt: Record<Language, string>;
-  content: Record<Language, string>;
-  image: string;
-  author: string;
-  date: string;
-  category: string;
-  tags: string[];
+// Strapi v5 Flat Structure (Slovenian field names)
+export interface StrapiArticle {
+  id: number;
+  Naslov: string;
+  Vsebina: any; // Can be string or Strapi Blocks array
+  Datum: string;
+  Slika?: {
+    url: string;
+  };
 }
 
-export interface Event {
-  id: string;
-  title: Record<Language, string>;
-  slug: string;
-  description: Record<Language, string>;
-  date: string;
-  author: string;
-  image: string;
-  location: string;
+export interface StrapiAnnouncement {
+  id: number;
+  Naslov: string;
+  Vsebina: any; // Can be string or Strapi Blocks array
+  Datum: string;
+  Ura: string;
+  Slika?: {
+    url: string;
+  };
 }
 
-export interface GalleryItem {
-  id: string;
-  eventId: string;
-  title: Record<Language, string>;
-  images: string[];
-}
-
-export interface ActivityLog {
-  id: string;
-  action: 'create' | 'update' | 'delete';
-  type: 'article' | 'event' | 'gallery' | 'settings';
-  targetId: string;
-  timestamp: string;
+export interface StrapiGallery {
+  id: number;
+  Naslov: string;
+  Slike?: Array<{
+    url: string;
+  }>;
 }
