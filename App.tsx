@@ -478,7 +478,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                 <div className="space-y-6">
                   <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Kaj pomeni članstvo v praksi?</h4>
-                  <p className="font-bold text-slate-100">Članstvo pomeni dostop do znanja, podpore and skupne moči:</p>
+                  <p className="font-bold text-slate-100">Članstvo pomoeni dostop do znanja, podpore and skupne moči:</p>
                   <ul className="space-y-4">
                     {[
                       "strokovno vodenje postopkov certificiranja in tehničnih vprašanj,",
@@ -486,7 +486,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
                       "pomoč pri homologacijah, uvozu, predelavah in vrednotenju vozil,",
                       "možnost aktivnega sodelovanja na klubskih dogodkih, vožnjah in tehničnih dnevih,",
                       "večjo vidnost in priložnosti za vozila (mediji, filmi, razstave, posebni dogodki),",
-                      "povezovanje s skupnostjo, ki deli iste vrednote, razumevanje in strast."
+                      "povezovanje s skupnostjo, ki deli iste vrednote, razumevanje and strast."
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0 shadow-[0_0_8px_#14b8a6]" />
@@ -592,8 +592,12 @@ const Hero = () => {
   return (
     <section id="hero" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img src="https://cdn.discordapp.com/attachments/1180963437984092244/1455924065842892850/Gemini_Generated_Image_2za4n12za4n12za4.png" className="w-full h-full object-cover" alt="Hero" />
-        <div className="absolute inset-0 bg-slate-950/60"></div>
+        <img 
+          src="https://my-backend-production-220b.up.railway.app/uploads/Gemini_Generated_Image_2za4n12za4n12za4_14ef9e6619.png" 
+          className="w-full h-full object-cover block" 
+          alt="Hero" 
+        />
+        <div className="absolute inset-0 bg-slate-950/60 pointer-events-none"></div>
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full">
         <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-2.png" alt="Logo" className="h-32 sm:h-48 mx-auto mb-12 object-contain" />
@@ -712,7 +716,11 @@ const App = () => {
                   <div><div className="retro-font text-4xl text-teal-400 font-black">{settings.eventCount}</div><div className="text-[10px] uppercase font-bold text-slate-500">DOGODKOV</div></div>
                 </div>
               </div>
-              <img src="https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=1200" className="rounded-[2rem] shadow-2xl border border-white/10 w-full object-cover" alt="About" />
+              <img 
+                src="https://my-backend-production-220b.up.railway.app/uploads/IMG_1053_1_05fb20dbcf.jpg" 
+                className="rounded-[2rem] shadow-2xl border border-white/10 w-full object-cover block h-auto" 
+                alt="About" 
+              />
             </div>
           </Section>
 
