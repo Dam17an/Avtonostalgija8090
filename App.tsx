@@ -29,6 +29,18 @@ const useApp = () => {
 
 // --- STRAPI CONTENT HELPERS ---
 
+const getMediaUrl = (media: any) => {
+  if (!media) return null;
+  // Handle Strapi v5 flattened structure
+  if (media.url) return `${STRAPI_BASE_URL}${media.url}`;
+  // Handle Strapi v4 structure or variations
+  if (media.data?.attributes?.url) return `${STRAPI_BASE_URL}${media.data.attributes.url}`;
+  if (media.data?.url) return `${STRAPI_BASE_URL}${media.data.url}`;
+  // Handle array of media
+  if (Array.isArray(media) && media[0]?.url) return `${STRAPI_BASE_URL}${media[0].url}`;
+  return null;
+};
+
 const getContentText = (content: any): string => {
   if (!content) return "";
   if (typeof content === 'string') return content;
@@ -104,7 +116,7 @@ const Modal = ({ children, onClose }: { children?: React.ReactNode; onClose: () 
 );
 
 const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => void }) => {
-  const imageUrl = item.Slika?.url ? `${STRAPI_BASE_URL}${item.Slika.url}` : 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
+  const imageUrl = getMediaUrl(item.Slika) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
   return (
     <Modal onClose={onClose}>
       <div className="space-y-6">
@@ -114,6 +126,29 @@ const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => voi
         <div className="space-y-4">
           <div className="flex flex-wrap gap-4 text-[10px] uppercase tracking-widest font-black text-slate-500">
             <span className="flex items-center gap-1"><Calendar size={12} /> {item.Datum}</span>
+          </div>
+          <h2 className="retro-font text-2xl sm:text-4xl text-white font-black uppercase tracking-tighter leading-tight">{item.Naslov}</h2>
+          <div className="text-slate-300 leading-relaxed text-sm sm:text-lg">
+            {renderContent(item.Vsebina)}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; onClose: () => void }) => {
+  const imageUrl = getMediaUrl(item.Slika) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
+  return (
+    <Modal onClose={onClose}>
+      <div className="space-y-6">
+        <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl border border-white/5">
+          <img src={imageUrl} className="w-full h-full object-cover" alt={item.Naslov} />
+        </div>
+        <div className="space-y-4">
+          <div className="flex flex-wrap gap-4 text-pink-500 text-[10px] uppercase font-black">
+            <span className="flex items-center gap-1"><Calendar size={14}/> {item.Datum}</span>
+            <span className="flex items-center gap-1"><Clock size={14}/> {item.Ura}</span>
           </div>
           <h2 className="retro-font text-2xl sm:text-4xl text-white font-black uppercase tracking-tighter leading-tight">{item.Naslov}</h2>
           <div className="text-slate-300 leading-relaxed text-sm sm:text-lg">
@@ -616,6 +651,7 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   
   const [selectedArticle, setSelectedArticle] = useState<StrapiArticle | null>(null);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<StrapiAnnouncement | null>(null);
   const [selectedGallery, setSelectedGallery] = useState<{ images: string[]; index: number } | null>(null);
 
   useEffect(() => {
@@ -679,30 +715,33 @@ const App = () => {
             </div>
           </Section>
 
-          {/* Announcements Section - Renamed to Napovednik with Fixed Image Logic */}
+          {/* Announcements Section - Renamed to Napovednik with Fixed Image and Click Logic */}
           <Section id="announcements" title="Napovednik" gradient="bg-gradient-to-b from-indigo-950 to-slate-900">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {announcements.map((item) => (
-                <div key={item.id} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all">
-                  <div className="aspect-video overflow-hidden">
-                    {item.Slika?.url ? (
-                      <img src={`${STRAPI_BASE_URL}${item.Slika.url}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} />
-                    ) : (
-                      <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600">
-                        <ImageIcon size={48} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-8 space-y-4">
-                    <div className="flex gap-4 text-pink-500 text-[10px] uppercase font-black">
-                      <span className="flex items-center gap-1"><Calendar size={14}/> {item.Datum}</span>
-                      <span className="flex items-center gap-1"><Clock size={14}/> {item.Ura}</span>
+              {announcements.map((item) => {
+                const imageUrl = getMediaUrl(item.Slika);
+                return (
+                  <div key={item.id} onClick={() => setSelectedAnnouncement(item)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer">
+                    <div className="aspect-video overflow-hidden">
+                      {imageUrl ? (
+                        <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} />
+                      ) : (
+                        <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600">
+                          <ImageIcon size={48} />
+                        </div>
+                      )}
                     </div>
-                    <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{item.Naslov}</h3>
-                    <div className="text-slate-400 text-sm line-clamp-3 leading-relaxed">{getContentText(item.Vsebina)}</div>
+                    <div className="p-8 space-y-4">
+                      <div className="flex gap-4 text-pink-500 text-[10px] uppercase font-black">
+                        <span className="flex items-center gap-1"><Calendar size={14}/> {item.Datum}</span>
+                        <span className="flex items-center gap-1"><Clock size={14}/> {item.Ura}</span>
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{item.Naslov}</h3>
+                      <div className="text-slate-400 text-sm line-clamp-3 leading-relaxed">{getContentText(item.Vsebina)}</div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
               {!loading && announcements.length === 0 && <p className="text-center text-slate-500 uppercase tracking-widest text-xs col-span-full">Ni novih obvestil.</p>}
             </div>
           </Section>
@@ -710,19 +749,22 @@ const App = () => {
           {/* News Section */}
           <Section id="news" title={translations[lang].sections.news} gradient="bg-gradient-to-b from-slate-900 to-purple-950">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {articles.map(article => (
-                <article key={article.id} onClick={() => setSelectedArticle(article)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer">
-                  <div className="aspect-video overflow-hidden">
-                    {article.Slika?.url ? <img src={`${STRAPI_BASE_URL}${article.Slika.url}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={article.Naslov} /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
-                  </div>
-                  <div className="p-8 space-y-4">
-                    <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{article.Datum}</div>
-                    <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{article.Naslov}</h3>
-                    <p className="text-slate-400 text-sm line-clamp-3">{getContentText(article.Vsebina)}</p>
-                    <button className="pt-4 flex items-center gap-2 text-teal-400 font-black uppercase text-[10px]">Preberi več <ChevronRight size={14} /></button>
-                  </div>
-                </article>
-              ))}
+              {articles.map(article => {
+                const imageUrl = getMediaUrl(article.Slika);
+                return (
+                  <article key={article.id} onClick={() => setSelectedArticle(article)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer">
+                    <div className="aspect-video overflow-hidden">
+                      {imageUrl ? <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={article.Naslov} /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
+                    </div>
+                    <div className="p-8 space-y-4">
+                      <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{article.Datum}</div>
+                      <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{article.Naslov}</h3>
+                      <p className="text-slate-400 text-sm line-clamp-3">{getContentText(article.Vsebina)}</p>
+                      <button className="pt-4 flex items-center gap-2 text-teal-400 font-black uppercase text-[10px]">Preberi več <ChevronRight size={14} /></button>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           </Section>
 
@@ -796,6 +838,7 @@ const App = () => {
         </footer>
 
         {selectedArticle && <DetailView item={selectedArticle} onClose={() => setSelectedArticle(null)} />}
+        {selectedAnnouncement && <AnnouncementDetailView item={selectedAnnouncement} onClose={() => setSelectedAnnouncement(null)} />}
         {selectedGallery && <GalleryLightbox images={selectedGallery.images} initialIndex={selectedGallery.index} onClose={() => setSelectedGallery(null)} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
         {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
