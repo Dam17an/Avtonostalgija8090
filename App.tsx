@@ -139,6 +139,7 @@ const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => voi
 
 const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; onClose: () => void }) => {
   const imageUrl = getMediaUrl(item.Slika) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
+  const formattedTime = item.Ura ? item.Ura.split(':').slice(0, 2).join(':') : "";
   return (
     <Modal onClose={onClose}>
       <div className="space-y-6">
@@ -146,9 +147,9 @@ const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; o
           <img src={imageUrl} className="w-full h-full object-cover" alt={item.Naslov} />
         </div>
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-4 text-pink-500 text-[10px] uppercase font-black">
-            <span className="flex items-center gap-1"><Calendar size={14}/> {item.Datum}</span>
-            <span className="flex items-center gap-1"><Clock size={14}/> {item.Ura}</span>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-pink-500 text-[10px] uppercase font-black">
+            <span className="flex items-center gap-2"><Calendar size={14}/> {item.Datum}</span>
+            <span className="flex items-center gap-2"><Clock size={14}/> {formattedTime}</span>
           </div>
           <h2 className="retro-font text-2xl sm:text-4xl text-white font-black uppercase tracking-tighter leading-tight">{item.Naslov}</h2>
           <div className="text-slate-300 leading-relaxed text-sm sm:text-lg">
@@ -472,7 +473,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                 <div className="p-6 bg-slate-950/50 rounded-2xl border border-white/5">
                   <p className="text-lg font-bold text-slate-100 mb-2">Brez skupnosti zakonodaja ne deluje v našo korist.</p>
-                  <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov in – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
+                  <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov and – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
                 </div>
 
                 <div className="space-y-6">
@@ -715,11 +716,13 @@ const App = () => {
             </div>
           </Section>
 
-          {/* Announcements Section - Renamed to Napovednik with Fixed Image and Click Logic */}
+          {/* Announcements Section - Renamed to Napovednik with Fixed Image, Click Logic, and Clean HH:mm formatting */}
           <Section id="announcements" title="Napovednik" gradient="bg-gradient-to-b from-indigo-950 to-slate-900">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {announcements.map((item) => {
                 const imageUrl = getMediaUrl(item.Slika);
+                // Correct HH:mm formatting by removing seconds
+                const formattedTime = item.Ura ? item.Ura.split(':').slice(0, 2).join(':') : "";
                 return (
                   <div key={item.id} onClick={() => setSelectedAnnouncement(item)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer">
                     <div className="aspect-video overflow-hidden">
@@ -732,9 +735,10 @@ const App = () => {
                       )}
                     </div>
                     <div className="p-8 space-y-4">
-                      <div className="flex gap-4 text-pink-500 text-[10px] uppercase font-black">
-                        <span className="flex items-center gap-1"><Calendar size={14}/> {item.Datum}</span>
-                        <span className="flex items-center gap-1"><Clock size={14}/> {item.Ura}</span>
+                      {/* Visual separation with flex row and clear gap-x-6 between date and time groups */}
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-pink-500 text-[10px] uppercase font-black">
+                        <span className="flex items-center gap-2"><Calendar size={14}/> {item.Datum}</span>
+                        <span className="flex items-center gap-2"><Clock size={14}/> {formattedTime}</span>
                       </div>
                       <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{item.Naslov}</h3>
                       <div className="text-slate-400 text-sm line-clamp-3 leading-relaxed">{getContentText(item.Vsebina)}</div>
