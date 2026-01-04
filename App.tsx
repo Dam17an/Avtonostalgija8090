@@ -180,6 +180,8 @@ const GalleryLightbox = ({ images, initialIndex, onClose }: { images: string[]; 
 };
 
 const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
+  const { lang } = useApp();
+  const t = translations[lang];
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
 
@@ -246,7 +248,7 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
 
   return (
     <div className="space-y-2">
-      <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">Podpis</label>
+      <label className="block text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-1">{t.membership.signature}</label>
       <div className="border border-slate-700 bg-black rounded-xl overflow-hidden touch-none relative">
         <canvas
           ref={canvasRef}
@@ -261,20 +263,22 @@ const SignaturePad = ({ onSave }: { onSave: (data: string) => void }) => {
           onTouchMove={draw}
           onTouchEnd={endDrawing}
         />
-        <button type="button" onClick={clear} className="absolute bottom-2 right-2 p-1 bg-slate-800/80 rounded text-[8px] uppercase font-bold text-slate-400 hover:text-white transition-colors">Počisti</button>
+        <button type="button" onClick={clear} className="absolute bottom-2 right-2 p-1 bg-slate-800/80 rounded text-[8px] uppercase font-bold text-slate-400 hover:text-white transition-colors">{t.membership.signatureClear}</button>
       </div>
     </div>
   );
 };
 
 const MembershipModal = ({ onClose }: { onClose: () => void }) => {
+  const { lang } = useApp();
+  const t = translations[lang];
   const [submitting, setSubmitting] = useState(false);
   const [signature, setSignature] = useState('');
   
   const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!signature) {
-      alert("Prosimo, dodajte svoj podpis.");
+      alert(t.membership.signPrompt);
       return;
     }
     setSubmitting(true);
@@ -294,11 +298,11 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
     try {
       (window as any).emailjs.init("0XBKLVyfoTbX1tjxl");
       await (window as any).emailjs.send("service_0ag32va", "template_vpe5zil", data);
-      alert("Obrazec je bil uspešno poslan! Prejeli boste potrditveno e-pošto.");
+      alert(t.membership.success);
       onClose();
     } catch (error) {
       console.error("Submission error:", error);
-      alert("Prišlo je do napake pri pošiljanju. Prosimo, poskusite znova.");
+      alert(t.membership.error);
     } finally {
       setSubmitting(false);
     }
@@ -309,39 +313,39 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
       <div className="bg-slate-900 w-full max-w-5xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 overflow-hidden flex flex-col md:flex-row cursor-default" onClick={(e) => e.stopPropagation()}>
         <div className="flex-1 p-6 sm:p-10 border-b md:border-b-0 md:border-r border-slate-800">
           <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-10 text-white" onClick={onClose} aria-label="Close modal"><X size={24} /></button>
-          <h2 className="retro-font text-xl sm:text-2xl text-teal-400 mb-8 uppercase text-center font-black tracking-tighter">Vloga za včlanitev</h2>
+          <h2 className="retro-font text-xl sm:text-2xl text-teal-400 mb-8 uppercase text-center font-black tracking-tighter">{t.membership.formTitle}</h2>
           <form onSubmit={handleFormSubmit} className="space-y-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Ime in priimek</label>
-                <input required name="name" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Janez Novak" />
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.name}</label>
+                <input required name="name" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.namePlaceholder} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Naslov</label>
-                <input required name="address" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Ulica 1, 1000 Ljubljana" />
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.address}</label>
+                <input required name="address" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.addressPlaceholder} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Telefon</label>
-                <input required name="phone" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="041 123 456" />
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.phone}</label>
+                <input required name="phone" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.phonePlaceholder} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">E-pošta</label>
-                <input required type="email" name="email" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="janez@novak.si" />
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.email}</label>
+                <input required type="email" name="email" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.emailPlaceholder} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">EMŠO</label>
-                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="0101980500123" />
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.emso}</label>
+                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.emsoPlaceholder} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Kraj rojstva</label>
-                <input required name="birth_place" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Ljubljana" />
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.birthPlace}</label>
+                <input required name="birth_place" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.birthPlacePlaceholder} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Tip vozila</label>
-                <input required name="vehicle_type" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder="Golf MK2" />
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.vehicleType}</label>
+                <input required name="vehicle_type" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.vehicleTypePlaceholder} />
               </div>
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Velikost majice</label>
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.shirtSize}</label>
                 <select required name="shirt_size" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm">
                   <option value="S">S</option>
                   <option value="M">M</option>
@@ -352,40 +356,39 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
               </div>
             </div>
             <div className="p-4 bg-slate-950/50 rounded-xl border border-slate-800 text-[11px] leading-relaxed text-slate-400 text-justify">
-              S podpisom izjavljam, da želim postati član-ica kluba AVTONOSTALGIJA 80&90, klub ljubiteljev mladodobnikov in, da sprejemam statut kluba ter sem se pripravljen-a ravnati po njem.
-              Klubu dovoljujem zbiranje, obdelavo in uporabo mojih osebnih podatkov za potrebe delovanja kluba, pri čemer je dolžno ravnati v skladu z določili Zakona o varstvu osebnih podatkov. Dovoljujem tudi javno objavljanje slikovnega, video in zvočnega materiala, ki prikazuje dejavnost društva in vsebuje moje posnetke.
+              {t.membership.agreementText}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-end">
               <SignaturePad onSave={setSignature} />
               <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Datum</label>
+                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.date}</label>
                 <input required type="date" name="date" defaultValue={new Date().toISOString().split('T')[0]} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" />
               </div>
             </div>
             <div className="flex items-start gap-3 px-1">
               <input required type="checkbox" id="agreement" className="mt-1 accent-teal-400" />
               <label htmlFor="agreement" className="text-[10px] text-slate-500 leading-snug">
-                Z uporabo tega obrazca se strinjate s shranjevanjem in obdelavo vaših podatkov na tej spletni strani.*
+                {t.membership.consentCheckbox}
               </label>
             </div>
             <button type="submit" disabled={submitting} className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50">
-              {submitting ? <Loader2 className="animate-spin mx-auto" /> : "Pošlji vlogo za včlanitev"}
+              {submitting ? <Loader2 className="animate-spin mx-auto" /> : t.membership.submit}
             </button>
           </form>
         </div>
         <div className="w-full md:w-80 lg:w-96 p-6 sm:p-10 bg-slate-950/50 flex flex-col space-y-6">
           <div className="space-y-4">
-            <h3 className="text-teal-400 font-black uppercase tracking-widest text-sm">Navodila za plačilo</h3>
-            <p className="text-[11px] text-slate-400 leading-relaxed">Članarino 25 EUR lahko nakažete preko spletne banke na TRR ali plačate preko plačilnega naloga na pošti, banki ali hranilnici. Navodila za izpolnjevanje UPN naloga so na voljo spodaj.</p>
+            <h3 className="text-teal-400 font-black uppercase tracking-widest text-sm">{t.membership.paymentInstructions}</h3>
+            <p className="text-[11px] text-slate-400 leading-relaxed">{t.membership.paymentDetails}</p>
           </div>
           <div className="space-y-4 pt-4 border-t border-slate-800 text-xs">
-            <div><div className="text-[9px] uppercase font-bold text-slate-500">Koda namena</div><div className="font-mono">OTHR</div></div>
-            <div><div className="text-[9px] uppercase font-bold text-slate-500">Namen</div><div className="font-mono">Članarina IME_PRIIMEK_ČLANA 2026</div></div>
-            <div><div className="text-[9px] uppercase font-bold text-slate-500">Znesek</div><div className="font-mono">25,00 EUR</div></div>
-            <div><div className="text-[9px] uppercase font-bold text-slate-500">BIC banke</div><div className="font-mono">HDELSI22</div></div>
-            <div><div className="text-[9px] uppercase font-bold text-slate-500">IBAN</div><div className="font-mono">SI56 6100 0002 3775 920</div></div>
-            <div><div className="text-[9px] uppercase font-bold text-slate-500">Referenca</div><div className="font-mono">SI00 “yyyymmdd”</div></div>
-            <div><div className="text-[9px] uppercase font-bold text-slate-500">Prejemnik</div><div className="font-mono">KLUB AVTONOSTALGIJA 80&90<br/>Trinkova 58, 1000 Ljubljana</div></div>
+            <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.code}</div><div className="font-mono">OTHR</div></div>
+            <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.purpose}</div><div className="font-mono">{t.membership.purposeText}</div></div>
+            <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.amount}</div><div className="font-mono">25,00 EUR</div></div>
+            <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.bic}</div><div className="font-mono">HDELSI22</div></div>
+            <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.iban}</div><div className="font-mono">SI56 6100 0002 3775 920</div></div>
+            <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.ref}</div><div className="font-mono">SI00 “yyyymmdd”</div></div>
+            <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.recipient}</div><div className="font-mono">{t.membership.recipientText}</div></div>
           </div>
         </div>
       </div>
@@ -461,7 +464,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
                       "zastopa lastnike vozil v dialogu z zakonodajo v Sloveniji in Evropski uniji,",
                       "ohranja pravico do uporabe, vožnje in dolgoročne vrednosti mladodobnih in starodobnih vozil,",
                       "gradi okolje, v katerem so avtomobili 80. in 90. let prepoznani kot tehniška in kulturna dediščina,",
-                      "povezuje znanje, izkušnje and ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."
+                      "povezuje znanje, izkušnje in ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-2 shrink-0 shadow-[0_0_8px_#ec4899]" />
@@ -473,12 +476,12 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                 <div className="p-6 bg-slate-950/50 rounded-2xl border border-white/5">
                   <p className="text-lg font-bold text-slate-100 mb-2">Brez skupnosti zakonodaja ne deluje v našo korist.</p>
-                  <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov and – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
+                  <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov in – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
                 </div>
 
                 <div className="space-y-6">
                   <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Kaj pomeni članstvo v praksi?</h4>
-                  <p className="font-bold text-slate-100">Članstvo pomoeni dostop do znanja, podpore and skupne moči:</p>
+                  <p className="font-bold text-slate-100">Članstvo pomeni dostop do znanja, podpore and skupne moči:</p>
                   <ul className="space-y-4">
                     {[
                       "strokovno vodenje postopkov certificiranja in tehničnih vprašanj,",
@@ -486,7 +489,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
                       "pomoč pri homologacijah, uvozu, predelavah in vrednotenju vozil,",
                       "možnost aktivnega sodelovanja na klubskih dogodkih, vožnjah in tehničnih dnevih,",
                       "večjo vidnost in priložnosti za vozila (mediji, filmi, razstave, posebni dogodki),",
-                      "povezovanje s skupnostjo, ki deli iste vrednote, razumevanje and strast."
+                      "povezovanje s skupnostjo, ki deli iste vrednote, razumevanje in strast."
                     ].map((item, i) => (
                       <li key={i} className="flex items-start gap-3">
                         <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0 shadow-[0_0_8px_#14b8a6]" />
@@ -498,7 +501,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                 <div className="space-y-4">
                   <p>Članstvo je pomembno, ker posameznik nima glasu, organizirana skupnost pa ga ima. Sodelovanje kluba s SVAMZ pa mu daje strokovno, pravno in institucionalno legitimnost ter glas v nacionalnih in evropskih zakonodajnih procesih, kjer se odloča o prihodnosti historičnih in youngtimer vozil; brez te povezave bi bil klub zgolj interesna skupina brez realnega vpliva, ne pa del sistema, ki dolgoročno ščiti pravico do obstoja, uporabe in priznanja teh vozil.</p>
-                  <p>Z včlanitvijo v klub in SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. in 90. let kot živo dediščino, img zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni in cenjeni tudi čez 10, 20 ali 30 let.</p>
+                  <p>Z včlanitvijo v klub in SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. in 90. let kot živo dediščino, jim zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni in cenjeni tudi čez 10, 20 ali 30 let.</p>
                 </div>
 
                 <div className="pt-8 border-t border-white/5 space-y-4 text-center">
@@ -514,7 +517,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
             </div>
           </div>
           <div className="flex justify-center mt-12">
-            <button onClick={() => setShowMembershipModal(true)} className="px-12 py-5 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-2xl font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(20,184,166,0.4)] text-xl cursor-pointer">Postani član zdaj</button>
+            <button onClick={() => setShowMembershipModal(true)} className="px-12 py-5 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-2xl font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(20,184,166,0.4)] text-xl cursor-pointer">{t.sections.memberTitle}</button>
           </div>
         </div>
       </div>
@@ -562,26 +565,48 @@ const Navbar = () => {
     <nav className="fixed w-full z-50 glass border-b border-purple-500/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer">
-            <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" alt="Logo" className="h-10 sm:h-12" />
+          <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer flex-shrink-0">
+            <img 
+              src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" 
+              alt="Logo" 
+              className="h-10 sm:h-12 block w-auto object-contain" 
+              loading="eager"
+            />
           </div>
           <div className="hidden lg:flex items-center space-x-4 text-xs font-medium">
             {menuItems.map(item => (
               <button key={item.id} onClick={() => handleNavClick(item.id)} className="hover:text-pink-500 transition-colors uppercase tracking-widest px-2">{item.label}</button>
             ))}
             <div className="flex items-center space-x-2 border-l border-slate-700 pl-4">
-              <button onClick={() => setLang('si')} className={`px-2 py-1 rounded-full text-[10px] ${lang === 'si' ? 'bg-pink-500 text-white' : 'text-slate-400'}`}>SI</button>
-              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full text-[10px] ${lang === 'en' ? 'bg-pink-500 text-white' : 'text-slate-400'}`}>EN</button>
+              <button onClick={() => setLang('si')} className={`px-2 py-1 rounded-full text-[10px] font-bold ${lang === 'si' ? 'bg-pink-500 text-white' : 'text-slate-400'}`}>SI</button>
+              <button onClick={() => setLang('en')} className={`px-2 py-1 rounded-full text-[10px] font-bold ${lang === 'en' ? 'bg-pink-500 text-white' : 'text-slate-400'}`}>EN</button>
             </div>
             <button onClick={() => isAdmin ? setShowAdmin(true) : setShowLogin(true)} className="p-2 text-slate-400 hover:text-pink-500">
               <User size={20} className={isAdmin ? 'text-teal-400' : ''} />
             </button>
           </div>
-          <button className="lg:hidden text-slate-100" onClick={() => setIsOpen(!isOpen)}>
+          <button className="lg:hidden text-slate-100 p-2" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X size={28} /> : <Menu size={28} />}
           </button>
         </div>
       </div>
+      {/* MOBILE MENU */}
+      {isOpen && (
+        <div className="lg:hidden glass border-t border-purple-500/30 py-6 px-4 space-y-2 animate-in slide-in-from-top duration-300 overflow-y-auto max-h-[calc(100vh-5rem)]">
+          {menuItems.map(item => (
+            <button key={item.id} onClick={() => handleNavClick(item.id)} className="block w-full text-left py-4 px-4 hover:bg-white/10 rounded-xl transition-colors uppercase tracking-widest text-xs font-black text-slate-100">{item.label}</button>
+          ))}
+          <div className="flex items-center justify-between pt-6 border-t border-white/5 px-4 mt-4">
+            <div className="flex gap-4">
+              <button onClick={() => { setLang('si'); setIsOpen(false); }} className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest ${lang === 'si' ? 'bg-pink-500 text-white' : 'text-slate-400 border border-white/10'}`}>SI</button>
+              <button onClick={() => { setLang('en'); setIsOpen(false); }} className={`px-4 py-2 rounded-full text-[10px] font-black tracking-widest ${lang === 'en' ? 'bg-pink-500 text-white' : 'text-slate-400 border border-white/10'}`}>EN</button>
+            </div>
+            <button onClick={() => { isAdmin ? setShowAdmin(true) : setShowLogin(true); setIsOpen(false); }} className="p-3 bg-slate-800 rounded-full text-slate-400 hover:text-pink-500 transition-colors">
+              <User size={20} className={isAdmin ? 'text-teal-400' : ''} />
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 };
@@ -596,21 +621,27 @@ const Hero = () => {
           src="https://my-backend-production-220b.up.railway.app/uploads/Gemini_Generated_Image_2za4n12za4n12za4_3cf33c7b31.png" 
           className="w-full h-full object-cover block" 
           alt="Hero" 
+          loading="eager"
         />
         <div className="absolute inset-0 bg-slate-950/20 pointer-events-none"></div>
       </div>
-      <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full">
-        <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-2.png" alt="Logo" className="h-32 sm:h-48 mx-auto mb-12 object-contain" />
+      <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full pt-20">
+        <img 
+          src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-2.png" 
+          alt="Logo" 
+          className="h-24 sm:h-32 md:h-48 mx-auto mb-8 md:mb-12 object-contain block w-auto" 
+          loading="eager"
+        />
         <h1 className="retro-font font-black mb-6 tracking-tighter uppercase text-center flex flex-col items-center">
-          <span className="text-[clamp(1rem,7.2vw,13rem)] neon-text-pink leading-none pb-4">AVTONOSTALGIJA</span>
-          <span className="text-[clamp(1rem,7.2vw,13rem)] neon-text-teal text-teal-400 leading-none">80&90</span>
+          <span className="text-[clamp(1.5rem,8vw,11rem)] neon-text-pink leading-none pb-2 md:pb-4">AVTONOSTALGIJA</span>
+          <span className="text-[clamp(1.5rem,8vw,11rem)] neon-text-teal text-teal-400 leading-none">80&90</span>
         </h1>
-        <p className="text-xs md:text-2xl text-teal-400 font-bold mb-12 tracking-[0.3em] uppercase italic opacity-90 text-border-white">{t.hero.subtitle}</p>
-        <div className="flex flex-wrap justify-center gap-4 sm:gap-6">
-          <button onClick={() => document.getElementById('announcements')?.scrollIntoView({ behavior: 'smooth' })} className="px-6 sm:px-10 py-3 sm:py-4 bg-pink-500 text-white rounded-xl retro-font text-sm sm:text-lg transition-all uppercase tracking-widest shadow-lg shadow-pink-500/20">Dogodki</button>
-          <button onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="px-6 sm:px-10 py-3 sm:py-4 border-2 border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-slate-950 rounded-xl retro-font text-sm sm:text-lg transition-all uppercase tracking-widest shadow-lg shadow-teal-400/20">Novice</button>
-          <a href="https://svamz.com/" target="_blank" rel="noopener noreferrer" className="px-6 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl retro-font text-sm sm:text-lg transition-all uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-purple-500/20">SVAMZ <ExternalLink size={18} /></a>
-          <button onClick={() => document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' })} className="px-6 sm:px-10 py-3 sm:py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl retro-font text-sm sm:text-lg transition-all uppercase tracking-widest shadow-lg shadow-teal-500/30">Včlani se</button>
+        <p className="text-[10px] md:text-2xl text-teal-400 font-bold mb-10 md:mb-12 tracking-[0.2em] md:tracking-[0.3em] uppercase italic opacity-90 text-border-white px-2">{t.hero.subtitle}</p>
+        <div className="flex flex-wrap justify-center gap-3 md:gap-6">
+          <button onClick={() => document.getElementById('announcements')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 md:px-10 py-3 md:py-4 bg-pink-500 text-white rounded-xl retro-font text-xs md:text-lg transition-all uppercase tracking-widest shadow-lg shadow-pink-500/20">{t.sections.events}</button>
+          <button onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 md:px-10 py-3 md:py-4 border-2 border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-slate-950 rounded-xl retro-font text-xs md:text-lg transition-all uppercase tracking-widest shadow-lg shadow-teal-400/20">{lang === 'si' ? 'Novice' : 'News'}</button>
+          <a href="https://svamz.com/" target="_blank" rel="noopener noreferrer" className="px-5 md:px-10 py-3 md:py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl retro-font text-xs md:text-lg transition-all uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-purple-500/20">SVAMZ <ExternalLink size={16} /></a>
+          <button onClick={() => document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 md:px-10 py-3 md:py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl retro-font text-xs md:text-lg transition-all uppercase tracking-widest shadow-lg shadow-teal-500/30">{lang === 'si' ? 'Včlani se' : 'Join Us'}</button>
         </div>
       </div>
     </section>
@@ -628,13 +659,13 @@ const LoginPageOverlay = ({ onClose }: { onClose: () => void }) => {
   };
   return (
     <div className="fixed inset-0 z-[70] glass flex items-center justify-center p-4">
-      <div className="bg-slate-900 p-8 rounded-3xl w-full max-sm border border-pink-500/30 relative">
-        <button className="absolute top-4 right-4 text-slate-400" onClick={onClose}><X size={24} /></button>
+      <div className="bg-slate-900 p-8 rounded-3xl w-full max-w-sm border border-pink-500/30 relative shadow-2xl">
+        <button className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors" onClick={onClose}><X size={24} /></button>
         <h2 className="retro-font text-xl text-pink-500 mb-8 text-center uppercase font-black">Admin Vstop</h2>
         <form onSubmit={handleLogin} className="space-y-6">
-          <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full bg-slate-950 p-3 rounded-lg border border-slate-800 outline-none text-sm" placeholder="Username" required />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-950 p-3 rounded-lg border border-slate-800 outline-none text-sm" placeholder="••••" required />
-          <button type="submit" className="w-full py-4 bg-pink-500 rounded-lg font-bold uppercase tracking-widest text-sm">Prijava</button>
+          <input type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="w-full bg-slate-950 p-4 rounded-xl border border-slate-800 outline-none focus:border-pink-500 text-sm" placeholder="Username" required />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full bg-slate-950 p-4 rounded-xl border border-slate-800 outline-none focus:border-pink-500 text-sm" placeholder="••••" required />
+          <button type="submit" className="w-full py-4 bg-pink-500 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-105 transition-transform">Prijava</button>
         </form>
       </div>
     </div>
@@ -690,6 +721,8 @@ const App = () => {
     setCookieConsent(accept);
   };
 
+  const t = translations[lang];
+
   return (
     <AppContext.Provider value={{
       lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin,
@@ -700,42 +733,46 @@ const App = () => {
         <main>
           <Hero />
           
-          <Section id="about" title={translations[lang].sections.introTitle} gradient="bg-gradient-to-b from-slate-950 to-indigo-950">
+          <Section id="about" title={t.sections.introTitle} gradient="bg-gradient-to-b from-slate-950 to-indigo-950">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-8 text-center lg:text-left">
                 <p className="text-xl leading-relaxed text-slate-300 font-light">
-                  Naš namen je predvsem druženje enako mislečih, izmenjava izkušenj in seveda ohranjanje tehnične kulture. Naši začetki segajo v avgust 2018, ko sva Tomaž Beguš in Janez Tomc postavila Facebook stran in malo kasneje tudi skupino. V začetku leta 2020 smo registrirali uradni klub in se kmalu pridružili zvezi SVAMZ. Prvo Slovensko youngtimer srečanje smo organizirali 11. 5. 2019; z leti je postalo tradicionalno in vsako leto bolj izpopolnjeno.
+                  {lang === 'si' 
+                    ? 'Naš namen je predvsem druženje enako mislečih, izmenjava izkušenj in seveda ohranjanje tehnične kulture. Naši začetki segajo v avgust 2018, ko sva Tomaž Beguš in Janez Tomc postavila Facebook stran in malo kasneje tudi skupino. V začetku leta 2020 smo registrirali uradni klub in se kmalu pridružili zvezi SVAMZ. Prvo Slovensko youngtimer srečanje smo organizirali 11. 5. 2019; z leti je postalo tradicionalno in vsako leto bolj izpopolnjeno.'
+                    : 'Our purpose is primarily the gathering of like-minded enthusiasts, the exchange of experiences, and of course, the preservation of technical culture. Our beginnings date back to August 2018, when Tomaž Beguš and Janez Tomc created a Facebook page and, a little later, a group. In early 2020, we registered as an official club and soon joined the SVAMZ association. We organized the first Slovenian Youngtimer meeting on May 11, 2019; over the years, it has become traditional and increasingly refined.'
+                  }
                 </p>
                 <div className="flex justify-center lg:justify-start">
                    <a href="https://www.facebook.com/groups/avtonostalgija" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-6 py-3 bg-blue-600/20 border border-blue-500/50 rounded-xl hover:bg-blue-600/40 transition-all text-blue-400 font-bold uppercase tracking-widest text-xs">
-                     <Facebook size={20} /> Pridruži se FB skupini
+                     <Facebook size={20} /> {lang === 'si' ? 'Pridruži se FB skupini' : 'Join our FB group'}
                    </a>
                 </div>
                 <div className="grid grid-cols-2 gap-8 pt-6">
-                  <div><div className="retro-font text-4xl text-pink-500 font-black">{settings.memberCount}</div><div className="text-[10px] uppercase font-bold text-slate-500">sledilcev</div></div>
-                  <div><div className="retro-font text-4xl text-teal-400 font-black">{settings.eventCount}</div><div className="text-[10px] uppercase font-bold text-slate-500">DOGODKOV</div></div>
+                  <div><div className="retro-font text-4xl text-pink-500 font-black">{settings.memberCount}</div><div className="text-[10px] uppercase font-bold text-slate-500">{lang === 'si' ? 'sledilcev' : 'followers'}</div></div>
+                  <div><div className="retro-font text-4xl text-teal-400 font-black">{settings.eventCount}</div><div className="text-[10px] uppercase font-bold text-slate-500">{lang === 'si' ? 'DOGODKOV' : 'EVENTS'}</div></div>
                 </div>
               </div>
               <img 
                 src="https://my-backend-production-220b.up.railway.app/uploads/IMG_1053_b94aabeced.jpg" 
-                className="rounded-[2rem] shadow-2xl border border-white/10 w-full object-cover block h-auto" 
+                className="rounded-[2rem] shadow-2xl border border-white/10 w-full object-cover block h-auto max-h-[500px]" 
                 alt="About" 
+                loading="lazy"
               />
             </div>
           </Section>
 
           {/* Announcements Section - Renamed to Napovednik with Fixed Image, Click Logic, and Clean HH:mm formatting */}
-          <Section id="announcements" title="Napovednik" gradient="bg-gradient-to-b from-indigo-950 to-slate-900">
+          <Section id="announcements" title={t.sections.events} gradient="bg-gradient-to-b from-indigo-950 to-slate-900">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {announcements.map((item) => {
                 const imageUrl = getMediaUrl(item.Slika);
                 // Correct HH:mm formatting by removing seconds
                 const formattedTime = item.Ura ? item.Ura.split(':').slice(0, 2).join(':') : "";
                 return (
-                  <div key={item.id} onClick={() => setSelectedAnnouncement(item)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer">
+                  <div key={item.id} onClick={() => setSelectedAnnouncement(item)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-xl">
                     <div className="aspect-video overflow-hidden">
                       {imageUrl ? (
-                        <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} />
+                        <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} loading="lazy" />
                       ) : (
                         <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600">
                           <ImageIcon size={48} />
@@ -754,25 +791,25 @@ const App = () => {
                   </div>
                 );
               })}
-              {!loading && announcements.length === 0 && <p className="text-center text-slate-500 uppercase tracking-widest text-xs col-span-full">Ni novih obvestil.</p>}
+              {!loading && announcements.length === 0 && <p className="text-center text-slate-500 uppercase tracking-widest text-[10px] col-span-full py-12">{lang === 'si' ? 'Ni novih obvestil.' : 'No new announcements.'}</p>}
             </div>
           </Section>
 
           {/* News Section */}
-          <Section id="news" title={translations[lang].sections.news} gradient="bg-gradient-to-b from-slate-900 to-purple-950">
+          <Section id="news" title={t.sections.news} gradient="bg-gradient-to-b from-slate-900 to-purple-950">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {articles.map(article => {
                 const imageUrl = getMediaUrl(article.Slika);
                 return (
-                  <article key={article.id} onClick={() => setSelectedArticle(article)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer">
+                  <article key={article.id} onClick={() => setSelectedArticle(article)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-xl">
                     <div className="aspect-video overflow-hidden">
-                      {imageUrl ? <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={article.Naslov} /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
+                      {imageUrl ? <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={article.Naslov} loading="lazy" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
                     </div>
                     <div className="p-8 space-y-4">
                       <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{article.Datum}</div>
                       <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{article.Naslov}</h3>
                       <p className="text-slate-400 text-sm line-clamp-3">{getContentText(article.Vsebina)}</p>
-                      <button className="pt-4 flex items-center gap-2 text-teal-400 font-black uppercase text-[10px]">Preberi več <ChevronRight size={14} /></button>
+                      <button className="pt-4 flex items-center gap-2 text-teal-400 font-black uppercase text-[10px]">{t.common.readMore} <ChevronRight size={14} /></button>
                     </div>
                   </article>
                 );
@@ -781,19 +818,19 @@ const App = () => {
           </Section>
 
           {/* Gallery Section */}
-          <Section id="gallery" title={translations[lang].sections.gallery} gradient="bg-gradient-to-b from-purple-950 to-slate-950">
+          <Section id="gallery" title={t.sections.gallery} gradient="bg-gradient-to-b from-purple-950 to-slate-950">
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {galleries.map(item => {
                   const images = item.Slike?.map(img => `${STRAPI_BASE_URL}${img.url}`) || [];
                   return (
                     <div key={item.id} onClick={() => images.length > 0 && setSelectedGallery({ images, index: 0 })} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-purple-500/50 transition-all cursor-pointer shadow-2xl">
                       <div className="aspect-video overflow-hidden relative">
-                        {images.length > 0 ? <img src={images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
+                        {images.length > 0 ? <img src={images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} loading="lazy" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
                         <div className="absolute top-4 right-4 bg-black/60 px-3 py-1 rounded-full text-[10px] font-black text-white flex items-center gap-1"><ImageIcon size={12} /> {images.length}</div>
                       </div>
                       <div className="p-8 space-y-2">
                         <h3 className="text-xl font-black text-white group-hover:text-purple-400 transition-colors uppercase tracking-tight">{item.Naslov}</h3>
-                        <p className="text-slate-500 text-[10px] uppercase font-black">Klikni za ogled ({images.length} slik)</p>
+                        <p className="text-slate-500 text-[10px] uppercase font-black">{lang === 'si' ? `Klikni za ogled (${images.length} slik)` : `Click to view (${images.length} photos)`}</p>
                       </div>
                     </div>
                   );
@@ -803,30 +840,30 @@ const App = () => {
 
           <YoungtimerSection />
 
-          <Section id="contact" title={translations[lang].nav.contact} gradient="bg-slate-950">
+          <Section id="contact" title={t.nav.contact} gradient="bg-slate-950">
             <div className="max-w-4xl mx-auto space-y-12 text-center sm:text-left">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="glass p-8 rounded-2xl border border-white/10 hover:border-teal-400/30 transition-all flex flex-col items-center sm:items-start shadow-xl">
                   <div className="text-2xl font-black text-teal-400 uppercase tracking-tight leading-tight mb-1">Janez Tomc</div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{translations[lang].contactRoles.president}</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{t.contactRoles.president}</div>
                   <div className="text-base font-black tracking-tight text-slate-100">+386 51 319 618</div>
                 </div>
                 <div className="glass p-8 rounded-2xl border border-white/10 hover:border-teal-400/30 transition-all flex flex-col items-center sm:items-start shadow-xl">
                   <div className="text-2xl font-black text-teal-400 uppercase tracking-tight leading-tight mb-1">Darko Šturm</div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{translations[lang].contactRoles.vicePresident}</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{t.contactRoles.vicePresident}</div>
                   <div className="text-base font-black tracking-tight text-slate-100">+386 31 790 605</div>
                 </div>
                 <div className="glass p-8 rounded-2xl border border-white/10 hover:border-teal-400/30 transition-all flex flex-col items-center sm:items-start shadow-xl">
                   <div className="text-2xl font-black text-teal-400 uppercase tracking-tight leading-tight mb-1">Damir Sterle</div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{translations[lang].contactRoles.secretary}</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{t.contactRoles.secretary}</div>
                   <div className="text-base font-black tracking-tight text-slate-100">+386 31 759 331</div>
                 </div>
                 <div className="glass p-8 rounded-2xl border border-white/10 hover:border-teal-400/30 transition-all flex flex-col items-center sm:items-start shadow-xl">
                   <div className="text-2xl font-black text-teal-400 uppercase tracking-tight leading-tight mb-1">Tomaž Beguš</div>
-                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{translations[lang].contactRoles.founder}</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{t.contactRoles.founder}</div>
                   <div className="text-base font-black tracking-tight text-slate-100">+386 41 512 723</div>
                 </div>
-                <div className="glass p-8 rounded-3xl border border-teal-400/20 flex flex-col items-center justify-center group hover:border-teal-400/50 transition-all col-span-full">
+                <div className="glass p-8 rounded-3xl border border-teal-400/20 flex flex-col items-center justify-center group hover:border-teal-400/50 transition-all col-span-full shadow-2xl">
                   <Mail className="text-teal-400 mb-4 group-hover:scale-110 transition-transform" size={32} />
                   <a href="mailto:avtonostalgija8090@gmail.com" className="text-xl sm:text-2xl font-black text-white hover:text-teal-400 transition-colors tracking-tight">avtonostalgija8090@gmail.com</a>
                 </div>
@@ -837,13 +874,20 @@ const App = () => {
 
         <footer className="py-16 border-t border-white/5 bg-slate-950 text-center">
           <div className="max-w-7xl mx-auto px-4 space-y-10">
-            <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" className="h-12 mx-auto grayscale opacity-50" alt="Logo" />
+            <div className="flex justify-center">
+              <img 
+                src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" 
+                className="h-10 sm:h-12 grayscale opacity-50 block w-auto object-contain" 
+                alt="Logo" 
+                loading="lazy"
+              />
+            </div>
             <div className="space-y-4">
-              <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600 font-bold">© {new Date().getFullYear()} AVTONOSTALGIJA 80&90. Vse pravice pridržane.</p>
-              <div className="max-w-xl mx-auto text-[9px] text-slate-600 leading-relaxed uppercase tracking-widest space-y-2">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-slate-600 font-bold">© {new Date().getFullYear()} AVTONOSTALGIJA 80&90. {lang === 'si' ? 'Vse pravice pridržane.' : 'All rights reserved.'}</p>
+              <div className="max-w-xl mx-auto text-[9px] text-slate-600 leading-relaxed uppercase tracking-widest space-y-2 px-4">
                 <p>Klub ljubiteljev mladodobnikov Avtonostalgija 80&90 • Trinkova ulica 58, 1000 Ljubljana</p>
                 <p>Davčna št.: 55751369 • Matična št.: 4120493000</p>
-                <p>IBAN SI56 6100 0002 3775 920 (26.2.2020, DH d.d.</p>
+                <p>IBAN SI56 6100 0002 3775 920 (26.2.2020, DH d.d.)</p>
               </div>
             </div>
           </div>

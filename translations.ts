@@ -28,6 +28,45 @@ export const translations = {
       certTitle: 'Pridobitev certifikata',
       memberTitle: 'Postani član kluba'
     },
+    membership: {
+      formTitle: 'Vloga za včlanitev',
+      name: 'Ime in priimek',
+      namePlaceholder: 'Janez Novak',
+      address: 'Naslov',
+      addressPlaceholder: 'Ulica 1, 1000 Ljubljana',
+      phone: 'Telefon',
+      phonePlaceholder: '041 123 456',
+      email: 'E-pošta',
+      emailPlaceholder: 'janez@novak.si',
+      emso: 'EMŠO',
+      emsoPlaceholder: '0101980500123',
+      birthPlace: 'Kraj rojstva',
+      birthPlacePlaceholder: 'Ljubljana',
+      vehicleType: 'Tip vozila',
+      vehicleTypePlaceholder: 'Golf MK2',
+      shirtSize: 'Velikost majice',
+      date: 'Datum',
+      signature: 'Podpis',
+      signatureClear: 'Počisti',
+      agreementText: 'S podpisom izjavljam, da želim postati član-ica kluba AVTONOSTALGIJA 80&90, klub ljubiteljev mladodobnikov in, da sprejemam statut kluba ter sem se pripravljen-a ravnati po njem. Klubu dovoljujem zbiranje, obdelavo in uporabo mojih osebnih podatkov za potrebe delovanja kluba, pri čemer je dolžno ravnati v skladu z določili Zakona o varstvu osebnih podatkov. Dovoljujem tudi javno objavljanje slikovnega, video in zvočnega materiala, ki prikazuje dejavnost društva in vsebuje moje posnetke.',
+      consentCheckbox: 'Z uporabo tega obrazca se strinjate s shranjevanjem in obdelavo vaših podatkov na tej spletni strani.*',
+      submit: 'Pošlji vlogo za včlanitev',
+      submitting: 'Pošiljanje...',
+      paymentInstructions: 'Navodila za plačilo',
+      paymentDetails: 'Članarino 25 EUR lahko nakažete preko spletne banke na TRR ali plačate preko plačilnega naloga na pošti, banki ali hranilnici. Navodila za izpolnjevanje UPN naloga so na voljo spodaj.',
+      code: 'Koda namena',
+      purpose: 'Namen',
+      purposeText: 'Članarina IME_PRIIMEK_ČLANA 2026',
+      amount: 'Znesek',
+      bic: 'BIC banke',
+      iban: 'IBAN',
+      ref: 'Referenca',
+      recipient: 'Prejemnik',
+      recipientText: 'KLUB AVTONOSTALGIJA 80&90, Trinkova 58, 1000 Ljubljana',
+      success: 'Obrazec je bil uspešno poslan! Prejeli boste potrditveno e-pošto.',
+      error: 'Prišlo je do napake pri pošiljanju. Prosimo, poskusite znova.',
+      signPrompt: 'Prosimo, dodajte svoj podpis.'
+    },
     faq: {
       title: 'Pogosta vprašanja',
       q1: 'IZ KATEREGA OBDOBJA VOZILA PODPIRA KLUB AVTONOSTALGIJA 80&90?',
@@ -156,61 +195,94 @@ V našem klubu nemamo zbiralca z verjetno največjim arhivom avtomobilskega tisk
       admin: 'Admin'
     },
     hero: {
-      title: 'CAR NOSTALGIA 80&90',
+      title: 'AVTONOSTALGIJA 80&90',
       subtitle: 'When cars had soul and character.'
     },
     sections: {
-      events: 'Events / Announcements',
+      events: 'Announcements',
       news: 'News / Articles',
       gallery: 'Gallery',
-      introTitle: 'A Story of Passion',
-      youngtimerTitle: 'FAQ',
+      introTitle: 'Story of Passion',
+      youngtimerTitle: 'Frequently Asked Questions',
       practicesTitle: 'Maintenance Best Practices',
       sloveniaTitle: 'Slovenia & Classics',
       whyTitle: 'The Golden Era',
       certTitle: 'Getting Certified',
-      memberTitle: 'Join the Club'
+      memberTitle: 'Become a Member'
+    },
+    membership: {
+      formTitle: 'Membership Application',
+      name: 'Full Name',
+      namePlaceholder: 'John Doe',
+      address: 'Address',
+      addressPlaceholder: 'Street 1, 1000 Ljubljana',
+      phone: 'Phone',
+      phonePlaceholder: '041 123 456',
+      email: 'Email',
+      emailPlaceholder: 'john@doe.com',
+      emso: 'Personal ID Number (EMŠO)',
+      emsoPlaceholder: '0101980500123',
+      birthPlace: 'Place of Birth',
+      birthPlacePlaceholder: 'Ljubljana',
+      vehicleType: 'Vehicle Type',
+      vehicleTypePlaceholder: 'Golf MK2',
+      shirtSize: 'Shirt Size',
+      date: 'Date',
+      signature: 'Signature',
+      signatureClear: 'Clear',
+      agreementText: 'By signing, I declare that I wish to become a member of the AVTONOSTALGIJA 80&90 club, a club for youngtimer enthusiasts, and that I accept the club\'s statutes and am prepared to act accordingly. I allow the club to collect, process, and use my personal data for the needs of the club\'s operation, acting in accordance with the provisions of the Personal Data Protection Act. I also allow public publication of image, video, and audio material showing the club\'s activities and containing my recordings.',
+      consentCheckbox: 'By using this form you agree with the storage and processing of your data on this website.*',
+      submit: 'Submit Membership Application',
+      submitting: 'Sending...',
+      paymentInstructions: 'Payment Instructions',
+      paymentDetails: 'The membership fee of 25 EUR can be transferred via online bank to the TRR or paid via a payment order at a post office or bank. Instructions for filling out the order are available below.',
+      code: 'Payment Code',
+      purpose: 'Purpose',
+      purposeText: 'Membership FEE NAME_SURNAME 2026',
+      amount: 'Amount',
+      bic: 'Bank BIC',
+      iban: 'IBAN',
+      ref: 'Reference',
+      recipient: 'Recipient',
+      recipientText: 'KLUB AVTONOSTALGIJA 80&90, Trinkova 58, 1000 Ljubljana',
+      success: 'Form submitted successfully! You will receive a confirmation email.',
+      error: 'An error occurred during submission. Please try again.',
+      signPrompt: 'Please add your signature.'
     },
     faq: {
       title: 'Frequently Asked Questions',
       q1: 'WHICH ERA VEHICLES DOES THE AVTONOSTALGIJA 80&90 CLUB SUPPORT?',
-      a1: `We support vehicle models whose production period (from introduction to end) fully or partially overlaps with the years 1980–1999. The minimum age for the model introduction is 1970. Examples include VW Golf I, Alfa Romeo 156, BMW 3 series E36, etc.
+      a1: `In our club, we generally support vehicle models whose production period (from introduction to the end of production) fully or partially overlaps with the years 1980–1999. The minimum age for a model introduction is 1970. Examples include VW Golf I, Alfa Romeo 156, BMW 3 series E36, etc.
 
-We do not differentiate between facelift and pre-facelift versions or specific designations like GTI, GTA, M3, etc. What matters to us is that the vehicle models coincide with the 1980–1999 era.`,
+We don't get complicated about facelift and pre-facelift terms, or designations like GTI, GTA, M3, etc. What matters to us is that the models fully or partially overlap with the years 1980–1999.`,
       q2: 'WHAT ATTITUDE TOWARDS VEHICLES DOES THE CLUB ADVOCATE?',
-      a2: 'We strictly advocate for a hobbyist perspective of ownership. This means occasional pleasure drives – not daily use. We also advocate for dry storage and ensuring the vehicle\'s condition does not deteriorate over time.',
+      a2: 'We strictly advocate for a hobbyist perspective of ownership. This means occasional pleasure drives – not for daily use. We also advocate for dry storage and ensuring the vehicle\'s condition does not deteriorate over time.',
       q3: 'MODIFIED VEHICLES – YES OR NO?',
       a3: 'We absolutely support the original configuration of a hobby vehicle. Any modifications should be in the spirit of the era of production.',
       q4: 'I WOULD LIKE TO ATTEND YOUR EVENTS BUT MY CAR IS SLIGHTLY TOO OLD/NEW. WHAT SHOULD I DO?',
       a4: 'Simply call us at +386 41 512 723 and we will try to reach an agreement. In 99% of cases, we grant the request.',
       q5: 'WHY ARE OLD MAGAZINES, BROCHURES, AND OTHER PAPER ARCHIVES WELCOME?',
-      a5: `Vehicles from the 80s & 90s mostly belong to the pre-internet era. Old printed material represents the extra soul of a car, especially if the vehicle looks exactly as it did in the brochure. This evokes true nostalgia. Those who do not appreciate the factory look of a car will find it difficult to collaborate with us.
-
-Our club includes a collector with one of the largest archives in the region. Upon request, he can search the archive for you and provide photos. Information at +386 41 512 723.`,
+      a5: `Vehicles from the 80s & 90s mostly belong to the pre-internet era. Old printed material represents the extra soul of a car, especially if the vehicle looks exactly as it did in the brochure. This evokes true nostalgia. Those who do not appreciate the factory look of a car will find it difficult to collaborate with us.`,
       q6: 'WHAT IS THE CLUB\'S VISION REGARDING YOUNGER GENERATIONS?',
-      a6: 'The world belongs to the young. While younger generations may find it harder to identify with the 80s and 90s, we know several promising young individuals with the right approach: being ready to listen to elders, taking interest in technical history, and understanding that an original vehicle is not just a substitute for a new one.',
+      a6: 'The world belongs to the young. While younger generations may find it harder to identify with the 80s and 90s, we know several promising young individuals with the right approach: being ready to listen to elders, taking interest in technical history, and understanding that an original vehicle is the most valuable.',
       q7: 'WHY IS LIFESTYLE OF THE ERA IMPORTANT ALONGSIDE THE VEHICLE?',
       a7: 'An older hobby vehicle is not just metal and plastic; it carries a story. It is much more interesting when placed in its time. Lifestyle – including fashion, Hi-Fi, watches, and pop culture – is an integral part of the car\'s narrative.',
-      getCertTitle: 'Youngtimer Certificate',
-      q8: 'What are the requirements for obtaining the certificate?',
-      a8: `In collaboration with SVAMZ and according to FIVA guidelines, we facilitate Youngtimer certificates for vehicles under 30 years old.
+      q8: 'What are the requirements for obtaining a certificate',
+      a8: `In collaboration with SVAMZ and according to FIVA guidelines, our club facilitates Youngtimer certificates for hobby vehicles under 30 years old.
 
-<b>Conditions:</b>
+<b>Requirements:</b>
 - Vehicle must be hobby-driven and maintained.
-- Commitment to limited annual mileage (max 3,000 km, exceptionally 5,000 km).
+- Max 3,000 km per year (exceptionally 5,000 km).
 - Dry garage storage.
 - Ownership of another vehicle for daily use.
 - Condition grade 1 or 2 required.
-- Originality must be maintained.
-- Minimum vehicle age of 20 years.
-
-Certificates are valid for 1 to 5 years and are only renewed if guidelines are followed.`
+- Originality/authenticity is mandatory.`
     },
     contactRoles: {
       president: 'President',
       vicePresident: 'Vice President',
       secretary: 'Secretary',
-      founder: 'Idejni vodja kluba'
+      founder: 'Club Visionary'
     },
     common: {
       readMore: 'Read More',
@@ -219,7 +291,7 @@ Certificates are valid for 1 to 5 years and are only renewed if guidelines are f
       author: 'Author',
       close: 'Close',
       login: 'Login',
-      logout: 'Odjava',
+      logout: 'Logout',
       back: 'Back',
       save: 'Save',
       edit: 'Edit',
@@ -234,7 +306,7 @@ Certificates are valid for 1 to 5 years and are only renewed if guidelines are f
       gallery: 'Gallery',
       logs: 'Activity Log',
       welcome: 'Welcome, Administrator',
-      noLogs: 'No activities logged yet.',
+      noLogs: 'No activities logged.',
       newPost: 'Post New Content'
     },
     cookies: {
