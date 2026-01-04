@@ -163,15 +163,52 @@ const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; o
 
 const GalleryLightbox = ({ images, initialIndex, onClose }: { images: string[]; initialIndex: number; onClose: () => void }) => {
   const [index, setIndex] = useState(initialIndex);
-  const handlePrev = (e: React.MouseEvent) => { e.stopPropagation(); setIndex(prev => (prev > 0 ? prev - 1 : images.length - 1)); };
-  const handleNext = (e: React.MouseEvent) => { e.stopPropagation(); setIndex(prev => (prev < images.length - 1 ? prev + 1 : 0)); };
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
+
+  const handlePrev = (e?: React.MouseEvent) => { 
+    if (e) e.stopPropagation(); 
+    setIndex(prev => (prev > 0 ? prev - 1 : images.length - 1)); 
+  };
+  const handleNext = (e?: React.MouseEvent) => { 
+    if (e) e.stopPropagation(); 
+    setIndex(prev => (prev < images.length - 1 ? prev + 1 : 0)); 
+  };
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const onTouchEnd = () => {
+    if (touchStartX.current === null || touchEndX.current === null) return;
+    const distance = touchStartX.current - touchEndX.current;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) handleNext();
+    if (isRightSwipe) handlePrev();
+    
+    touchStartX.current = null;
+    touchEndX.current = null;
+  };
 
   return (
-    <div className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center p-4 cursor-default" onClick={onClose}>
-      <button className="absolute top-6 right-6 p-4 text-white hover:text-pink-500 transition-colors" onClick={onClose}><X size={32} /></button>
-      <button className="absolute left-6 p-4 text-white hover:text-pink-500 transition-colors hidden sm:block" onClick={handlePrev}><ArrowLeft size={48} /></button>
-      <button className="absolute right-6 p-4 text-white hover:text-pink-500 transition-colors hidden sm:block" onClick={handleNext}><ArrowRight size={48} /></button>
-      <img src={images[index]} className="max-w-full max-h-[85vh] object-contain shadow-2xl animate-in zoom-in fade-in duration-300" alt="Gallery" />
+    <div 
+      className="fixed inset-0 z-[110] bg-black/95 flex items-center justify-center p-4 cursor-default" 
+      onClick={onClose}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      <button className="absolute top-6 right-6 p-4 text-white hover:text-pink-500 transition-colors z-20" onClick={(e) => { e.stopPropagation(); onClose(); }}><X size={32} /></button>
+      <button className="absolute left-2 sm:left-6 p-2 sm:p-4 text-white hover:text-pink-500 transition-colors z-20" onClick={handlePrev}><ArrowLeft size={32} className="sm:scale-150" /></button>
+      <button className="absolute right-2 sm:right-6 p-2 sm:p-4 text-white hover:text-pink-500 transition-colors z-20" onClick={handleNext}><ArrowRight size={32} className="sm:scale-150" /></button>
+      <img src={images[index]} className="max-w-full max-h-[85vh] object-contain shadow-2xl animate-in zoom-in fade-in duration-300 select-none" alt="Gallery" />
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-slate-500 font-bold uppercase tracking-widest text-xs">
         {index + 1} / {images.length}
       </div>
@@ -380,6 +417,15 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
           <div className="space-y-4">
             <h3 className="text-teal-400 font-black uppercase tracking-widest text-sm">{t.membership.paymentInstructions}</h3>
             <p className="text-[11px] text-slate-400 leading-relaxed">{t.membership.paymentDetails}</p>
+            {/* QR Code Section */}
+            <div className="mt-4 p-2 bg-white rounded-xl shadow-lg border border-teal-500/20 overflow-hidden">
+              <img 
+                src="https://my-backend-production-220b.up.railway.app/uploads/8ca02f15185e47ef827e98c821573153_ff23f24ca0.png" 
+                alt="QR Code Payment" 
+                className="w-full h-auto block object-contain"
+                loading="lazy"
+              />
+            </div>
           </div>
           <div className="space-y-4 pt-4 border-t border-slate-800 text-xs">
             <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.code}</div><div className="font-mono">OTHR</div></div>
@@ -444,75 +490,148 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
         </div>
         <div id="vclani-se" className="space-y-10 sm:space-y-16 pt-10 sm:pt-20 border-t border-white/5">
           <div className="space-y-12">
-            <h3 className="retro-font text-2xl sm:text-4xl text-teal-400 uppercase tracking-widest text-center font-black">Zakaj sem član Avtonostalgije 80&90?</h3>
+            <h3 className="retro-font text-2xl sm:text-4xl text-teal-400 uppercase tracking-widest text-center font-black">{lang === 'si' ? 'Zakaj sem član Avtonostalgije 80&90?' : 'Why am I a member of Avtonostalgija 80&90?'}</h3>
             <div className="glass p-8 sm:p-12 rounded-[2.5rem] border border-white/10 relative overflow-hidden group">
               <div className="space-y-8 relative z-10 text-slate-300 leading-relaxed text-sm sm:text-base text-justify">
-                <div className="space-y-6">
-                  <p className="text-slate-100 font-bold text-lg">Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitety, mojih spominov in tehnične kulture svojega časa.</p>
-                  <p className="text-slate-100">Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.</p>
-                </div>
+                {lang === 'si' ? (
+                  <>
+                    <div className="space-y-6">
+                      <p className="text-slate-100 font-bold text-lg">Ker avtomobil ni zgolj prevozno sredstvo, temveč del moje identitete, mojih spominov in tehnične kulture svojega časa.</p>
+                      <p className="text-slate-100">Ker verjamem, da imajo avtomobili 80. in 90. let resnično kulturno vrednost – vrednost, ki jo je treba razumeti, zagovarjati in aktivno ohranjati.</p>
+                    </div>
 
-                <div className="py-6 border-y border-white/5">
-                  <p className="retro-font text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-2">Avtonostalgija 80&90 ni klub popustov.</p>
-                  <p className="text-slate-100 font-bold">Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev and oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
-                </div>
+                    <div className="py-6 border-y border-white/5">
+                      <p className="retro-font text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-2">Avtonostalgija 80&90 ni klub popustov.</p>
+                      <p className="text-slate-100 font-bold">Je skupnost ljudi, ki razumejo, da prihodnost youngtimerjev and oldtimerjev ni samoumevna in da brez organiziranega delovanja preprosto ne obstaja.</p>
+                    </div>
 
-                <div className="space-y-6">
-                  <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Klub obstaja zato, da:</h4>
-                  <ul className="space-y-4">
-                    {[
-                      "zastopa lastnike vozil v dialogu z zakonodajo v Sloveniji in Evropski uniji,",
-                      "ohranja pravico do uporabe, vožnje in dolgoročne vrednosti mladodobnih in starodobnih vozil,",
-                      "gradi okolje, v katerem so avtomobili 80. in 90. let prepoznani kot tehniška in kulturna dediščina,",
-                      "povezuje znanje, izkušnje in ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-2 shrink-0 shadow-[0_0_8px_#ec4899]" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                    <div className="space-y-6">
+                      <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Klub obstaja zato, da:</h4>
+                      <ul className="space-y-4">
+                        {[
+                          "zastopa lastnike vozil v dialogu z zakonodajo v Sloveniji in Evropski uniji,",
+                          "ohranja pravico do uporabe, vožnje in dolgoročne vrednosti mladodobnih in starodobnih vozil,",
+                          "gradi okolje, v katerem so avtomobili 80. in 90. let prepoznani kot tehniška in kulturna dediščina,",
+                          "povezuje znanje, izkušnje in ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."
+                        ].map((item, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-2 shrink-0 shadow-[0_0_8px_#ec4899]" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                <div className="p-6 bg-slate-950/50 rounded-2xl border border-white/5">
-                  <p className="text-lg font-bold text-slate-100 mb-2">Brez skupnosti zakonodaja ne deluje v našo korist.</p>
-                  <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov in – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
-                </div>
+                    <div className="p-6 bg-slate-950/50 rounded-2xl border border-white/5">
+                      <p className="text-lg font-bold text-slate-100 mb-2">Brez skupnosti zakonodaja ne deluje v našo korist.</p>
+                      <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov in – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
+                    </div>
 
-                <div className="space-y-6">
-                  <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">Kaj pomeni članstvo v praksi?</h4>
-                  <p className="font-bold text-slate-100">Članstvo pomeni dostop do znanja, podpore and skupne moči:</p>
-                  <ul className="space-y-4">
-                    {[
-                      "strokovno vodenje postopkov certificiranja in tehničnih vprašanj,",
-                      "stalno spremljanje zakonodajnih sprememb in aktivnosti doma ter v tujini,",
-                      "pomoč pri homologacijah, uvozu, predelavah in vrednotenju vozil,",
-                      "možnost aktivnega sodelovanja na klubskih dogodkih, vožnjah in tehničnih dnevih,",
-                      "večjo vidnost in priložnosti za vozila (mediji, filmi, razstave, posebni dogodki),",
-                      "povezovanje s skupnostjo, ki deli iste vrednote, razumevanje in strast."
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-3">
-                        <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0 shadow-[0_0_8px_#14b8a6]" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                    <div className="space-y-6">
+                      <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm text-center">Kaj pomeni članstvo v praksi?</h4>
+                      <p className="font-bold text-slate-100 text-center">Članstvo pomeni dostop do znanja, podpore and skupne moči:</p>
+                      <ul className="space-y-4">
+                        {[
+                          "strokovno vodenje postopkov certificiranja in tehničnih vprašanj,",
+                          "stalno spremljanje zakonodajnih sprememb in aktivnosti doma ter v tujini,",
+                          "pomoč pri homologacijah, uvozu, predelavah in vrednotenju vozil,",
+                          "možnost aktivnega sodelovanja na klubskih dogodkih, vožnjah in tehničnih dnevih,",
+                          "večjo vidnost in priložnosti za vozila (mediji, filmi, razstave, posebni dogodki),",
+                          "povezovanje s skupnostjo, ki deli iste vrednote, razumevanje in strast."
+                        ].map((item, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0 shadow-[0_0_8px_#14b8a6]" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
 
-                <div className="space-y-4">
-                  <p>Članstvo je pomembno, ker posameznik nima glasu, organizirana skupnost pa ga ima. Sodelovanje kluba s SVAMZ pa mu daje strokovno, pravno in institucionalno legitimnost ter glas v nacionalnih in evropskih zakonodajnih procesih, kjer se odloča o prihodnosti historičnih in youngtimer vozil; brez te povezave bi bil klub zgolj interesna skupina brez realnega vpliva, ne pa del sistema, ki dolgoročno ščiti pravico do obstoja, uporabe in priznanja teh vozil.</p>
-                  <p>Z včlanitvijo v klub in SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. in 90. let kot živo dediščino, jim zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni in cenjeni tudi čez 10, 20 ali 30 let.</p>
-                </div>
+                    <div className="space-y-4">
+                      <p>Članstvo je pomembno, ker posameznik nima glasu, organizirana skupnost pa ga ima. Sodelovanje kluba s SVAMZ pa mu daje strokovno, pravno in institucionalno legitimnost ter glas v nacionalnih in evropskih zakonodajnih procesih, kjer se odloča o prihodnosti historičnih in youngtimer vozil; brez te povezave bi bil klub zgolj interesna skupina brez realnega vpliva, ne pa del sistema, ki dolgoročno ščiti pravico do obstoja, uporabe in priznanja teh vozil.</p>
+                      <p>Z včlanitvijo v klub in SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. in 90. let kot živo dediščino, jim zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni in cenjeni tudi čez 10, 20 ali 30 let.</p>
+                    </div>
 
-                <div className="pt-8 border-t border-white/5 space-y-4 text-center">
-                  <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-widest">Članstvo ni strošek.</p>
-                  <p className="italic text-slate-100 font-bold">Je zavestna naložba v prihodnost avtomobilske kulture, ki ti je blizu.</p>
-                  <div className="mt-8 p-6 bg-teal-400/5 rounded-2xl border border-teal-400/20">
-                    <p className="text-teal-400 font-black tracking-tight text-lg">
-                      👉 Če razumeš, zakaj ti tvoj avto pomeni več kot le kos pločevine, potem Avtonostalgija 80&90 ni le klub. Je tvoj prostor. Skupaj smo močnejši!
-                    </p>
-                  </div>
-                </div>
+                    <div className="pt-8 border-t border-white/5 space-y-4 text-center">
+                      <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-widest">Članstvo ni strošek.</p>
+                      <p className="italic text-slate-100 font-bold">Je zavestna naložba v prihodnost avtomobilske kulture, ki ti je blizu.</p>
+                      <div className="mt-8 p-6 bg-teal-400/5 rounded-2xl border border-teal-400/20">
+                        <p className="text-teal-400 font-black tracking-tight text-lg">
+                          👉 Če razumeš, zakaj ti tvoj avto pomeni več kot le kos pločevine, potem Avtonostalgija 80&90 ni le klub. Je tvoj prostor. Skupaj smo močnejši!
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-6">
+                      <p className="text-slate-100 font-bold text-lg">Because a car is not just a means of transport, but part of my identity, my memories and the technical culture of its time.</p>
+                      <p className="text-slate-100">Because I believe that the cars of the 80s and 90s have true cultural value - a value that needs to be understood, defended and actively preserved.</p>
+                    </div>
+
+                    <div className="py-6 border-y border-white/5">
+                      <p className="retro-font text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-tighter mb-2">Avtonostalgija 80&90 is not a discount club.</p>
+                      <p className="text-slate-100 font-bold">It is a community of people who understand that the future of youngtimers and oldtimers is not self-evident and simply does not exist without organized action.</p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm">The club exists to:</h4>
+                      <ul className="space-y-4">
+                        {[
+                          "represent vehicle owners in dialogue with legislation in Slovenia and the European Union,",
+                          "preserve the right to use, drive and the long-term value of youngtimer and oldtimer vehicles,",
+                          "build an environment where cars of the 80s and 90s are recognized as technical and cultural heritage,",
+                          "connect knowledge, experiences and people in a way that an individual alone could never achieve."
+                        ].map((item, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-pink-500 mt-2 shrink-0 shadow-[0_0_8px_#ec4899]" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="p-6 bg-slate-950/50 rounded-2xl border border-white/5">
+                      <p className="text-lg font-bold text-slate-100 mb-2">Without a community, legislation does not work in our favor.</p>
+                      <p>Without the club, there are no events, no technical standards, no protection of interests and – most importantly – no future for our cars.</p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <h4 className="text-teal-400 font-black uppercase tracking-widest text-sm text-center">What does membership mean in practice?</h4>
+                      <p className="font-bold text-slate-100 text-center">Membership means access to knowledge, support and collective strength:</p>
+                      <ul className="space-y-4">
+                        {[
+                          "professional guidance for certification procedures and technical questions,",
+                          "constant monitoring of legislative changes and activities at home and abroad,",
+                          "assistance with homologations, imports, modifications and vehicle evaluations,",
+                          "opportunity to actively participate in club events, drives and technical days,",
+                          "greater visibility and opportunities for vehicles (media, films, exhibitions, special events),",
+                          "connecting with a community that shares the same values, understanding and passion."
+                        ].map((item, i) => (
+                          <li key={i} className="flex items-start gap-3">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0 shadow-[0_0_8px_#14b8a6]" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="space-y-4">
+                      <p>Membership is important because an individual has no voice, but an organized community does. The club's cooperation with SVAMZ gives it professional, legal and institutional legitimacy and a voice in national and European legislative processes where the future of historic and youngtimer vehicles is decided; without this connection, the club would be merely an interest group without real influence, rather than part of a system that long-term protects the right to exist, use and recognize these vehicles.</p>
+                      <p>By joining the club and SVAMZ, you are not looking for benefits, but identifying with a mission: to preserve the cars of the 80s and 90s as a living heritage, to provide them with space on the roads and to create an environment in which they can be driven, understood and appreciated even in 10, 20 or 30 years.</p>
+                    </div>
+
+                    <div className="pt-8 border-t border-white/5 space-y-4 text-center">
+                      <p className="text-xl sm:text-2xl text-pink-500 font-black uppercase tracking-widest">Membership is not an expense.</p>
+                      <p className="italic text-slate-100 font-bold">It is a conscious investment in the future of the automotive culture that is close to you.</p>
+                      <div className="mt-8 p-6 bg-teal-400/5 rounded-2xl border border-teal-400/20">
+                        <p className="text-teal-400 font-black tracking-tight text-lg">
+                          👉 If you understand why your car means more to you than just a piece of metal, then Avtonostalgija 80&90 is not just a club. It is your space. Together we are stronger!
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
