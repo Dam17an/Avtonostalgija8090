@@ -597,7 +597,7 @@ const Hero = () => {
           className="w-full h-full object-cover block" 
           alt="Hero" 
         />
-        <div className="absolute inset-0 bg-slate-950/60 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-slate-950/20 pointer-events-none"></div>
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full">
         <img src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-2.png" alt="Logo" className="h-32 sm:h-48 mx-auto mb-12 object-contain" />
@@ -648,7 +648,7 @@ const App = () => {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [cookieConsent, setCookieConsent] = useState<boolean | null>(null);
-  const [settings, setSettings] = useState<SiteSettings>({ heroImage: '', aboutImage: '', memberCount: '35.000', eventCount: '30+' });
+  const [settings, setSettings] = useState<SiteSettings>({ heroImage: '', aboutImage: '', memberCount: '36.000', eventCount: '30+' });
   
   const [articles, setArticles] = useState<StrapiArticle[]>([]);
   const [galleries, setGalleries] = useState<StrapiGallery[]>([]);
@@ -712,7 +712,7 @@ const App = () => {
                    </a>
                 </div>
                 <div className="grid grid-cols-2 gap-8 pt-6">
-                  <div><div className="retro-font text-4xl text-pink-500 font-black">{settings.memberCount}</div><div className="text-[10px] uppercase font-bold text-slate-500">SLEDILCEV</div></div>
+                  <div><div className="retro-font text-4xl text-pink-500 font-black">{settings.memberCount}</div><div className="text-[10px] uppercase font-bold text-slate-500">sledilcev</div></div>
                   <div><div className="retro-font text-4xl text-teal-400 font-black">{settings.eventCount}</div><div className="text-[10px] uppercase font-bold text-slate-500">DOGODKOV</div></div>
                 </div>
               </div>
@@ -806,25 +806,25 @@ const App = () => {
           <Section id="contact" title={translations[lang].nav.contact} gradient="bg-slate-950">
             <div className="max-w-4xl mx-auto space-y-12 text-center sm:text-left">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all">
-                  <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-1">Janez Tomc</div>
-                  <div className="text-slate-100 font-bold uppercase tracking-widest text-[10px] mb-1">{translations[lang].contactRoles.president}</div>
-                  <div className="text-sm font-black tracking-tight">+386 51 319 618</div>
+                <div className="glass p-8 rounded-2xl border border-white/10 hover:border-teal-400/30 transition-all flex flex-col items-center sm:items-start shadow-xl">
+                  <div className="text-2xl font-black text-teal-400 uppercase tracking-tight leading-tight mb-1">Janez Tomc</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{translations[lang].contactRoles.president}</div>
+                  <div className="text-base font-black tracking-tight text-slate-100">+386 51 319 618</div>
                 </div>
-                <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all">
-                  <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-1">Darko Šturm</div>
-                  <div className="text-slate-100 font-bold uppercase tracking-widest text-[10px] mb-1">{translations[lang].contactRoles.vicePresident}</div>
-                  <div className="text-sm font-black tracking-tight">+386 31 790 605</div>
+                <div className="glass p-8 rounded-2xl border border-white/10 hover:border-teal-400/30 transition-all flex flex-col items-center sm:items-start shadow-xl">
+                  <div className="text-2xl font-black text-teal-400 uppercase tracking-tight leading-tight mb-1">Darko Šturm</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{translations[lang].contactRoles.vicePresident}</div>
+                  <div className="text-base font-black tracking-tight text-slate-100">+386 31 790 605</div>
                 </div>
-                <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all">
-                  <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-1">Damir Sterle</div>
-                  <div className="text-slate-100 font-bold uppercase tracking-widest text-[10px] mb-1">{translations[lang].contactRoles.secretary}</div>
-                  <div className="text-sm font-black tracking-tight">+386 31 759 331</div>
+                <div className="glass p-8 rounded-2xl border border-white/10 hover:border-teal-400/30 transition-all flex flex-col items-center sm:items-start shadow-xl">
+                  <div className="text-2xl font-black text-teal-400 uppercase tracking-tight leading-tight mb-1">Damir Sterle</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{translations[lang].contactRoles.secretary}</div>
+                  <div className="text-base font-black tracking-tight text-slate-100">+386 31 759 331</div>
                 </div>
-                <div className="glass p-6 rounded-2xl border border-white/10 hover:border-pink-500/30 transition-all">
-                  <div className="text-[10px] uppercase tracking-widest text-slate-500 font-black mb-1">Tomaž Beguš</div>
-                  <div className="text-slate-100 font-bold uppercase tracking-widest text-[10px] mb-1">{translations[lang].contactRoles.founder}</div>
-                  <div className="text-sm font-black tracking-tight">+386 41 512 723</div>
+                <div className="glass p-8 rounded-2xl border border-white/10 hover:border-teal-400/30 transition-all flex flex-col items-center sm:items-start shadow-xl">
+                  <div className="text-2xl font-black text-teal-400 uppercase tracking-tight leading-tight mb-1">Tomaž Beguš</div>
+                  <div className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold mb-5">{translations[lang].contactRoles.founder}</div>
+                  <div className="text-base font-black tracking-tight text-slate-100">+386 41 512 723</div>
                 </div>
                 <div className="glass p-8 rounded-3xl border border-teal-400/20 flex flex-col items-center justify-center group hover:border-teal-400/50 transition-all col-span-full">
                   <Mail className="text-teal-400 mb-4 group-hover:scale-110 transition-transform" size={32} />
