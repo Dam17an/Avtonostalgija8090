@@ -379,7 +379,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.vehicleType}</label>
-                <input required name="vehicle_type" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.vehicleTypePlaceholder} />
+                <input required name="vehicle_type" className="w-full bg-slate-950 p-3 rounded-xl border border-teal-400 text-sm" placeholder={t.membership.vehicleTypePlaceholder} />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.shirtSize}</label>
@@ -524,7 +524,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                     <div className="p-6 bg-slate-950/50 rounded-2xl border border-white/5">
                       <p className="text-lg font-bold text-slate-100 mb-2">Brez skupnosti zakonodaja ne deluje v našo korist.</p>
-                      <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov in – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
+                      <p>Brez kluba ni dogodkov, ni tehničnih standardov, ni zaščite interesov i – kar je najpomembneje – ni prihodnosti za naše avtomobile.</p>
                     </div>
 
                     <div className="space-y-6">
@@ -684,10 +684,16 @@ const Navbar = () => {
     <nav className="fixed w-full z-50 glass border-b border-purple-500/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-20 items-center">
-          <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer flex-shrink-0">
+          <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer flex-shrink-0 gap-3">
             <img 
-              src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" 
+              src="https://my-backend-production-220b.up.railway.app/uploads/youngtimer_avtonostalgija_1_53027830c7.png" 
               alt="Logo" 
+              className="h-10 sm:h-12 block w-auto object-contain" 
+              loading="eager"
+            />
+            <img 
+              src="https://my-backend-production-220b.up.railway.app/uploads/logo1111_svamz_02a00c69a5.png" 
+              alt="SVAMZ Logo" 
               className="h-10 sm:h-12 block w-auto object-contain" 
               loading="eager"
             />
@@ -733,6 +739,9 @@ const Navbar = () => {
 const Hero = () => {
   const { lang } = useApp();
   const t = translations[lang];
+  
+  const heroBtnClass = "w-[160px] sm:w-[200px] md:w-[280px] py-3 md:py-4 bg-transparent border-2 border-teal-400 text-teal-400 rounded-xl retro-font text-[10px] sm:text-xs md:text-lg transition-all uppercase tracking-widest shadow-[0_0_15px_rgba(20,184,166,0.3)] hover:shadow-[0_0_25px_rgba(20,184,166,0.5)] active:scale-95 hover:bg-teal-400/5 flex items-center justify-center gap-2 font-bold backdrop-blur-[2px] text-center";
+
   return (
     <section id="hero" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
@@ -746,21 +755,21 @@ const Hero = () => {
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full pt-20">
         <img 
-          src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-2.png" 
+          src="https://my-backend-production-220b.up.railway.app/uploads/youngtimer_avtonostalgija_2_2ceda473cc.png" 
           alt="Logo" 
           className="h-24 sm:h-32 md:h-48 mx-auto mb-8 md:mb-12 object-contain block w-auto" 
           loading="eager"
         />
         <h1 className="retro-font font-black mb-6 tracking-tighter uppercase text-center flex flex-col items-center">
-          <span className="text-[clamp(1.5rem,8vw,11rem)] neon-text-pink leading-none pb-2 md:pb-4">AVTONOSTALGIJA</span>
-          <span className="text-[clamp(1.5rem,8vw,11rem)] neon-text-teal text-teal-400 leading-none">80&90</span>
+          <span className="text-[clamp(1.5rem,8vw,13rem)] lg:text-[clamp(1.5rem,9vw,14rem)] neon-text-pink leading-none pb-2 md:pb-4">AVTONOSTALGIJA</span>
+          <span className="text-[clamp(1.5rem,8vw,13rem)] lg:text-[clamp(1.5rem,9vw,14rem)] neon-text-teal text-teal-400 leading-none">80&90</span>
         </h1>
         <p className="text-[10px] md:text-2xl text-teal-400 font-bold mb-10 md:mb-12 tracking-[0.2em] md:tracking-[0.3em] uppercase italic opacity-90 text-border-white px-2">{t.hero.subtitle}</p>
         <div className="flex flex-wrap justify-center gap-3 md:gap-6">
-          <button onClick={() => document.getElementById('announcements')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 md:px-10 py-3 md:py-4 bg-pink-500 text-white rounded-xl retro-font text-xs md:text-lg transition-all uppercase tracking-widest shadow-lg shadow-pink-500/20">{t.sections.events}</button>
-          <button onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 md:px-10 py-3 md:py-4 border-2 border-teal-400 text-teal-400 hover:bg-teal-400 hover:text-slate-950 rounded-xl retro-font text-xs md:text-lg transition-all uppercase tracking-widest shadow-lg shadow-teal-400/20">{lang === 'si' ? 'Novice' : 'News'}</button>
-          <a href="https://svamz.com/" target="_blank" rel="noopener noreferrer" className="px-5 md:px-10 py-3 md:py-4 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-xl retro-font text-xs md:text-lg transition-all uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-purple-500/20">SVAMZ <ExternalLink size={16} /></a>
-          <button onClick={() => document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 md:px-10 py-3 md:py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl retro-font text-xs md:text-lg transition-all uppercase tracking-widest shadow-lg shadow-teal-500/30">{lang === 'si' ? 'Včlani se' : 'Join Us'}</button>
+          <button onClick={() => document.getElementById('announcements')?.scrollIntoView({ behavior: 'smooth' })} className={heroBtnClass}>{t.sections.events}</button>
+          <button onClick={() => document.getElementById('news')?.scrollIntoView({ behavior: 'smooth' })} className={heroBtnClass}>{lang === 'si' ? 'Novice' : 'News'}</button>
+          <a href="https://svamz.com/" target="_blank" rel="noopener noreferrer" className={heroBtnClass}>SVAMZ <ExternalLink size={16} /></a>
+          <button onClick={() => document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' })} className={heroBtnClass}>{lang === 'si' ? 'Včlani se' : 'Join Us'}</button>
         </div>
       </div>
     </section>
@@ -995,7 +1004,7 @@ const App = () => {
           <div className="max-w-7xl mx-auto px-4 space-y-10">
             <div className="flex justify-center">
               <img 
-                src="https://avtonostalgija.si/wp-content/uploads/2022/11/youngtimer-avtonostalgija-1.png" 
+                src="https://my-backend-production-220b.up.railway.app/uploads/youngtimer_avtonostalgija_1_53027830c7.png" 
                 className="h-10 sm:h-12 grayscale opacity-50 block w-auto object-contain" 
                 alt="Logo" 
                 loading="lazy"
