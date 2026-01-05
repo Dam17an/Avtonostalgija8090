@@ -510,7 +510,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
                       <ul className="space-y-4">
                         {[
                           "zastopa lastnike vozil v dialogu z zakonodajo v Sloveniji in Evropski uniji,",
-                          "ohranja pravico do uporabe, vožnje in dolgoročne vrednosti mladodobnih in starodobnih vozil,",
+                          "ohranja pravico do uporabe, vožnje i dolgoročne vrednosti mladodobnih i starodobnih vozil,",
                           "gradi okolje, v katerem so avtomobili 80. in 90. let prepoznani kot tehniška in kulturna dediščina,",
                           "povezuje znanje, izkušnje in ljudi na način, ki ga posameznik sam nikoli ne bi mogel doseči."
                         ].map((item, i) => (
@@ -740,7 +740,7 @@ const Hero = () => {
   const { lang } = useApp();
   const t = translations[lang];
   
-  const heroBtnClass = "w-[160px] sm:w-[200px] md:w-[280px] py-3 md:py-4 bg-transparent border-2 border-teal-400 text-teal-400 rounded-xl retro-font text-[10px] sm:text-xs md:text-lg transition-all uppercase tracking-widest shadow-[0_0_15px_rgba(20,184,166,0.3)] hover:shadow-[0_0_25px_rgba(20,184,166,0.5)] active:scale-95 hover:bg-teal-400/5 flex items-center justify-center gap-2 font-bold backdrop-blur-[2px] text-center";
+  const heroBtnClass = "w-[160px] sm:w-[200px] md:w-[280px] py-3 md:py-4 bg-transparent border-2 border-teal-400 text-teal-400 rounded-xl retro-font text-[10px] sm:text-xs md:text-lg transition-all uppercase tracking-widest shadow-[0_0_15px_rgba(20,184,166,0.3)] hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] active:scale-95 hover:bg-pink-500 hover:text-white hover:border-pink-500 flex items-center justify-center gap-2 font-bold backdrop-blur-[2px] text-center";
 
   return (
     <section id="hero" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
@@ -813,6 +813,7 @@ const App = () => {
   const [galleries, setGalleries] = useState<StrapiGallery[]>([]);
   const [announcements, setAnnouncements] = useState<StrapiAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAllGalleries, setShowAllGalleries] = useState(false);
   
   const [selectedArticle, setSelectedArticle] = useState<StrapiArticle | null>(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<StrapiAnnouncement | null>(null);
@@ -948,7 +949,7 @@ const App = () => {
           {/* Gallery Section */}
           <Section id="gallery" title={t.sections.gallery} gradient="bg-gradient-to-b from-purple-950 to-slate-950">
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {galleries.map(item => {
+                {galleries.slice(0, showAllGalleries ? undefined : 3).map(item => {
                   const images = item.Slike?.map(img => `${STRAPI_BASE_URL}${img.url}`) || [];
                   return (
                     <div key={item.id} onClick={() => images.length > 0 && setSelectedGallery({ images, index: 0 })} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-purple-500/50 transition-all cursor-pointer shadow-2xl">
@@ -964,6 +965,16 @@ const App = () => {
                   );
                 })}
              </div>
+             {!showAllGalleries && galleries.length > 3 && (
+                <div className="flex justify-center mt-12">
+                   <button 
+                      onClick={() => setShowAllGalleries(true)} 
+                      className="px-10 py-4 border-2 border-purple-500 text-purple-400 rounded-xl retro-font text-sm transition-all uppercase tracking-widest hover:bg-purple-500 hover:text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] active:scale-95"
+                   >
+                      {lang === 'si' ? 'Prikaži več' : 'Show more'}
+                   </button>
+                </div>
+             )}
           </Section>
 
           <YoungtimerSection />
