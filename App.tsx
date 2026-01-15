@@ -92,6 +92,26 @@ const renderContent = (content: any) => {
   return null;
 };
 
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return "";
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('sl-SI', { day: 'numeric', month: 'numeric', year: 'numeric' });
+};
+
+const formatTime = (timeStr: string, dateStr: string) => {
+  if (timeStr && timeStr.includes(':')) {
+    return timeStr.split(':').slice(0, 2).join(':');
+  }
+  if (dateStr && dateStr.includes('T')) {
+    const date = new Date(dateStr);
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleTimeString('sl-SI', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+  }
+  return "";
+};
+
 // --- UI COMPONENTS ---
 
 const Modal = ({ children, onClose }: { children?: React.ReactNode; onClose: () => void }) => (
@@ -125,7 +145,7 @@ const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => voi
         </div>
         <div className="space-y-4">
           <div className="flex flex-wrap gap-4 text-[10px] uppercase tracking-widest font-black text-slate-500">
-            <span className="flex items-center gap-1"><Calendar size={12} /> {item.Datum}</span>
+            <span className="flex items-center gap-1"><Calendar size={12} /> {formatDate(item.Datum)}</span>
           </div>
           <h2 className="retro-font text-2xl sm:text-4xl text-white font-black uppercase tracking-tighter leading-tight">{item.Naslov}</h2>
           <div className="text-slate-300 leading-relaxed text-sm sm:text-lg">
@@ -139,7 +159,8 @@ const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => voi
 
 const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; onClose: () => void }) => {
   const imageUrl = getMediaUrl(item.Slika) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
-  const formattedTime = item.Ura ? item.Ura.split(':').slice(0, 2).join(':') : "";
+  const formattedDate = formatDate(item.Datum);
+  const formattedTime = formatTime(item.Ura, item.Datum);
   return (
     <Modal onClose={onClose}>
       <div className="space-y-6">
@@ -148,8 +169,8 @@ const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; o
         </div>
         <div className="space-y-4">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-pink-500 text-[10px] uppercase font-black">
-            <span className="flex items-center gap-2"><Calendar size={14}/> {item.Datum}</span>
-            <span className="flex items-center gap-2"><Clock size={14}/> {formattedTime}</span>
+            <span className="flex items-center gap-2"><Calendar size={14}/> {formattedDate}</span>
+            {formattedTime && <span className="flex items-center gap-2"><Clock size={14}/> {formattedTime}</span>}
           </div>
           <h2 className="retro-font text-2xl sm:text-4xl text-white font-black uppercase tracking-tighter leading-tight">{item.Naslov}</h2>
           <div className="text-slate-300 leading-relaxed text-sm sm:text-lg">
@@ -371,7 +392,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.emso}</label>
-                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-800 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.emsoPlaceholder} />
+                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.emsoPlaceholder} />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.birthPlace}</label>
@@ -909,8 +930,8 @@ const App = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {announcements.map((item) => {
                 const imageUrl = getMediaUrl(item.Slika);
-                // Correct HH:mm formatting by removing seconds
-                const formattedTime = item.Ura ? item.Ura.split(':').slice(0, 2).join(':') : "";
+                const formattedDate = formatDate(item.Datum);
+                const formattedTime = formatTime(item.Ura, item.Datum);
                 return (
                   <div key={item.id} onClick={() => setSelectedAnnouncement(item)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-xl">
                     <div className="aspect-video overflow-hidden">
@@ -925,8 +946,8 @@ const App = () => {
                     <div className="p-8 space-y-4">
                       {/* Visual separation with flex row and clear gap-x-6 between date and time groups */}
                       <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-pink-500 text-[10px] uppercase font-black">
-                        <span className="flex items-center gap-2"><Calendar size={14}/> {item.Datum}</span>
-                        <span className="flex items-center gap-2"><Clock size={14}/> {formattedTime}</span>
+                        <span className="flex items-center gap-2"><Calendar size={14}/> {formattedDate}</span>
+                        {formattedTime && <span className="flex items-center gap-2"><Clock size={14}/> {formattedTime}</span>}
                       </div>
                       <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{item.Naslov}</h3>
                       <div className="text-slate-400 text-sm line-clamp-3 leading-relaxed">{getContentText(item.Vsebina)}</div>
@@ -949,7 +970,7 @@ const App = () => {
                       {imageUrl ? <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={article.Naslov} loading="lazy" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
                     </div>
                     <div className="p-8 space-y-4">
-                      <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{article.Datum}</div>
+                      <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{formatDate(article.Datum)}</div>
                       <h3 className="text-xl font-bold text-slate-100 group-hover:text-pink-500 transition-colors uppercase leading-tight">{article.Naslov}</h3>
                       <p className="text-slate-400 text-sm line-clamp-3">{getContentText(article.Vsebina)}</p>
                       <button className="pt-4 flex items-center gap-2 text-teal-400 font-black uppercase text-[10px]">{t.common.readMore} <ChevronRight size={14} /></button>
