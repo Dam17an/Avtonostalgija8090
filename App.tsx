@@ -371,7 +371,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.emso}</label>
-                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.emsoPlaceholder} />
+                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-800 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.emsoPlaceholder} />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.birthPlace}</label>
@@ -833,9 +833,23 @@ const App = () => {
         const artData = await artRes.json();
         const galData = await galRes.json();
         const annData = await annRes.json();
-        setArticles(artData.data || []);
-        setGalleries(galData.data || []);
-        setAnnouncements(annData.data || []);
+        
+        // Sorting fetched data according to requested order
+        const sortedArticles = (artData.data || []).sort((a: StrapiArticle, b: StrapiArticle) => 
+          b.Datum.localeCompare(a.Datum)
+        );
+        const sortedAnnouncements = (annData.data || []).sort((a: StrapiAnnouncement, b: StrapiAnnouncement) => {
+          const dateCompare = b.Datum.localeCompare(a.Datum);
+          if (dateCompare !== 0) return dateCompare;
+          return (b.Ura || "").localeCompare(a.Ura || "");
+        });
+        const sortedGalleries = (galData.data || []).sort((a: StrapiGallery, b: StrapiGallery) => 
+          a.id - b.id
+        );
+
+        setArticles(sortedArticles);
+        setGalleries(sortedGalleries);
+        setAnnouncements(sortedAnnouncements);
       } catch (err) {
         console.error("Data fetch failed:", err);
       } finally {
