@@ -4,7 +4,7 @@ import { translations } from './translations';
 import { Language, StrapiArticle, StrapiAnnouncement, StrapiGallery, SiteSettings } from './types';
 
 // --- STRAPI CONFIGURATION ---
-const STRAPI_BASE_URL = 'https://my-backend-production-220b.up.railway.app';
+const STRAPI_BASE_URL = 'https://necessary-flame-a032995f3f.strapiapp.com';
 
 const AppContext = createContext<{
   lang: Language;
@@ -441,7 +441,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
             {/* QR Code Section */}
             <div className="mt-4 p-2 bg-white rounded-xl shadow-lg border border-teal-500/20 overflow-hidden">
               <img 
-                src="https://my-backend-production-220b.up.railway.app/uploads/8ca02f15185e47ef827e98c821573153_ff23f24ca0.png" 
+                src="https://necessary-flame-a032995f3f.media.strapiapp.com/8ca02f15185e47ef827e98c821573153_b83eb64283.png" 
                 alt="QR Code Payment" 
                 className="w-full h-auto block object-contain"
                 loading="lazy"
@@ -707,13 +707,13 @@ const Navbar = () => {
         <div className="flex justify-between h-20 items-center">
           <div onClick={() => handleNavClick('hero')} className="flex items-center cursor-pointer flex-shrink-0 gap-3">
             <img 
-              src="https://my-backend-production-220b.up.railway.app/uploads/youngtimer_avtonostalgija_1_53027830c7.png" 
+              src="https://necessary-flame-a032995f3f.media.strapiapp.com/Removal_839_030878ac88.png" 
               alt="Logo" 
               className="h-10 sm:h-12 block w-auto object-contain" 
               loading="eager"
             />
             <img 
-              src="https://my-backend-production-220b.up.railway.app/uploads/logo1111_svamz_02a00c69a5.png" 
+              src="https://necessary-flame-a032995f3f.media.strapiapp.com/logo1111_svamz_c90a4d8839.png" 
               alt="SVAMZ Logo" 
               className="h-10 sm:h-12 block w-auto object-contain" 
               loading="eager"
@@ -767,7 +767,7 @@ const Hero = () => {
     <section id="hero" className="relative min-h-screen w-full flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://my-backend-production-220b.up.railway.app/uploads/Gemini_Generated_Image_2za4n12za4n12za4_3cf33c7b31.png" 
+          src="https://necessary-flame-a032995f3f.media.strapiapp.com/Gemini_Generated_Image_2za4n12za4n12za4_a7d7380b1c.png" 
           className="w-full h-full object-cover block" 
           alt="Hero" 
           loading="eager"
@@ -776,7 +776,7 @@ const Hero = () => {
       </div>
       <div className="relative z-10 text-center px-4 max-w-7xl mx-auto w-full pt-20">
         <img 
-          src="https://my-backend-production-220b.up.railway.app/uploads/youngtimer_avtonostalgija_2_2ceda473cc.png" 
+          src="https://necessary-flame-a032995f3f.media.strapiapp.com/MAJICE_AVTONOSTALGIJA_80_and_90_LEON_G_M_November_2021_FILM_Cdr_0b17299b77.png" 
           alt="Logo" 
           className="h-24 sm:h-32 md:h-48 mx-auto mb-8 md:mb-12 object-contain block w-auto" 
           loading="eager"
@@ -917,7 +917,7 @@ const App = () => {
                 </div>
               </div>
               <img 
-                src="https://my-backend-production-220b.up.railway.app/uploads/IMG_1053_b94aabeced.jpg" 
+                src="https://necessary-flame-a032995f3f.media.strapiapp.com/IMG_1053_1_b9b3682fb1.jpg" 
                 className="rounded-[2rem] shadow-2xl border border-white/10 w-full object-cover block h-auto max-h-[500px]" 
                 alt="About" 
                 loading="lazy"
@@ -1050,7 +1050,7 @@ const App = () => {
           <div className="max-w-7xl mx-auto px-4 space-y-10">
             <div className="flex justify-center">
               <img 
-                src="https://my-backend-production-220b.up.railway.app/uploads/youngtimer_avtonostalgija_1_53027830c7.png" 
+                src="https://necessary-flame-a032995f3f.media.strapiapp.com/Removal_839_030878ac88.png" 
                 className="h-10 sm:h-12 grayscale opacity-50 block w-auto object-contain" 
                 alt="Logo" 
                 loading="lazy"
