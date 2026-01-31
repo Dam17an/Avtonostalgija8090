@@ -31,14 +31,16 @@ const useApp = () => {
 
 const getMediaUrl = (media: any) => {
   if (!media) return null;
-  // Handle Strapi v5 flattened structure
-  if (media.url) return `${STRAPI_BASE_URL}${media.url}`;
-  // Handle Strapi v4 structure or variations
-  if (media.data?.attributes?.url) return `${STRAPI_BASE_URL}${media.data.attributes.url}`;
-  if (media.data?.url) return `${STRAPI_BASE_URL}${media.data.url}`;
-  // Handle array of media
-  if (Array.isArray(media) && media[0]?.url) return `${STRAPI_BASE_URL}${media[0].url}`;
-  return null;
+  
+  // Handle various Strapi structures (v5 flattened, v4 data, or array)
+  const url = media.url || 
+              media.data?.attributes?.url || 
+              media.data?.url || 
+              (Array.isArray(media) ? media[0]?.url : null);
+
+  if (!url) return null;
+  // Handle absolute vs relative URLs
+  return url.startsWith('http') ? url : `${STRAPI_BASE_URL}${url}`;
 };
 
 const getContentText = (content: any): string => {
@@ -392,7 +394,7 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.emso}</label>
-                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.emsoPlaceholder} />
+                <input required name="emso" className="w-full bg-slate-950 p-3 rounded-xl border border-slate-800 outline-none focus:border-teal-400 text-sm" placeholder={t.membership.emsoPlaceholder} />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">{t.membership.birthPlace}</label>
@@ -570,7 +572,7 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
 
                     <div className="space-y-4">
                       <p>Članstvo je pomembno, ker posameznik nima glasu, organizirana skupnost pa ga ima. Sodelovanje kluba s SVAMZ pa mu daje strokovno, pravno in institucionalno legitimnost ter glas v nacionalnih in evropskih zakonodajnih procesih, kjer se odloča o prihodnosti historičnih in youngtimer vozil; brez te povezave bi bil klub zgolj interesna skupina brez realnega vpliva, ne pa del sistema, ki dolgoročno ščiti pravico do obstoja, uporabe in priznanja teh vozil.</p>
-                      <p>Z včlanitvijo v klub in SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. in 90. let kot živo dediščino, jim zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni in cenjeni tudi čez 10, 20 ali 30 let.</p>
+                      <p>Z včlanitvijo v klub in SVAMZ ne iščeš ugodnosti, temveč se poistovetiš z misijo: ohraniti avtomobile 80. in 90. let kot živo dediščino, img zagotoviti prostor na cestah ter ustvariti okolje, v katerem bodo lahko vozni, razumljeni in cenjeni tudi čez 10, 20 ali 30 let.</p>
                     </div>
 
                     <div className="pt-8 border-t border-white/5 space-y-4 text-center">
@@ -857,10 +859,10 @@ const App = () => {
         
         // Sorting fetched data according to requested order
         const sortedArticles = (artData.data || []).sort((a: StrapiArticle, b: StrapiArticle) => 
-          b.Datum.localeCompare(a.Datum)
+          (b.Datum || "").localeCompare(a.Datum || "")
         );
         const sortedAnnouncements = (annData.data || []).sort((a: StrapiAnnouncement, b: StrapiAnnouncement) => {
-          const dateCompare = b.Datum.localeCompare(a.Datum);
+          const dateCompare = (b.Datum || "").localeCompare(a.Datum || "");
           if (dateCompare !== 0) return dateCompare;
           return (b.Ura || "").localeCompare(a.Ura || "");
         });
@@ -985,7 +987,7 @@ const App = () => {
           <Section id="gallery" title={t.sections.gallery} gradient="bg-gradient-to-b from-purple-950 to-slate-950">
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {galleries.slice(0, showAllGalleries ? undefined : 3).map(item => {
-                  const images = item.Slike?.map(img => `${STRAPI_BASE_URL}${img.url}`) || [];
+                  const images = item.Slike?.map(img => getMediaUrl(img)) || [];
                   return (
                     <div key={item.id} onClick={() => images.length > 0 && setSelectedGallery({ images, index: 0 })} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-purple-500/50 transition-all cursor-pointer shadow-2xl">
                       <div className="aspect-video overflow-hidden relative">
