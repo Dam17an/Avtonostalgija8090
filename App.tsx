@@ -909,7 +909,8 @@ const App = () => {
                   }
                 </p>
                 <div className="flex justify-center lg:justify-start">
-                   <a href="https://www.facebook.com/groups/avtonostalgija" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-6 py-3 bg-blue-600/20 border border-blue-500/50 rounded-xl hover:bg-blue-600/40 transition-all text-blue-400 font-bold uppercase tracking-widest text-xs">
+                   <a href="https://www.facebook.com/groups/avtonostalgija" target="_blank" rel="noopener noreferrer" 
+                      className="flex items-center gap-3 px-6 py-3 bg-blue-600/20 border-2 border-blue-500/50 rounded-xl hover:bg-blue-600/40 transition-all text-blue-400 font-bold uppercase tracking-widest text-xs shadow-[0_0_15px_rgba(59,130,246,0.3)] animate-pulse hover:animate-none">
                      <Facebook size={20} /> {lang === 'si' ? 'Pridruži se FB skupini' : 'Join our FB group'}
                    </a>
                 </div>

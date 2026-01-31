@@ -90,59 +90,24 @@ V našem klubu imamo zbiralca z verjetno največjim arhivom avtomobilskega tiska
       q8: 'Kakšni so pogoji za pridobitev certifikata',
       a8: `V sodelovanju s Slovensko veteransko avto-moto zvezo (SVAMZ) in v skladu s smernicami FIVA naš klub ureja tudi pridobitev youngtimer certifikatov (mladodobnik) za perspektivna ljubiteljska vozila, ki še niso dopolnila 30 let. Ker želimo preprečiti zlorabe, smo postavili stroge kriterije.
 
-<div style="font-size: 1.25rem; font-weight: 900; color: #14b8a6; margin-top: 1.5rem; margin-bottom: 0.75rem;">Pogoji za pridobitev roza (youngtimer - mladodobnik) certifikata:</div>
-- Vozilo mora biti ljubiteljsko voženo in vzdrževano. Vožnja pozimi in uporaba za vsakodnevna opravila nima nič skupnega z ohranjanjem tehnične kulture.
+<div style="font-weight: 900; color: #ec4899; margin-top: 1.5rem; margin-bottom: 0.75rem;">Pogoji za pridobitev roza (youngtimer - mladodobnik) certifikata:</div>
+- Vozilo mora biti ljubiteljsko voženo in vzdrževano. Vožnja pozimi in uporaba za vsakodnevna opravila nima nič skupnega z ohranjanjem tehnične kulture. Zaveza k omejenemu številu letno prevoženih kilometrov: - Največ 3.000 km na leto, izjemoma do 5.000 km.
+- Hramba vozila: Vozilo mora biti hranjeno v garaži oziroma na suhem.
+- Lastništvo dodatnega vozila: Lastnik mora imeti še ein avtomobil za vsakodnevna uporabo.
+- Ohranjenost: Načeloma je zahtevano stanje ohranjenosti 1 ali 2 (pri čemer je 1 najboljše stanje na petstopenjski lestvici). Pri bolj množičnih modelih iz začetka 2000-ih je stanje 1 pogoj za pridobitev certifikata.
+- Originalnost: Vozilo mora biti načeloma tovarniško originalno oziroma avtentično. Če ima predelave (platišča, amortizerji, izpuh ipd.), morajo biti te v duhu časa. Pri bolj množičnih modelih iz začetka 2000ih je zahtevana popolna originalnost. Obvezna je odstranitev vgrajene plinske inštalacije, če jo vozilo ima.
+- Starost vozila in modela: Spodnja meja za pridobitev youngtimer certifikata je 20 let, skladno s smernicami FIVA.
+- Opozorilo: Veljavnost certifikata je od enega do največ petih let in se ne podaljša, če se lastnik ne drži zgoraj zapisanih smernic.
+- Ugodnosti: Zavarovalnica lahko prizna enak popust kot za starodobna vozila.
 
-<b>Zaveza k omejenemu številu letno prevoženih kilometrov:</b>
-- Največ 3.000 km na leto, izjemoma do 5.000 km.
-
-<b>Hramba vozila:</b>
-- Vozilo mora biti hranjeno v garaži oziroma na suhem.
-
-<b>Lastništvo dodatnega vozila:</b>
-- Lastnik mora imeti še ein avtomobil za vsakodnevna uporabo.
-
-<b>Ohranjenost:</b>
-- Načeloma je zahtevano stanje ohranjenosti 1 ali 2 (pri čemer je 1 najboljše stanje na petstopenjski lestvici).
-- Pri bolj množičnih modelih iz začetka 2000-ih je stanje 1 pogoj za pridobitev certifikata. S tem je mišljeno tudi izredno majhno skupno število prevoženih kilometrov.
-
-<b>Originalnost:</b>
-- Vozilo mora biti načeloma tovarniško originalno oziroma avtentično. Če ima predelave (platišča, amortizerji, izpuh ipd.), morajo biti te v duhu časa.
-- Pri bolj množičnih modelih iz konca 90-ih je zahtevana popolna originalnost.
-- Obvezna je odstranitev vgrajene plinske inštalacije, če jo vozilo ima.
-
-<b>Starost vozila in modela:</b>
-- Spodnja meja za pridobitev youngtimer certifikata je 20 let, skladno s smernicami FIVA.
-
-<b>Opozorilo:</b>
-- Veljavnost certifikata je od enega do največ petih let in se ne podaljša, če se lastnik ne drži zgoraj zapisanih smernic.
-
-<b>Ugodnosti:</b>
-- Zavarovalnica lahko prizna enak popust kot za starodobna vozila.
-
-<div style="font-size: 1.25rem; font-weight: 900; color: #14b8a6; margin-top: 1.5rem; margin-bottom: 0.75rem;">Pogoji za pridobitev zelenega starodobnik certifikata (Zakon o motornih vozilih – ZMV-1, 24. člen):</div>
-- ohranjeno ali pravilno restavrirano v originalno stanje,
-- izdelano pred več kot 30 leti,
-- ohranjeno skladno s svojo originalno konstrukcijsko sestavo in obliko,
+<div style="font-weight: 900; color: #14b8a6; margin-top: 1.5rem; margin-bottom: 0.75rem;">Pogoji za pridobitev zelenega starodobnik certifikata (Zakon o motornih vozilih – ZMV-1, 24. člen):</div>
+- ohranjeno ali pravilno restavrirano v originalno stanje
+- izdelano pred več kot 30 leti
+- ohranjeno skladno s svojo originalno konstrukcijsko sestavo in obliko
 - namenjeno občasnim vožnjam in prireditvam, ne za vsakodnevna uporabo.
-
-<b>Ugodnosti:</b>
-- <b>Znižane dajatve za uporabo cest (cestnina):</b> Če je v prometnem dovoljenju vpisan status starodobnika, je letna dajatev za uporabo cest lahko znatno nižja – do 80 % popusta.
-- <b>Nižji stroški obveznega zavarovanja:</b> Lastniki starodobnih vozih običajno plačujejo bistveno nižje premije obveznega zavarovanja (včasih tudi 80–90 % nižje kot za običajna vozila), saj zavarovalnice upoštevajo, da se vozila uporabljajo le občasno.
-- <b>Oprostitev davka na motorna vozila (DMV):</b> Starodobna vozila so lahko oproščena plačila DMV, če so registrirana kot starodobniki in se uporabljajo kot taka. To je še posebej pomembno pri uvozu iz tujine in prvi registraciji.
-
-<b>Kaj ugodnosti niso:</b>
-- Status starodobnika ali mladodobnika ne pomeni avtomatske oprostitve tehničnih pregledov; vozilo mora še vedno izpolnjevati vse pogoje za vključitev v promet (tehnično brezhibnost).
-
-<b>Postopek za pridobitev statusa starodobnika:</b>
-- Kontaktirate Slovensko veteransko avto-moto zvezo (SVAMZ) ali najbližjega tehničnega komisarja. (<a href="https://svamz.com/vloge-za-certifikate/" target="_blank" rel="noopener noreferrer" style="color: #ec4899; text-decoration: underline;">https://svamz.com/vloge-za-certifikate/</a>)
-- Izpolnite vlogo in predložite potrebne dokumente (dokazilo o lastništvu, prometno dovoljenje ipd.).
-- Ogled vozila opravi tehnični komisar, ki tudi pripravi dokumentacijo.
-- SVAMZ izda:
-  - Poročilo o uvrstitvi vozila v razred starodobnih vozil,
-  - zapisnik o oceni,
-  - certifikat.
-- Status se vpiše v potrdilo o skladnosti in v prometno dovoljenje (pri pooblaščenih organizacijah in tehničnih pregledih).`
+- Ugodnosti: Znižane dajatve za uporabo cest (cestnina) do 80 % popusta, nižji stroški obveznega zavarovanja (80–90 % nižje kot za običajna vozila), oprostitev davka na motorna vozila (DMV) ob registraciji kot starodobnik.
+- Kaj ugodnosti niso: Status starodobnika ali mladodobnika ne pomeni avtomatske oprostitve tehničnih pregledov; vozilo mora še vedno izpolnjevati vse pogoje za vključitev v promet.
+- Postopek za pridobitev statusa starodobnika: Kontaktirajte (051 319 618) Slovensko veteransko avto-moto zvezo (SVAMZ) ali najbližjega tehničnega komisarja (<a href="https://svamz.com/vloge-za-certifikate/" target="_blank" rel="noopener noreferrer" style="color: #ec4899; text-decoration: underline;">https://svamz.com/vloge-za-certifikate/</a>).`
     },
     contactRoles: {
       president: 'Predsednik',
