@@ -830,7 +830,7 @@ const App = () => {
   const [showAdmin, setShowAdmin] = useState(false);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
   const [cookieConsent, setCookieConsent] = useState<boolean | null>(null);
-  const [settings, setSettings] = useState<SiteSettings>({ heroImage: '', aboutImage: '', memberCount: '36.000', eventCount: '30+' });
+  const [settings, setSettings] = useState<SiteSettings>({ heroImage: '', aboutImage: '', memberCount: '40.000', eventCount: '30+' });
   
   const [articles, setArticles] = useState<StrapiArticle[]>([]);
   const [galleries, setGalleries] = useState<StrapiGallery[]>([]);
