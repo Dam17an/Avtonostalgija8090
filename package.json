@@ -7,7 +7,10 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
+    "git:init": "npx -y git-init",
+    "git:check": "npx -y git-check-remote"
   },
   "dependencies": {
     "react": "^19.0.0",
