@@ -145,6 +145,7 @@ const Modal = ({ children, onClose }: { children?: React.ReactNode; onClose: () 
 
 const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => void }) => {
   const imageUrl = getMediaUrl(item.Slika) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
+
   return (
     <Modal onClose={onClose}>
       <div className="space-y-6">
@@ -165,10 +166,17 @@ const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => voi
   );
 };
 
-const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; onClose: () => void }) => {
+const AnnouncementDetailView = ({ item, onClose, isLatest }: { item: StrapiAnnouncement; onClose: () => void; isLatest: boolean }) => {
+  const { setShowKovozooForm } = useApp();
   const imageUrl = getMediaUrl(item.Slika) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
   const formattedDate = formatDate(item.Datum);
   const formattedTime = formatTime(item.Ura, item.Datum);
+
+  const handleRegisterClick = () => {
+    onClose();
+    setShowKovozooForm(true);
+  };
+
   return (
     <Modal onClose={onClose}>
       <div className="space-y-6">
@@ -184,6 +192,17 @@ const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; o
           <div className="text-slate-300 leading-relaxed text-sm sm:text-lg">
             {renderContent(item.Vsebina)}
           </div>
+
+          {isLatest && (
+            <div className="pt-6 border-t border-white/5">
+              <button 
+                onClick={handleRegisterClick}
+                className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all"
+              >
+                Prijava na dogodek
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </Modal>
@@ -505,9 +524,9 @@ const KovozooForm = ({ onClose }: { onClose: () => void }) => {
     };
 
     try {
-      (window as any).emailjs.init("0XBKLVyfoTbX1tjxl");
-      // Using the same service ID as the membership form since none was specified
-      await (window as any).emailjs.send("service_0ag32va", "template_h8nqojc", data);
+      (window as any).emailjs.init("evoyM66gQsOUOhzBY");
+      // Using the correct service ID for the event form
+      await (window as any).emailjs.send("service_2rcx5qv", "template_rx246ib", data);
       alert("Prijava uspešno poslana!");
       onClose();
     } catch (error) {
@@ -1330,7 +1349,13 @@ const App = () => {
         </footer>
 
         {selectedArticle && <DetailView item={selectedArticle} onClose={() => setSelectedArticle(null)} />}
-        {selectedAnnouncement && <AnnouncementDetailView item={selectedAnnouncement} onClose={() => setSelectedAnnouncement(null)} />}
+        {selectedAnnouncement && (
+          <AnnouncementDetailView 
+            item={selectedAnnouncement} 
+            onClose={() => setSelectedAnnouncement(null)} 
+            isLatest={selectedAnnouncement.id === announcements[0]?.id}
+          />
+        )}
         {selectedGallery && <GalleryLightbox images={selectedGallery.images} initialIndex={selectedGallery.index} onClose={() => setSelectedGallery(null)} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
         {showKovozooPopup && (
