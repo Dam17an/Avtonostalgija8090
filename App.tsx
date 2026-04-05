@@ -35,6 +35,54 @@ const useApp = () => {
 
 // --- STRAPI CONTENT HELPERS ---
 
+const fetchWithRetry = async (url: string, options: any = {}, retries = 3, backoff = 1000): Promise<any> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (retries > 0 && error.name !== 'AbortError') {
+      await new Promise(resolve => setTimeout(resolve, backoff));
+      return fetchWithRetry(url, options, retries - 1, backoff * 1.5);
+    }
+    throw error;
+  }
+};
+
+const LoadingState = ({ loading, error, onRetry, lang }: { loading: boolean; error: boolean; onRetry: () => void; lang: Language }) => {
+  if (loading) {
+    return (
+      <div className="col-span-full py-12 flex flex-col items-center justify-center space-y-4 text-center">
+        <Loader2 className="animate-spin text-pink-500" size={40} />
+        <p className="text-slate-400 text-sm uppercase tracking-widest font-bold px-4">
+          {lang === 'si' ? 'Vsebina se nalaga... Če traja predolgo, kliknite osveži.' : 'Loading content... If it takes too long, click refresh.'}
+        </p>
+        <button onClick={onRetry} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest transition-colors">
+          {lang === 'si' ? 'Osveži' : 'Refresh'}
+        </button>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div className="col-span-full py-12 flex flex-col items-center justify-center space-y-4 text-center">
+        <p className="text-pink-500 text-sm uppercase tracking-widest font-bold px-4">
+          {lang === 'si' ? 'Prišlo je do težave pri nalaganju. Poskusite ponovno.' : 'There was a problem loading. Please try again.'}
+        </p>
+        <button onClick={onRetry} className="px-8 py-3 bg-pink-500 hover:bg-pink-600 text-white rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-lg hover:scale-105">
+          {lang === 'si' ? 'Osveži' : 'Refresh'}
+        </button>
+      </div>
+    );
+  }
+  return null;
+};
+
 const getMediaUrl = (media: any) => {
   if (!media) return null;
   
@@ -1091,50 +1139,56 @@ const App = () => {
   const [galleries, setGalleries] = useState<StrapiGallery[]>([]);
   const [announcements, setAnnouncements] = useState<StrapiAnnouncement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const [showAllGalleries, setShowAllGalleries] = useState(false);
   
   const [selectedArticle, setSelectedArticle] = useState<StrapiArticle | null>(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<StrapiAnnouncement | null>(null);
   const [selectedGallery, setSelectedGallery] = useState<{ images: string[]; index: number } | null>(null);
 
+  const fetchData = async () => {
+    setLoading(true);
+    setHasError(false);
+    try {
+      const [artData, galData, annData] = await Promise.all([
+        fetchWithRetry(`${STRAPI_BASE_URL}/api/articles?populate=*`),
+        fetchWithRetry(`${STRAPI_BASE_URL}/api/galleries?populate=*`),
+        fetchWithRetry(`${STRAPI_BASE_URL}/api/announcements?populate=*`)
+      ]);
+      
+      // Sorting fetched data according to requested order
+      const sortedArticles = (artData.data || []).sort((a: StrapiArticle, b: StrapiArticle) => 
+        (b.Datum || "").localeCompare(a.Datum || "")
+      );
+      const sortedAnnouncements = (annData.data || []).sort((a: StrapiAnnouncement, b: StrapiAnnouncement) => {
+        const dateCompare = (b.Datum || "").localeCompare(a.Datum || "");
+        if (dateCompare !== 0) return dateCompare;
+        return (b.Ura || "").localeCompare(a.Ura || "");
+      });
+      const sortedGalleries = (galData.data || []).sort((a: StrapiGallery, b: StrapiGallery) => 
+        a.id - b.id
+      );
+
+      setArticles(sortedArticles);
+      setGalleries(sortedGalleries);
+      setAnnouncements(sortedAnnouncements);
+      setHasError(false);
+    } catch (err) {
+      console.error("Data fetch failed:", err);
+      setHasError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const consent = localStorage.getItem('an_cookie_consent');
     if (consent !== null) setCookieConsent(consent === 'true');
 
-    const fetchData = async () => {
-      try {
-        const [artRes, galRes, annRes] = await Promise.all([
-          fetch(`${STRAPI_BASE_URL}/api/articles?populate=*`),
-          fetch(`${STRAPI_BASE_URL}/api/galleries?populate=*`),
-          fetch(`${STRAPI_BASE_URL}/api/announcements?populate=*`)
-        ]);
-        const artData = await artRes.json();
-        const galData = await galRes.json();
-        const annData = await annRes.json();
-        
-        // Sorting fetched data according to requested order
-        const sortedArticles = (artData.data || []).sort((a: StrapiArticle, b: StrapiArticle) => 
-          (b.Datum || "").localeCompare(a.Datum || "")
-        );
-        const sortedAnnouncements = (annData.data || []).sort((a: StrapiAnnouncement, b: StrapiAnnouncement) => {
-          const dateCompare = (b.Datum || "").localeCompare(a.Datum || "");
-          if (dateCompare !== 0) return dateCompare;
-          return (b.Ura || "").localeCompare(a.Ura || "");
-        });
-        const sortedGalleries = (galData.data || []).sort((a: StrapiGallery, b: StrapiGallery) => 
-          a.id - b.id
-        );
-
-        setArticles(sortedArticles);
-        setGalleries(sortedGalleries);
-        setAnnouncements(sortedAnnouncements);
-      } catch (err) {
-        console.error("Data fetch failed:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
+
+    // Expose refresh to window for manual wake up if needed
+    (window as any).refreshStrapi = fetchData;
 
     // Show Kovozoo popup on load
     const timer = setTimeout(() => {
@@ -1209,7 +1263,8 @@ const App = () => {
           {/* Announcements Section - Renamed to Napovednik with Fixed Image, Click Logic, and Clean HH:mm formatting */}
           <Section id="announcements" title={t.sections.events} gradient="bg-gradient-to-b from-indigo-950 to-slate-900">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {announcements.map((item) => {
+              <LoadingState loading={loading} error={hasError} onRetry={fetchData} lang={lang} />
+              {!loading && !hasError && announcements.map((item) => {
                 const imageUrl = getMediaUrl(item.Slika);
                 const formattedDate = formatDate(item.Datum);
                 const formattedTime = formatTime(item.Ura, item.Datum);
@@ -1243,7 +1298,8 @@ const App = () => {
           {/* News Section */}
           <Section id="news" title={t.sections.news} gradient="bg-gradient-to-b from-slate-900 to-purple-950">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {articles.map(article => {
+              <LoadingState loading={loading} error={hasError} onRetry={fetchData} lang={lang} />
+              {!loading && !hasError && articles.map(article => {
                 const imageUrl = getMediaUrl(article.Slika);
                 return (
                   <article key={article.id} onClick={() => setSelectedArticle(article)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-xl">
@@ -1265,7 +1321,8 @@ const App = () => {
           {/* Gallery Section */}
           <Section id="gallery" title={t.sections.gallery} gradient="bg-gradient-to-b from-purple-950 to-slate-950">
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {galleries.slice(0, showAllGalleries ? undefined : 3).map(item => {
+                <LoadingState loading={loading} error={hasError} onRetry={fetchData} lang={lang} />
+                {!loading && !hasError && galleries.slice(0, showAllGalleries ? undefined : 3).map(item => {
                   const images = item.Slike?.map(img => getMediaUrl(img)) || [];
                   return (
                     <div key={item.id} onClick={() => images.length > 0 && setSelectedGallery({ images, index: 0 })} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-purple-500/50 transition-all cursor-pointer shadow-2xl">
