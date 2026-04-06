@@ -1,10 +1,24 @@
-import React, { useState, useEffect, createContext, useContext, useRef } from 'react';
+import React, { useState, useEffect, createContext, useContext, useRef, useCallback } from 'react';
 import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings, Clock, Cookie, Facebook } from 'lucide-react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { translations } from './translations';
 import { Language, StrapiArticle, StrapiAnnouncement, StrapiGallery, SiteSettings } from './types';
 
 // --- STRAPI CONFIGURATION ---
 const STRAPI_BASE_URL = 'https://necessary-flame-a032995f3f.strapiapp.com';
+
+const slugify = (text: string) => {
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^\w-]+/g, '')
+    .replace(/--+/g, '-')
+    .replace(/^-+/, '')
+    .replace(/-+$/, '');
+};
 
 const AppContext = createContext<{
   lang: Language;
@@ -35,9 +49,9 @@ const useApp = () => {
 
 // --- STRAPI CONTENT HELPERS ---
 
-const fetchWithRetry = async (url: string, options: any = {}, retries = 3, backoff = 1000): Promise<any> => {
+const fetchWithRetry = async (url: string, options: any = {}, retries = 5, backoff = 1000): Promise<any> => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout for cold starts
   
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
@@ -46,7 +60,9 @@ const fetchWithRetry = async (url: string, options: any = {}, retries = 3, backo
     return await response.json();
   } catch (error: any) {
     clearTimeout(timeoutId);
-    if (retries > 0 && error.name !== 'AbortError') {
+    // Retry on most errors, including AbortError (timeout) and TypeError (network error)
+    if (retries > 0) {
+      console.warn(`Fetch attempt failed for ${url}. Retrying in ${backoff}ms... (${retries} retries left). Error: ${error.name} - ${error.message}`);
       await new Promise(resolve => setTimeout(resolve, backoff));
       return fetchWithRetry(url, options, retries - 1, backoff * 1.5);
     }
@@ -216,6 +232,7 @@ const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => voi
 
 const AnnouncementDetailView = ({ item, onClose, isLatest }: { item: StrapiAnnouncement; onClose: () => void; isLatest: boolean }) => {
   const { setShowKovozooForm } = useApp();
+  const navigate = useNavigate();
   const imageUrl = getMediaUrl(item.Slika) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
   const formattedDate = formatDate(item.Datum);
   const formattedTime = formatTime(item.Ura, item.Datum);
@@ -223,6 +240,7 @@ const AnnouncementDetailView = ({ item, onClose, isLatest }: { item: StrapiAnnou
   const handleRegisterClick = () => {
     onClose();
     setShowKovozooForm(true);
+    navigate('/kovozoo');
   };
 
   return (
@@ -795,6 +813,7 @@ const Section = ({ id, title, children, gradient }: { id: string, title: string,
 
 const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
   const { lang, setShowMembershipModal } = useApp();
+  const navigate = useNavigate();
   const t = translations[lang];
   return (
     <Section id="youngtimer" title={t.faq.title} gradient={transparent ? "bg-transparent" : "bg-gradient-to-b from-slate-950 via-indigo-950 to-purple-950"}>
@@ -959,7 +978,10 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
             </div>
           </div>
           <div className="flex justify-center mt-12">
-            <button onClick={() => setShowMembershipModal(true)} className="px-12 py-5 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-2xl font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(20,184,166,0.4)] text-xl cursor-pointer">{t.sections.memberTitle}</button>
+            <button onClick={() => {
+              setShowMembershipModal(true);
+              navigate('/clanstvo');
+            }} className="px-12 py-5 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-2xl font-black uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-[0_0_30px_rgba(20,184,166,0.4)] text-xl cursor-pointer">{t.sections.memberTitle}</button>
           </div>
         </div>
       </div>
@@ -988,10 +1010,20 @@ const CookieBanner = ({ onAccept, onDecline }: { onAccept: () => void; onDecline
 
 const Navbar = () => {
   const { lang, setLang, isAdmin, setShowLogin, setShowAdmin } = useApp();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const t = translations[lang];
   const handleNavClick = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+    if (id === 'vclani-se') navigate('/clanstvo');
+    else if (id === 'announcements') navigate('/dogodki');
+    else if (id === 'gallery') navigate('/galerija');
+    else {
+      if (pathname !== '/') navigate('/');
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
     setIsOpen(false);
   };
   const menuItems = [
@@ -1124,6 +1156,8 @@ const LoginPageOverlay = ({ onClose }: { onClose: () => void }) => {
 };
 
 const App = () => {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [lang, setLang] = useState<Language>('si');
   const [isAdmin, setIsAdmin] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
@@ -1141,19 +1175,30 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [showAllGalleries, setShowAllGalleries] = useState(false);
+  const lastFetchedRef = useRef<number | null>(null);
   
   const [selectedArticle, setSelectedArticle] = useState<StrapiArticle | null>(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<StrapiAnnouncement | null>(null);
   const [selectedGallery, setSelectedGallery] = useState<{ images: string[]; index: number } | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async (force = false) => {
+    // 10-minute cache (600,000 ms)
+    const CACHE_DURATION = 10 * 60 * 1000;
+    const now = Date.now();
+
+    if (!force && lastFetchedRef.current && (now - lastFetchedRef.current < CACHE_DURATION)) {
+      console.log("Using cached data from Strapi Cloud...");
+      return;
+    }
+
     setLoading(true);
     setHasError(false);
     try {
+      const timestamp = Date.now();
       const [artData, galData, annData] = await Promise.all([
-        fetchWithRetry(`${STRAPI_BASE_URL}/api/articles?populate=*`),
-        fetchWithRetry(`${STRAPI_BASE_URL}/api/galleries?populate=*`),
-        fetchWithRetry(`${STRAPI_BASE_URL}/api/announcements?populate=*`)
+        fetchWithRetry(`${STRAPI_BASE_URL}/api/articles?populate=*&_t=${timestamp}`),
+        fetchWithRetry(`${STRAPI_BASE_URL}/api/galleries?populate=*&_t=${timestamp}`),
+        fetchWithRetry(`${STRAPI_BASE_URL}/api/announcements?populate=*&_t=${timestamp}`)
       ]);
       
       // Sorting fetched data according to requested order
@@ -1172,6 +1217,7 @@ const App = () => {
       setArticles(sortedArticles);
       setGalleries(sortedGalleries);
       setAnnouncements(sortedAnnouncements);
+      lastFetchedRef.current = now;
       setHasError(false);
     } catch (err) {
       console.error("Data fetch failed:", err);
@@ -1179,7 +1225,7 @@ const App = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const consent = localStorage.getItem('an_cookie_consent');
@@ -1188,14 +1234,75 @@ const App = () => {
     fetchData();
 
     // Expose refresh to window for manual wake up if needed
-    (window as any).refreshStrapi = fetchData;
+    (window as any).refreshStrapi = () => fetchData(true);
 
-    // Show Kovozoo popup on load
+    // Show Kovozoo popup on load if not on a specific route
     const timer = setTimeout(() => {
-      setShowKovozooPopup(true);
+      if (window.location.pathname === '/' || window.location.pathname === '/kovozoo') {
+        setShowKovozooPopup(true);
+      }
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Routing Logic
+  useEffect(() => {
+    if (loading) return;
+
+    const handleRouting = () => {
+      if (pathname === '/clanstvo') {
+        document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' });
+      } else if (pathname === '/dogodki') {
+        document.getElementById('announcements')?.scrollIntoView({ behavior: 'smooth' });
+      } else if (pathname === '/galerija') {
+        document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });
+      } else if (pathname === '/kovozoo') {
+        setShowKovozooPopup(true);
+      } else if (pathname.startsWith('/novice/')) {
+        const slug = pathname.replace('/novice/', '');
+        const article = articles.find(a => slugify(a.Naslov) === slug);
+        if (article) {
+          setSelectedArticle(article);
+        }
+      } else if (pathname.startsWith('/napovednik/')) {
+        const slug = pathname.replace('/napovednik/', '');
+        const announcement = announcements.find(a => slugify(a.Naslov) === slug);
+        if (announcement) {
+          setSelectedAnnouncement(announcement);
+        }
+      } else if (pathname.startsWith('/galerija/')) {
+        const slug = pathname.replace('/galerija/', '');
+        const gallery = galleries.find(g => slugify(g.Naslov) === slug);
+        if (gallery) {
+          const images = gallery.Slike?.map(img => getMediaUrl(img)) || [];
+          if (images.length > 0) {
+            setSelectedGallery({ images, index: 0 });
+          }
+        }
+      }
+    };
+
+    handleRouting();
+  }, [pathname, loading, articles, announcements]);
+
+  const handleCloseDetail = () => {
+    setSelectedArticle(null);
+    setSelectedAnnouncement(null);
+    setSelectedGallery(null);
+    if (pathname !== '/') navigate('/');
+  };
+
+  const handleCloseKovozoo = () => {
+    setShowKovozooPopup(false);
+    setIsKovozooMinimized(true);
+    if (pathname === '/kovozoo') navigate('/');
+  };
+
+  const handleCloseKovozooForm = () => {
+    setShowKovozooForm(false);
+    setIsKovozooMinimized(true);
+    if (pathname === '/kovozoo') navigate('/');
+  };
 
   const handleCookieConsent = (accept: boolean) => {
     localStorage.setItem('an_cookie_consent', accept.toString());
@@ -1217,7 +1324,10 @@ const App = () => {
         {/* Floating Kovozoo Button */}
         {isKovozooMinimized && !showKovozooPopup && !showKovozooForm && (
           <button 
-            onClick={() => setShowKovozooPopup(true)}
+            onClick={() => {
+              setShowKovozooPopup(true);
+              navigate('/kovozoo');
+            }}
             className="fixed right-4 bottom-24 z-[90] p-4 bg-gradient-to-br from-pink-500 to-teal-500 rounded-full shadow-2xl hover:scale-110 transition-all group animate-bounce"
             title="Kovozoo 2026"
           >
@@ -1263,13 +1373,16 @@ const App = () => {
           {/* Announcements Section - Renamed to Napovednik with Fixed Image, Click Logic, and Clean HH:mm formatting */}
           <Section id="announcements" title={t.sections.events} gradient="bg-gradient-to-b from-indigo-950 to-slate-900">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <LoadingState loading={loading} error={hasError} onRetry={fetchData} lang={lang} />
+              <LoadingState loading={loading} error={hasError} onRetry={() => fetchData(true)} lang={lang} />
               {!loading && !hasError && announcements.map((item) => {
                 const imageUrl = getMediaUrl(item.Slika);
                 const formattedDate = formatDate(item.Datum);
                 const formattedTime = formatTime(item.Ura, item.Datum);
                 return (
-                  <div key={item.id} onClick={() => setSelectedAnnouncement(item)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-xl">
+                  <div key={item.id} onClick={() => {
+                    setSelectedAnnouncement(item);
+                    navigate(`/napovednik/${slugify(item.Naslov)}`);
+                  }} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-xl">
                     <div className="aspect-video overflow-hidden">
                       {imageUrl ? (
                         <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} loading="lazy" />
@@ -1298,11 +1411,14 @@ const App = () => {
           {/* News Section */}
           <Section id="news" title={t.sections.news} gradient="bg-gradient-to-b from-slate-900 to-purple-950">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <LoadingState loading={loading} error={hasError} onRetry={fetchData} lang={lang} />
+              <LoadingState loading={loading} error={hasError} onRetry={() => fetchData(true)} lang={lang} />
               {!loading && !hasError && articles.map(article => {
                 const imageUrl = getMediaUrl(article.Slika);
                 return (
-                  <article key={article.id} onClick={() => setSelectedArticle(article)} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-xl">
+                  <article key={article.id} onClick={() => {
+                    setSelectedArticle(article);
+                    navigate(`/novice/${slugify(article.Naslov)}`);
+                  }} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-xl">
                     <div className="aspect-video overflow-hidden">
                       {imageUrl ? <img src={imageUrl} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={article.Naslov} loading="lazy" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
                     </div>
@@ -1321,11 +1437,16 @@ const App = () => {
           {/* Gallery Section */}
           <Section id="gallery" title={t.sections.gallery} gradient="bg-gradient-to-b from-purple-950 to-slate-950">
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <LoadingState loading={loading} error={hasError} onRetry={fetchData} lang={lang} />
+                <LoadingState loading={loading} error={hasError} onRetry={() => fetchData(true)} lang={lang} />
                 {!loading && !hasError && galleries.slice(0, showAllGalleries ? undefined : 3).map(item => {
                   const images = item.Slike?.map(img => getMediaUrl(img)) || [];
                   return (
-                    <div key={item.id} onClick={() => images.length > 0 && setSelectedGallery({ images, index: 0 })} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-purple-500/50 transition-all cursor-pointer shadow-2xl">
+                    <div key={item.id} onClick={() => {
+                      if (images.length > 0) {
+                        setSelectedGallery({ images, index: 0 });
+                        navigate(`/galerija/${slugify(item.Naslov)}`);
+                      }
+                    }} className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-purple-500/50 transition-all cursor-pointer shadow-2xl">
                       <div className="aspect-video overflow-hidden relative">
                         {images.length > 0 ? <img src={images[0]} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} loading="lazy" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center text-slate-600"><ImageIcon size={48} /></div>}
                         <div className="absolute top-4 right-4 bg-black/60 px-3 py-1 rounded-full text-[10px] font-black text-white flex items-center gap-1"><ImageIcon size={12} /> {images.length}</div>
@@ -1405,34 +1526,29 @@ const App = () => {
           </div>
         </footer>
 
-        {selectedArticle && <DetailView item={selectedArticle} onClose={() => setSelectedArticle(null)} />}
+        {selectedArticle && <DetailView item={selectedArticle} onClose={handleCloseDetail} />}
         {selectedAnnouncement && (
           <AnnouncementDetailView 
             item={selectedAnnouncement} 
-            onClose={() => setSelectedAnnouncement(null)} 
+            onClose={handleCloseDetail} 
             isLatest={selectedAnnouncement.id === announcements[0]?.id}
           />
         )}
-        {selectedGallery && <GalleryLightbox images={selectedGallery.images} initialIndex={selectedGallery.index} onClose={() => setSelectedGallery(null)} />}
+        {selectedGallery && <GalleryLightbox images={selectedGallery.images} initialIndex={selectedGallery.index} onClose={handleCloseDetail} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
         {showKovozooPopup && (
           <EventPopup 
-            onClose={() => {
-              setShowKovozooPopup(false);
-              setIsKovozooMinimized(true);
-            }} 
+            onClose={handleCloseKovozoo} 
             onRegister={() => {
               setShowKovozooPopup(false);
               setShowKovozooForm(true);
+              navigate('/kovozoo');
             }} 
           />
         )}
         {showKovozooForm && (
           <KovozooForm 
-            onClose={() => {
-              setShowKovozooForm(false);
-              setIsKovozooMinimized(true);
-            }} 
+            onClose={handleCloseKovozooForm} 
           />
         )}
         {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}

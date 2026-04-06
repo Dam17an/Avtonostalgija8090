@@ -1,4 +1,3 @@
-
 {
   "name": "avtonostalgija-80-90",
   "version": "1.0.0",
@@ -13,9 +12,10 @@
     "git:check": "npx -y git-check-remote"
   },
   "dependencies": {
+    "lucide-react": "^0.462.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "lucide-react": "^0.462.0"
+    "react-router-dom": "^7.14.0"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
