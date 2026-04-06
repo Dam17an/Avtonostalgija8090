@@ -1015,10 +1015,17 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const t = translations[lang];
   const handleNavClick = (id: string) => {
-    if (id === 'vclani-se') navigate('/clanstvo');
-    else if (id === 'announcements') navigate('/dogodki');
-    else if (id === 'gallery') navigate('/galerija');
-    else {
+    const targetPath = id === 'vclani-se' ? '/clanstvo' : 
+                      id === 'announcements' ? '/dogodki' : 
+                      id === 'gallery' ? '/galerija' : null;
+
+    if (targetPath) {
+      if (pathname === targetPath) {
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigate(targetPath);
+      }
+    } else {
       if (pathname !== '/') navigate('/');
       setTimeout(() => {
         document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
@@ -1238,7 +1245,7 @@ const App = () => {
 
     // Show Kovozoo popup on load if not on a specific route
     const timer = setTimeout(() => {
-      if (window.location.pathname === '/' || window.location.pathname === '/kovozoo') {
+      if (window.location.pathname === '/') {
         setShowKovozooPopup(true);
       }
     }, 1500);
@@ -1250,13 +1257,23 @@ const App = () => {
     if (loading) return;
 
     const handleRouting = () => {
+      // Use a small delay to ensure DOM is ready
+      const scrollWithDelay = (id: string) => {
+        setTimeout(() => {
+          const element = document.getElementById(id);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 300);
+      };
+
       if (pathname === '/clanstvo') {
-        document.getElementById('vclani-se')?.scrollIntoView({ behavior: 'smooth' });
+        scrollWithDelay('vclani-se');
       } else if (pathname === '/dogodki') {
-        document.getElementById('announcements')?.scrollIntoView({ behavior: 'smooth' });
+        scrollWithDelay('announcements');
       } else if (pathname === '/galerija') {
-        document.getElementById('gallery')?.scrollIntoView({ behavior: 'smooth' });
-      } else if (pathname === '/kovozoo') {
+        scrollWithDelay('gallery');
+      } else if (pathname === '/kovozoo' && !showKovozooForm) {
         setShowKovozooPopup(true);
       } else if (pathname.startsWith('/novice/')) {
         const slug = pathname.replace('/novice/', '');
@@ -1283,7 +1300,7 @@ const App = () => {
     };
 
     handleRouting();
-  }, [pathname, loading, articles, announcements]);
+  }, [pathname, loading, articles, announcements, galleries, showKovozooForm]);
 
   const handleCloseDetail = () => {
     setSelectedArticle(null);
