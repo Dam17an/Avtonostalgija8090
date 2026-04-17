@@ -33,12 +33,6 @@ const AppContext = createContext<{
   setSettings: React.Dispatch<React.SetStateAction<SiteSettings>>;
   showMembershipModal: boolean;
   setShowMembershipModal: (b: boolean) => void;
-  showKovozooPopup: boolean;
-  setShowKovozooPopup: (b: boolean) => void;
-  showKovozooForm: boolean;
-  setShowKovozooForm: (b: boolean) => void;
-  isKovozooMinimized: boolean;
-  setIsKovozooMinimized: (b: boolean) => void;
 } | null>(null);
 
 const useApp = () => {
@@ -230,18 +224,10 @@ const DetailView = ({ item, onClose }: { item: StrapiArticle; onClose: () => voi
   );
 };
 
-const AnnouncementDetailView = ({ item, onClose, isLatest }: { item: StrapiAnnouncement; onClose: () => void; isLatest: boolean }) => {
-  const { setShowKovozooForm } = useApp();
-  const navigate = useNavigate();
+const AnnouncementDetailView = ({ item, onClose }: { item: StrapiAnnouncement; onClose: () => void; isLatest: boolean }) => {
   const imageUrl = getMediaUrl(item.Slika) || 'https://images.unsplash.com/photo-1542281286-9e0a16bb7366?w=800';
   const formattedDate = formatDate(item.Datum);
   const formattedTime = formatTime(item.Ura, item.Datum);
-
-  const handleRegisterClick = () => {
-    onClose();
-    setShowKovozooForm(true);
-    navigate('/kovozoo');
-  };
 
   return (
     <Modal onClose={onClose}>
@@ -258,17 +244,6 @@ const AnnouncementDetailView = ({ item, onClose, isLatest }: { item: StrapiAnnou
           <div className="text-slate-300 leading-relaxed text-sm sm:text-lg">
             {renderContent(item.Vsebina)}
           </div>
-
-          {isLatest && (
-            <div className="pt-6 border-t border-white/5">
-              <button 
-                onClick={handleRegisterClick}
-                className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all"
-              >
-                Prijava na dogodek
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </Modal>
@@ -549,233 +524,6 @@ const MembershipModal = ({ onClose }: { onClose: () => void }) => {
             <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.iban}</div><div className="font-mono">SI56 6100 0002 3775 920</div></div>
             <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.ref}</div><div className="font-mono">SI00 “yyyymmdd”</div></div>
             <div><div className="text-[9px] uppercase font-bold text-slate-500">{t.membership.recipient}</div><div className="font-mono">{t.membership.recipientText}</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const KovozooForm = ({ onClose }: { onClose: () => void }) => {
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    ime_priimek: '',
-    stevilo_oseb: 1,
-    naslov: '',
-    status: 'clan',
-    znamka: '',
-    model: '',
-    letnik: '',
-    majica: ''
-  });
-
-  const pricePerPerson = formData.status === 'clan' ? 130 : 150;
-  const totalAmount = formData.stevilo_oseb * pricePerPerson;
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: name === 'stevilo_oseb' ? parseInt(value) || 0 : value
-    }));
-  };
-
-  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setSubmitting(true);
-    
-    const data = {
-      ...formData,
-      skupna_cena: `${totalAmount} EUR`
-    };
-
-    try {
-      (window as any).emailjs.init("evoyM66gQsOUOhzBY");
-      // Using the correct service ID for the event form
-      await (window as any).emailjs.send("service_2rcx5qv", "template_rx246ib", data);
-      alert("Prijava uspešno poslana!");
-      onClose();
-    } catch (error) {
-      console.error("Submission error:", error);
-      alert("Prišlo je do napake pri pošiljanju. Prosimo, poskusite znova.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 z-[120] glass flex items-start justify-center p-4 overflow-y-auto cursor-pointer" onClick={onClose}>
-      <div className="bg-slate-900 w-full max-w-2xl rounded-3xl border border-pink-500/30 shadow-2xl relative my-8 p-6 sm:p-10 cursor-default" onClick={(e) => e.stopPropagation()}>
-        <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-10 text-white" onClick={onClose} aria-label="Close modal"><X size={24} /></button>
-        <h2 className="retro-font text-xl sm:text-2xl text-pink-500 mb-8 uppercase text-center font-black tracking-tighter">Prijavnica za Kovozoo</h2>
-        
-        <form onSubmit={handleFormSubmit} className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Ime in priimek voznika</label>
-              <input required name="ime_priimek" value={formData.ime_priimek} onChange={handleInputChange} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-pink-500 text-sm" placeholder="Janez Novak" />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Skupno število oseb</label>
-                <input required type="number" min="1" name="stevilo_oseb" value={formData.stevilo_oseb} onChange={handleInputChange} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-pink-500 text-sm" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Naslov</label>
-                <input required name="naslov" value={formData.naslov} onChange={handleInputChange} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-pink-500 text-sm" placeholder="Ulica 123, 1000 Ljubljana" />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Status</label>
-              <div className="flex gap-6 p-3 bg-slate-950 rounded-xl border border-slate-700">
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
-                  <input type="radio" name="status" value="clan" checked={formData.status === 'clan'} onChange={handleInputChange} className="accent-pink-500" />
-                  Član Avtonostalgija
-                </label>
-                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
-                  <input type="radio" name="status" value="neclan" checked={formData.status === 'neclan'} onChange={handleInputChange} className="accent-pink-500" />
-                  Nečlan
-                </label>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Znamka</label>
-                <input required name="znamka" value={formData.znamka} onChange={handleInputChange} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-pink-500 text-sm" placeholder="npr. BMW" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Model</label>
-                <input required name="model" value={formData.model} onChange={handleInputChange} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-pink-500 text-sm" placeholder="npr. E30" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Letnik</label>
-                <input required name="letnik" value={formData.letnik} onChange={handleInputChange} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-pink-500 text-sm" placeholder="npr. 1989" />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-1">Velikost majice</label>
-              <input required name="majica" value={formData.majica} onChange={handleInputChange} className="w-full bg-slate-950 p-3 rounded-xl border border-slate-700 outline-none focus:border-pink-500 text-sm" placeholder="npr. L" />
-            </div>
-          </div>
-
-          <div className="p-6 bg-pink-500/10 rounded-2xl border border-pink-500/30 text-center">
-            <div className="text-[10px] uppercase tracking-widest text-pink-500 font-bold mb-1">Skupna cena za plačilo</div>
-            <div className="retro-font text-3xl text-white font-black">{totalAmount} EUR</div>
-          </div>
-
-          <button type="submit" disabled={submitting} className="w-full py-4 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all disabled:opacity-50">
-            {submitting ? <Loader2 className="animate-spin mx-auto" /> : "Prijava"}
-          </button>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-const EventPopup = ({ onClose, onRegister }: { onClose: () => void; onRegister: () => void }) => {
-  return (
-    <div className="fixed inset-0 z-[110] glass flex items-center justify-center p-4 overflow-y-auto cursor-pointer" onClick={onClose}>
-      <div className="bg-slate-900 w-full max-w-3xl rounded-3xl border border-teal-500/30 shadow-2xl relative my-8 p-6 sm:p-10 cursor-default animate-in fade-in zoom-in duration-300" onClick={(e) => e.stopPropagation()}>
-        <button className="absolute top-4 right-4 p-2 bg-slate-800 rounded-full hover:bg-pink-500 transition-colors z-10 text-white" onClick={onClose} aria-label="Close modal"><X size={24} /></button>
-        
-        <div className="space-y-6 max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
-          <div className="text-center space-y-2">
-            <h3 className="text-teal-400 font-black uppercase tracking-widest text-sm">PRIJAVA NA SKUPINSKI OBISK</h3>
-            <h2 className="retro-font text-2xl sm:text-4xl text-white font-black uppercase tracking-tighter leading-tight">Old Vehicles Meeting in Kovozoo 2026</h2>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div className="glass p-4 rounded-xl border border-white/5 flex items-center gap-3">
-              <MapPin className="text-pink-500" size={20} />
-              <div>
-                <div className="text-[10px] uppercase font-bold text-slate-500">Lokacija</div>
-                <div className="text-slate-200">Staré Město in Uherské Hradiště</div>
-              </div>
-            </div>
-            <div className="glass p-4 rounded-xl border border-white/5 flex items-center gap-3">
-              <Calendar className="text-pink-500" size={20} />
-              <div>
-                <div className="text-[10px] uppercase font-bold text-slate-500">Termin izvedbe</div>
-                <div className="text-slate-200">5.–8. junij 2026</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4 text-slate-300 text-sm sm:text-base leading-relaxed">
-            <div className="space-y-2">
-              <h4 className="text-white font-bold uppercase tracking-widest text-xs">Opis dogodka</h4>
-              <p>Vabimo vas na organiziran skupinski obisk največjega srečanja starodobnih vozil na Češkem. Dogodek združuje ljubitelje klasičnih vozil, tehnične dediščine in avtomobilske kulture, ob tem pa ponuja tudi bogat spremljevalni turistični program.</p>
-            </div>
-
-            <div className="space-y-4">
-              <h4 className="text-white font-bold uppercase tracking-widest text-xs">Program</h4>
-              <div className="space-y-4">
-                <div>
-                  <div className="text-pink-500 font-bold text-xs uppercase">Petek, 5. 6. 2026</div>
-                  <p>Odhod v popoldanskih urah in prihod na lokacijo.</p>
-                </div>
-                <div>
-                  <div className="text-pink-500 font-bold text-xs uppercase">Sobota, 6. 6. 2026</div>
-                  <p>Organiziran voden program:</p>
-                  <ul className="list-disc list-inside ml-2 space-y-1">
-                    <li>ogled letalskega muzeja</li>
-                    <li>ogled pivovarne</li>
-                    <li>postanek na razglednem stolpu</li>
-                    <li>ogled gradu</li>
-                  </ul>
-                </div>
-                <div>
-                  <div className="text-pink-500 font-bold text-xs uppercase">Nedelja, 7. 6. 2026</div>
-                  <p>Obisk prireditve Old Vehicles Meeting in Kovozoo 2026 (9:00–17:00)</p>
-                </div>
-                <div>
-                  <div className="text-pink-500 font-bold text-xs uppercase">Ponedeljek, 8. 6. 2026</div>
-                  <p>Odhod domov po zajtrku.</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-white/5">
-              <div className="space-y-2">
-                <h4 className="text-white font-bold uppercase tracking-widest text-xs">Cena udeležbe</h4>
-                <ul className="space-y-1">
-                  <li className="flex justify-between"><span>Člani kluba:</span> <span className="font-bold text-teal-400">130 EUR</span></li>
-                  <li className="flex justify-between"><span>Nečlani:</span> <span className="font-bold text-teal-400">150 EUR</span></li>
-                </ul>
-                <p className="text-[10px] text-slate-500 italic">Morebitno višji strošek, kot smo planirali pokrije klub.</p>
-              </div>
-              <div className="space-y-2">
-                <h4 className="text-white font-bold uppercase tracking-widest text-xs">Cena vključuje</h4>
-                <ul className="text-[11px] space-y-1 list-disc list-inside">
-                  <li>3× prenočišče z zajtrkom</li>
-                  <li>voden sobotni program z vključenimi vstopninami</li>
-                  <li>prigrizke</li>
-                  <li>vstop in udeležbo na nedeljski prireditvi v Kovozoo</li>
-                  <li>organizacijo in izvedbo izleta</li>
-                  <li>nalepke za vozilo</li>
-                  <li>ekskluzivno majico Avtonostalgija 80&90</li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="p-4 bg-teal-400/5 rounded-xl border border-teal-400/20 space-y-2">
-              <h4 className="text-teal-400 font-bold uppercase tracking-widest text-xs">Pomembne informacije</h4>
-              <ul className="text-xs space-y-1">
-                <li className="flex items-center gap-2"><span className="w-1 h-1 bg-teal-400 rounded-full" /> Število mest je omejeno na 25 udeležencev</li>
-                <li className="flex items-center gap-2"><span className="w-1 h-1 bg-teal-400 rounded-full" /> Rok za prijavo: 19. april 2026</li>
-              </ul>
-              <p className="text-[10px] text-slate-400 pt-2">Prijave zbiramo do zapolnitve mest oziroma najkasneje do navedenega roka, zaradi pravočasne organizacije in rezervacije nastanitev.</p>
-            </div>
-          </div>
-
-          <div className="pt-4">
-            <button onClick={onRegister} className="w-full py-4 bg-gradient-to-r from-teal-400 to-teal-600 text-slate-950 rounded-xl font-black uppercase tracking-widest text-sm shadow-xl hover:scale-[1.02] transition-all">
-              Prijava
-            </button>
           </div>
         </div>
       </div>
@@ -1170,9 +918,6 @@ const App = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showAdmin, setShowAdmin] = useState(false);
   const [showMembershipModal, setShowMembershipModal] = useState(false);
-  const [showKovozooPopup, setShowKovozooPopup] = useState(false);
-  const [showKovozooForm, setShowKovozooForm] = useState(false);
-  const [isKovozooMinimized, setIsKovozooMinimized] = useState(false);
   const [cookieConsent, setCookieConsent] = useState<boolean | null>(null);
   const [settings, setSettings] = useState<SiteSettings>({ heroImage: '', aboutImage: '', memberCount: '40.000', eventCount: '30+' });
   
@@ -1242,14 +987,6 @@ const App = () => {
 
     // Expose refresh to window for manual wake up if needed
     (window as any).refreshStrapi = () => fetchData(true);
-
-    // Show Kovozoo popup on load if not on a specific route
-    const timer = setTimeout(() => {
-      if (window.location.pathname === '/') {
-        setShowKovozooPopup(true);
-      }
-    }, 1500);
-    return () => clearTimeout(timer);
   }, []);
 
   // Routing Logic
@@ -1273,8 +1010,6 @@ const App = () => {
         scrollWithDelay('announcements');
       } else if (pathname === '/galerija') {
         scrollWithDelay('gallery');
-      } else if (pathname === '/kovozoo' && !showKovozooForm) {
-        setShowKovozooPopup(true);
       } else if (pathname.startsWith('/novice/')) {
         const slug = pathname.replace('/novice/', '');
         const article = articles.find(a => slugify(a.Naslov) === slug);
@@ -1300,25 +1035,13 @@ const App = () => {
     };
 
     handleRouting();
-  }, [pathname, loading, articles, announcements, galleries, showKovozooForm]);
+  }, [pathname, loading, articles, announcements, galleries]);
 
   const handleCloseDetail = () => {
     setSelectedArticle(null);
     setSelectedAnnouncement(null);
     setSelectedGallery(null);
     if (pathname !== '/') navigate('/');
-  };
-
-  const handleCloseKovozoo = () => {
-    setShowKovozooPopup(false);
-    setIsKovozooMinimized(true);
-    if (pathname === '/kovozoo') navigate('/');
-  };
-
-  const handleCloseKovozooForm = () => {
-    setShowKovozooForm(false);
-    setIsKovozooMinimized(true);
-    if (pathname === '/kovozoo') navigate('/');
   };
 
   const handleCookieConsent = (accept: boolean) => {
@@ -1331,29 +1054,10 @@ const App = () => {
   return (
     <AppContext.Provider value={{
       lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin,
-      settings, setSettings, showMembershipModal, setShowMembershipModal,
-      showKovozooPopup, setShowKovozooPopup, showKovozooForm, setShowKovozooForm,
-      isKovozooMinimized, setIsKovozooMinimized
+      settings, setSettings, showMembershipModal, setShowMembershipModal
     }}>
       <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-pink-500/30 selection:text-pink-400">
         <Navbar />
-        
-        {/* Floating Kovozoo Button */}
-        {isKovozooMinimized && !showKovozooPopup && !showKovozooForm && (
-          <button 
-            onClick={() => {
-              setShowKovozooPopup(true);
-              navigate('/kovozoo');
-            }}
-            className="fixed right-4 bottom-24 z-[90] p-4 bg-gradient-to-br from-pink-500 to-teal-500 rounded-full shadow-2xl hover:scale-110 transition-all group animate-bounce"
-            title="Kovozoo 2026"
-          >
-            <Calendar className="text-white group-hover:rotate-12 transition-transform" size={24} />
-            <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg border border-white/10 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              Kovozoo 2026
-            </span>
-          </button>
-        )}
 
         <main>
           <Hero />
@@ -1553,21 +1257,6 @@ const App = () => {
         )}
         {selectedGallery && <GalleryLightbox images={selectedGallery.images} initialIndex={selectedGallery.index} onClose={handleCloseDetail} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
-        {showKovozooPopup && (
-          <EventPopup 
-            onClose={handleCloseKovozoo} 
-            onRegister={() => {
-              setShowKovozooPopup(false);
-              setShowKovozooForm(true);
-              navigate('/kovozoo');
-            }} 
-          />
-        )}
-        {showKovozooForm && (
-          <KovozooForm 
-            onClose={handleCloseKovozooForm} 
-          />
-        )}
         {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
         {cookieConsent === null && <CookieBanner onAccept={() => handleCookieConsent(true)} onDecline={() => handleCookieConsent(false)} />}
       </div>
