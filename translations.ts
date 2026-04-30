@@ -9,6 +9,7 @@ export const translations = {
       why: 'Zakaj 80\' & 90\'?',
       cert: 'Certifikat',
       membership: 'Članarina',
+      tiskaniMediji: 'V tiskanih medijih',
       contact: 'Kontakt',
       admin: 'Admin'
     },
@@ -26,7 +27,8 @@ export const translations = {
       sloveniaTitle: 'Slovenija in klasiki',
       whyTitle: 'Zlata doba avtomobilizma',
       certTitle: 'Pridobitev certifikata',
-      memberTitle: 'Postani član kluba'
+      memberTitle: 'Postani član kluba',
+      tiskaniMediji: 'Avtonostalgija v tiskanih medijih'
     },
     membership: {
       formTitle: 'Vloga za včlanitev',
@@ -156,6 +158,7 @@ V našem klubu imamo zbiralca z verjetno največjim arhivom avtomobilskega tiska
       why: 'Why 80\' & 90\'?',
       cert: 'Certificate',
       membership: 'Membership',
+      tiskaniMediji: 'Printed Media',
       contact: 'Contact',
       admin: 'Admin'
     },
@@ -173,7 +176,8 @@ V našem klubu imamo zbiralca z verjetno največjim arhivom avtomobilskega tiska
       sloveniaTitle: 'Slovenia & Classics',
       whyTitle: 'The Golden Era',
       certTitle: 'Getting Certified',
-      memberTitle: 'Become a Member'
+      memberTitle: 'Become a Member',
+      tiskaniMediji: 'Avtonostalgija in Printed Media'
     },
     membership: {
       formTitle: 'Membership Application',

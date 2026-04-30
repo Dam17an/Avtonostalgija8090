@@ -2,7 +2,7 @@ import React, { useState, useEffect, createContext, useContext, useRef, useCallb
 import { Menu, X, User, LogOut, ChevronRight, MapPin, Calendar, Image as ImageIcon, Trash2, Edit3, Plus, ExternalLink, Save, ArrowLeft, ArrowRight, Upload, Loader2, ChevronDown, MessageSquare, Phone, Mail, Settings, Clock, Cookie, Facebook } from 'lucide-react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { translations } from './translations';
-import { Language, StrapiArticle, StrapiAnnouncement, StrapiGallery, SiteSettings } from './types';
+import { Language, StrapiArticle, StrapiAnnouncement, StrapiGallery, StrapiTiskaniMedij, SiteSettings } from './types';
 
 // --- STRAPI CONFIGURATION ---
 const STRAPI_BASE_URL = 'https://necessary-flame-a032995f3f.strapiapp.com';
@@ -33,6 +33,13 @@ const AppContext = createContext<{
   setSettings: React.Dispatch<React.SetStateAction<SiteSettings>>;
   showMembershipModal: boolean;
   setShowMembershipModal: (b: boolean) => void;
+  setSelectedGallery: (g: { images: string[]; index: number } | null) => void;
+  selectedMedij: StrapiTiskaniMedij | null;
+  setSelectedMedij: (m: StrapiTiskaniMedij | null) => void;
+  tiskaniMediji: StrapiTiskaniMedij[];
+  loading: boolean;
+  hasError: boolean;
+  fetchData: (force?: boolean) => Promise<void>;
 } | null>(null);
 
 const useApp = () => {
@@ -737,6 +744,233 @@ const YoungtimerSection = ({ transparent }: { transparent?: boolean }) => {
   );
 };
 
+const TiskaniMedijiHeader = () => {
+  const { lang } = useApp();
+  const t = translations[lang];
+
+  return (
+    <div className="relative w-full">
+      {/* Background Section */}
+      <div className="h-[50vh] sm:h-[60vh] relative overflow-hidden">
+        <img 
+          src="https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2070&auto=format&fit=crop" 
+          className="w-full h-full object-cover" 
+          alt="Press/Media" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-900/20" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-4">
+          <h1 className="retro-font text-3xl sm:text-7xl text-white font-black uppercase tracking-tighter leading-tight drop-shadow-[0_0_30px_rgba(20,184,166,0.3)]">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-white to-teal-400">
+              {t.nav.tiskaniMediji}
+            </span>
+          </h1>
+        </div>
+      </div>
+
+      {/* Static Description Section */}
+      <div className="max-w-4xl mx-auto px-4 -mt-20 relative z-10">
+        <div className="glass p-8 sm:p-12 rounded-[2.5rem] border border-white/10 shadow-2xl backdrop-blur-xl">
+          <p className="text-slate-200 leading-relaxed text-sm sm:text-lg text-justify font-light">
+            {lang === 'si' 
+              ? "Prisotnost Avtonostalgije 80 & 90 v tiskanih medijih potrjuje naše poslanstvo ohranjanja tehnične dediščine. Skozi leta smo bili predstavljeni v številnih strokovnih revijah, časopisih in publikacijah, kjer smo delili naše zgodbe, strast do youngtimerjev in pomen ohranjanja avtomobilov, ki so zaznamovali našo mladost. Ta arhiv služi kot pričevanje o rasti in vplivu našega kluba v širšem avtomobilskem prostoru."
+              : "The presence of Avtonostalgija 80 & 90 in printed media confirms our mission to preserve technical heritage. Over the years, we have been featured in numerous professional magazines, newspapers, and publications, where we shared our stories, passion for youngtimers, and the importance of preserving the cars that marked our youth. This archive serves as a testament to the growth and influence of our club in the broader automotive landscape."
+            }
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+const TiskaniMedijiDetailView = ({ item, onClose }: { item: StrapiTiskaniMedij; onClose: () => void }) => {
+  const { lang, setSelectedGallery } = useApp();
+  const images = item.Slike?.map(img => getMediaUrl(img)) || [];
+  const headerUrl = getMediaUrl(item.HeaderImage);
+  const allImages = headerUrl ? [headerUrl, ...images] : images;
+  const [index, setIndex] = useState(0);
+
+  const next = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIndex(i => (i + 1) % allImages.length);
+  };
+  const prev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIndex(i => (i - 1 + allImages.length) % allImages.length);
+  };
+
+  return (
+    <Modal onClose={onClose}>
+      <div className="space-y-6">
+        {allImages.length > 0 && (
+          <div className="space-y-4">
+            <div className="aspect-video w-full rounded-2xl overflow-hidden shadow-2xl border border-white/5 relative group bg-slate-950">
+              <img 
+                src={allImages[index]} 
+                className="w-full h-full object-contain cursor-pointer transition-transform duration-500" 
+                onClick={() => setSelectedGallery({ images: allImages, index })}
+                alt={item.Naslov} 
+              />
+              
+              {allImages.length > 1 && (
+                <>
+                  <button onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 p-3 bg-black/60 hover:bg-pink-500 rounded-full text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl">
+                    <ArrowLeft size={24} />
+                  </button>
+                  <button onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-black/60 hover:bg-pink-500 rounded-full text-white transition-all opacity-0 group-hover:opacity-100 shadow-xl">
+                    <ArrowRight size={24} />
+                  </button>
+                  <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 px-4 py-1.5 rounded-full text-[10px] font-black text-white backdrop-blur-md border border-white/10 uppercase tracking-widest">
+                    {index + 1} / {allImages.length}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {allImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                {allImages.map((img, idx) => (
+                  <div 
+                    key={idx} 
+                    onClick={() => setIndex(idx)}
+                    className={`shrink-0 w-20 h-20 rounded-xl overflow-hidden border-2 transition-all cursor-pointer ${index === idx ? 'border-pink-500 scale-95' : 'border-transparent opacity-50 hover:opacity-100 hover:border-white/20'}`}
+                  >
+                    <img src={img} className="w-full h-full object-cover" alt="" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="space-y-4 border-t border-white/5 pt-6">
+          <div className="flex items-center gap-4 text-teal-400">
+            <Calendar size={16} />
+            <span className="text-[10px] uppercase font-black tracking-widest">{formatDate(item.Datum)}</span>
+          </div>
+          <h2 className="retro-font text-2xl sm:text-4xl text-white font-black uppercase tracking-tighter leading-tight">{item.Naslov}</h2>
+          <div className="text-slate-300 leading-relaxed text-sm sm:text-base text-justify font-light prose prose-invert max-w-none prose-p:leading-relaxed prose-p:mb-4">
+            {renderContent(item.Vsebina)}
+          </div>
+        </div>
+      </div>
+    </Modal>
+  );
+};
+
+const TiskaniMedijiGallery = () => {
+  const { lang, setSelectedGallery, tiskaniMediji, loading, hasError, fetchData, setSelectedMedij } = useApp();
+  const [showAll, setShowAll] = useState(false);
+  const navigate = useNavigate();
+  
+  if (loading) {
+    return (
+      <div className="py-20 text-center space-y-6">
+        <Loader2 className="animate-spin text-teal-400 mx-auto" size={40} />
+        <p className="text-slate-500 uppercase tracking-widest text-[10px] font-bold">
+          {lang === 'si' ? 'Galerija se nalaga...' : 'Gallery is loading...'}
+        </p>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="py-20 text-center space-y-6">
+        <p className="text-pink-500 uppercase tracking-widest text-[10px] font-bold">
+          {lang === 'si' ? 'Napaka pri nalaganju galerije.' : 'Error loading gallery.'}
+        </p>
+        <button onClick={() => fetchData(true)} className="px-6 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-full text-[10px] font-black uppercase tracking-widest">
+          {lang === 'si' ? 'Poskusi znova' : 'Try again'}
+        </button>
+      </div>
+    );
+  }
+
+  const displayedMediji = showAll ? tiskaniMediji : tiskaniMediji.slice(0, 4);
+
+  return (
+    <div className="space-y-20 pb-20">
+      <div className="flex items-center gap-4 max-w-7xl mx-auto px-4">
+        <div className="h-px bg-gradient-to-r from-transparent to-teal-500/50 flex-1" />
+        <h2 className="retro-font text-lg sm:text-2xl text-teal-400 uppercase tracking-widest font-black">
+          {lang === 'si' ? 'ARHIV' : 'ARCHIVE'}
+        </h2>
+        <div className="h-px bg-gradient-to-l from-transparent to-teal-500/50 flex-1" />
+      </div>
+
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-10">
+          {displayedMediji.map((item) => {
+            const headerUrl = getMediaUrl(item.HeaderImage);
+            const images = item.Slike?.map(img => getMediaUrl(img)) || [];
+            const thumbnail = headerUrl || images[0] || 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800';
+            
+            return (
+              <div 
+                key={item.id} 
+                onClick={() => setSelectedMedij(item)}
+                className="group bg-slate-900/50 rounded-3xl overflow-hidden border border-white/5 hover:border-pink-500/50 transition-all cursor-pointer shadow-2xl flex flex-col h-full"
+              >
+                <div className="aspect-[4/3] overflow-hidden relative">
+                  <img src={thumbnail} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={item.Naslov} loading="lazy" />
+                  <div className="absolute top-4 right-4 bg-black/60 px-3 py-1 rounded-full text-[10px] font-black text-white flex items-center gap-1 backdrop-blur-md">
+                    <Calendar size={12} className="text-teal-400" /> {formatDate(item.Datum)}
+                  </div>
+                </div>
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3 className="text-lg font-black text-white group-hover:text-pink-500 transition-colors uppercase tracking-tight leading-tight mb-4 flex-1 line-clamp-3">
+                    {item.Naslov}
+                  </h3>
+                  <div className="pt-4 border-t border-white/5 flex items-center justify-between">
+                     <span className="text-[9px] text-slate-500 uppercase font-black tracking-widest">{lang === 'si' ? 'Preberi več' : 'Read more'}</span>
+                     <ChevronRight size={16} className="text-pink-500 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {!showAll && tiskaniMediji.length > 4 && (
+          <div className="flex justify-center mt-12">
+            <button 
+              onClick={() => setShowAll(true)} 
+              className="px-12 py-4 border-2 border-teal-400 text-teal-400 rounded-2xl retro-font text-sm transition-all uppercase tracking-widest hover:bg-teal-400 hover:text-slate-950 shadow-[0_0_20px_rgba(20,184,166,0.3)] active:scale-95 font-black"
+            >
+              {lang === 'si' ? 'Prikaži več' : 'Show more'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {tiskaniMediji.length === 0 && (
+        <div className="text-center py-20">
+          <ImageIcon size={48} className="mx-auto text-slate-800 mb-4" />
+          <p className="text-slate-600 uppercase tracking-widest text-[10px] font-bold">
+            {lang === 'si' ? 'Trenutno ni podatkov v galeriji.' : 'No gallery data available at the moment.'}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const TiskaniMedijiPage = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  return (
+    <div className="min-h-screen pt-20 bg-slate-950 animate-in fade-in duration-1000">
+      <TiskaniMedijiHeader />
+      <TiskaniMedijiGallery />
+    </div>
+  );
+};
+
+
+
 const CookieBanner = ({ onAccept, onDecline }: { onAccept: () => void; onDecline: () => void }) => {
   const { lang } = useApp();
   const t = translations[lang].cookies;
@@ -765,11 +999,16 @@ const Navbar = () => {
   const handleNavClick = (id: string) => {
     const targetPath = id === 'vclani-se' ? '/clanstvo' : 
                       id === 'announcements' ? '/dogodki' : 
-                      id === 'gallery' ? '/galerija' : null;
+                      id === 'gallery' ? '/galerija' : 
+                      id === 'tiskani-mediji' ? '/tiskani-mediji' : null;
 
     if (targetPath) {
       if (pathname === targetPath) {
-        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+        if (targetPath === '/tiskani-mediji') {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+        }
       } else {
         navigate(targetPath);
       }
@@ -787,6 +1026,7 @@ const Navbar = () => {
     { label: t.sections.news, id: 'news' },
     { label: t.sections.events, id: 'announcements' },
     { label: t.sections.gallery, id: 'gallery' },
+    { label: t.nav.tiskaniMediji, id: 'tiskani-mediji' },
     { label: t.faq.title, id: 'youngtimer' },
     { label: t.nav.contact, id: 'contact' }
   ];
@@ -924,6 +1164,7 @@ const App = () => {
   const [articles, setArticles] = useState<StrapiArticle[]>([]);
   const [galleries, setGalleries] = useState<StrapiGallery[]>([]);
   const [announcements, setAnnouncements] = useState<StrapiAnnouncement[]>([]);
+  const [tiskaniMediji, setTiskaniMediji] = useState<StrapiTiskaniMedij[]>([]);
   const [loading, setLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [showAllGalleries, setShowAllGalleries] = useState(false);
@@ -932,6 +1173,7 @@ const App = () => {
   const [selectedArticle, setSelectedArticle] = useState<StrapiArticle | null>(null);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<StrapiAnnouncement | null>(null);
   const [selectedGallery, setSelectedGallery] = useState<{ images: string[]; index: number } | null>(null);
+  const [selectedMedij, setSelectedMedij] = useState<StrapiTiskaniMedij | null>(null);
 
   const fetchData = useCallback(async (force = false) => {
     // 10-minute cache (600,000 ms)
@@ -947,28 +1189,45 @@ const App = () => {
     setHasError(false);
     try {
       const timestamp = Date.now();
-      const [artData, galData, annData] = await Promise.all([
-        fetchWithRetry(`${STRAPI_BASE_URL}/api/articles?populate=*&_t=${timestamp}`),
-        fetchWithRetry(`${STRAPI_BASE_URL}/api/galleries?populate=*&_t=${timestamp}`),
-        fetchWithRetry(`${STRAPI_BASE_URL}/api/announcements?populate=*&_t=${timestamp}`)
+      
+      // Fetch each collection individually to prevent one failure from blocking others
+      const fetchCollection = async (path: string) => {
+        try {
+          const res = await fetchWithRetry(`${STRAPI_BASE_URL}/api/${path}?populate=*&_t=${timestamp}`);
+          return res.data || [];
+        } catch (err) {
+          console.error(`Fetch failed for ${path}:`, err);
+          return [];
+        }
+      };
+
+      const [artData, galData, annData, medijiData] = await Promise.all([
+        fetchCollection('articles'),
+        fetchCollection('galleries'),
+        fetchCollection('announcements'),
+        fetchCollection('tiskani-medijis')
       ]);
       
-      // Sorting fetched data according to requested order
-      const sortedArticles = (artData.data || []).sort((a: StrapiArticle, b: StrapiArticle) => 
+      // Sorting fetched data
+      const sortedArticles = artData.sort((a: StrapiArticle, b: StrapiArticle) => 
         (b.Datum || "").localeCompare(a.Datum || "")
       );
-      const sortedAnnouncements = (annData.data || []).sort((a: StrapiAnnouncement, b: StrapiAnnouncement) => {
+      const sortedAnnouncements = annData.sort((a: StrapiAnnouncement, b: StrapiAnnouncement) => {
         const dateCompare = (b.Datum || "").localeCompare(a.Datum || "");
         if (dateCompare !== 0) return dateCompare;
         return (b.Ura || "").localeCompare(a.Ura || "");
       });
-      const sortedGalleries = (galData.data || []).sort((a: StrapiGallery, b: StrapiGallery) => 
+      const sortedGalleries = galData.sort((a: StrapiGallery, b: StrapiGallery) => 
         a.id - b.id
+      );
+      const sortedMediji = medijiData.sort((a: StrapiTiskaniMedij, b: StrapiTiskaniMedij) => 
+        (b.Datum || "").localeCompare(a.Datum || "")
       );
 
       setArticles(sortedArticles);
       setGalleries(sortedGalleries);
       setAnnouncements(sortedAnnouncements);
+      setTiskaniMediji(sortedMediji);
       lastFetchedRef.current = now;
       setHasError(false);
     } catch (err) {
@@ -1010,6 +1269,14 @@ const App = () => {
         scrollWithDelay('announcements');
       } else if (pathname === '/galerija') {
         scrollWithDelay('gallery');
+      } else if (pathname === '/tiskani-mediji') {
+        // Handled by the page component itself
+      } else if (pathname.startsWith('/tiskani-mediji/')) {
+        const slug = pathname.replace('/tiskani-mediji/', '');
+        const medij = tiskaniMediji.find(m => slugify(m.Naslov) === slug);
+        if (medij) {
+          setSelectedMedij(medij);
+        }
       } else if (pathname.startsWith('/novice/')) {
         const slug = pathname.replace('/novice/', '');
         const article = articles.find(a => slugify(a.Naslov) === slug);
@@ -1041,7 +1308,13 @@ const App = () => {
     setSelectedArticle(null);
     setSelectedAnnouncement(null);
     setSelectedGallery(null);
-    if (pathname !== '/') navigate('/');
+    setSelectedMedij(null);
+    
+    if (pathname === '/tiskani-mediji' || pathname.startsWith('/tiskani-mediji/')) {
+       navigate('/tiskani-mediji');
+    } else if (pathname !== '/') {
+       navigate('/');
+    }
   };
 
   const handleCookieConsent = (accept: boolean) => {
@@ -1054,15 +1327,20 @@ const App = () => {
   return (
     <AppContext.Provider value={{
       lang, setLang, isAdmin, setIsAdmin, showLogin, setShowLogin, showAdmin, setShowAdmin,
-      settings, setSettings, showMembershipModal, setShowMembershipModal
+      settings, setSettings, showMembershipModal, setShowMembershipModal,
+      setSelectedGallery, selectedMedij, setSelectedMedij, tiskaniMediji, loading, hasError, fetchData
     }}>
       <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-pink-500/30 selection:text-pink-400">
         <Navbar />
 
         <main>
-          <Hero />
-          
-          <Section id="about" title={t.sections.introTitle} gradient="bg-gradient-to-b from-slate-950 to-indigo-950">
+          {pathname === '/tiskani-mediji' ? (
+            <TiskaniMedijiPage />
+          ) : (
+            <>
+              <Hero />
+              
+              <Section id="about" title={t.sections.introTitle} gradient="bg-gradient-to-b from-slate-950 to-indigo-950">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-8 text-center lg:text-left">
                 <p className="text-xl leading-relaxed text-slate-300 font-light">
@@ -1224,14 +1502,16 @@ const App = () => {
               </div>
             </div>
           </Section>
-        </main>
+        </>
+      )}
+    </main>
 
         <footer className="py-16 border-t border-white/5 bg-slate-950 text-center">
           <div className="max-w-7xl mx-auto px-4 space-y-10">
             <div className="flex justify-center">
               <img 
                 src="https://necessary-flame-a032995f3f.media.strapiapp.com/Removal_839_030878ac88.png" 
-                className="h-10 sm:h-12 grayscale opacity-50 block w-auto object-contain" 
+                className="h-10 sm:h-12 grayscale opacity-50 block w-auto object-contain cursor-pointer transition-all duration-300 hover:grayscale-0 hover:opacity-100 hover:scale-105 active:scale-95 hover:drop-shadow-[0_0_15px_rgba(20,184,166,0.2)]" 
                 alt="Logo" 
                 loading="lazy"
               />
@@ -1256,6 +1536,7 @@ const App = () => {
           />
         )}
         {selectedGallery && <GalleryLightbox images={selectedGallery.images} initialIndex={selectedGallery.index} onClose={handleCloseDetail} />}
+        {selectedMedij && <TiskaniMedijiDetailView item={selectedMedij} onClose={handleCloseDetail} />}
         {showMembershipModal && <MembershipModal onClose={() => setShowMembershipModal(false)} />}
         {showLogin && <LoginPageOverlay onClose={() => setShowLogin(false)} />}
         {cookieConsent === null && <CookieBanner onAccept={() => handleCookieConsent(true)} onDecline={() => handleCookieConsent(false)} />}

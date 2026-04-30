@@ -36,3 +36,16 @@ export interface StrapiGallery {
     url: string;
   }>;
 }
+
+export interface StrapiTiskaniMedij {
+  id: number;
+  Naslov: string;
+  Vsebina: any;
+  Datum: string;
+  HeaderImage?: {
+    url: string;
+  };
+  Slike?: Array<{
+    url: string;
+  }>;
+}
